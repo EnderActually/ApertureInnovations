@@ -6,8 +6,10 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import net.mistersecret312.aperture_innovations.init.SoundInit;
 
 import java.util.UUID;
 
@@ -67,6 +69,8 @@ public class PortalLink
 		this.wallPrimary = facing.equals(Direction.UP);
 		this.ceilingPrimary = direction.equals(Direction.DOWN);
 
+		level.playSound(null, pos, SoundInit.PORTAL_OPEN_PRIMARY.get(), SoundSource.BLOCKS, 0.7f, 1f);
+
 		PortalLinkData.get(level).setDirty();
 	}
 
@@ -78,11 +82,16 @@ public class PortalLink
 		this.wallSecondary = facing.equals(Direction.UP);
 		this.ceilingSecondary = direction.equals(Direction.DOWN);
 
+		level.playSound(null, pos, SoundInit.PORTAL_OPEN_SECONDARY.get(), SoundSource.BLOCKS, 0.7f, 1f);
+
 		PortalLinkData.get(level).setDirty();
 	}
 
 	public void reset(Level level)
 	{
+		level.playSound(null, posPrimary, SoundInit.PORTAL_FIZZLE.get(), SoundSource.BLOCKS, 0.5f, 1f);
+		level.playSound(null, posSecondary, SoundInit.PORTAL_FIZZLE.get(), SoundSource.BLOCKS, 0.5f, 1f);
+
 		this.posPrimary = null;
 		this.wallPrimary = false;
 		this.ceilingPrimary = false;

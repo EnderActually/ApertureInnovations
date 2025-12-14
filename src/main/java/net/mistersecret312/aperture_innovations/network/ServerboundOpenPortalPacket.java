@@ -3,12 +3,14 @@ package net.mistersecret312.aperture_innovations.network;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.network.NetworkEvent;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
+import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.portal.PortalLink;
 import net.mistersecret312.aperture_innovations.portal.PortalLinkData;
@@ -69,11 +71,14 @@ public class ServerboundOpenPortalPacket
 					portalGun.stopTriggeredAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
 					portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
 
-					if(isPrimary)
+					if(isPrimary) {
 						link.createPrimaryPortal(level, placement.bottomPos, level.dimension(), placement.facing, placement.rotation);
-					else
+						level.playSound(null, player.getOnPos().above(), SoundInit.PORTAL_GUN_FIRE_PRIMARY.get(), SoundSource.PLAYERS, 0.5f, 1f);
+					}
+					else {
 						link.createSecondaryPortal(level, placement.bottomPos, level.dimension(), placement.facing, placement.rotation);
-
+						level.playSound(null, player.getOnPos().above(), SoundInit.PORTAL_GUN_FIRE_SECONDARY.get(), SoundSource.PLAYERS, 0.5f, 1f);
+					}
 				}
 			}
 

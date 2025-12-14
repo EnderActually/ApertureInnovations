@@ -6,6 +6,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -24,6 +25,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.mistersecret312.aperture_innovations.client.renderer.PortalGunRenderer;
+import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.portal.PortalLink;
 import net.mistersecret312.aperture_innovations.portal.PortalLinkData;
 import net.mistersecret312.aperture_innovations.portal.PortalPlacement;
@@ -67,19 +69,20 @@ public class PortalGunItem extends Item implements GeoItem
 	@Override
 	public void inventoryTick(ItemStack stack, Level level, Entity entity, int slot, boolean isSelected)
 	{
-		if(level.isClientSide())
+		if(level.isClientSide() || !(entity instanceof Player player))
 			return;
 
-		if(!isInitialized(stack))
-		{
+		if(!isInitialized(stack)) {
 			setInitialized(stack, true);
 			PortalLinkData data = PortalLinkData.get(level);
 
 			UUID linkID = getUUID(stack);
 
 			PortalLink link = data.getLink(linkID);
-			if(link == null)
+			if (link == null) {
 				data.addFreshLink(linkID);
+				level.playSound(player, player.getEyePosition().x(), player.getEyePosition().y(), entity.getEyePosition().z(), SoundInit.PORTAL_GUN_ACTIVATION.get(), SoundSource.PLAYERS, 1f, 1f);
+			}
 		}
 	}
 

@@ -1,0 +1,73 @@
+{
+  "portal_ambient": {
+    "subtitle": "sound.aperture_innovations.portal_ambient",
+    "sounds": [
+      "aperture_innovations:portal_ambient"
+    ]
+  },
+  "portal_enter": {
+    "subtitle": "sound.aperture_innovations.portal_enter",
+    "sounds": [
+      "aperture_innovations:portal_enter_1",
+      "aperture_innovations:portal_enter_2",
+      "aperture_innovations:portal_enter_3"
+    ]
+  },
+  "portal_fizzle": {
+    "subtitle": "sound.aperture_innovations.portal_fizzle",
+    "sounds": [
+      "aperture_innovations:portal_fizzle_1",
+      "aperture_innovations:portal_fizzle_2"
+    ]
+  },
+  "portal_gun_activation": {
+    "subtitle": "sound.aperture_innovations.portal_gun_activation",
+    "sounds": [
+      "aperture_innovations:portal_gun_activation"
+    ]
+  },
+  "portal_gun_fire_primary": {
+    "subtitle": "sound.aperture_innovations.portal_gun_fire_primary",
+    "sounds": [
+      "aperture_innovations:portal_gun_fire_primary_1",
+      "aperture_innovations:portal_gun_fire_primary_2",
+      "aperture_innovations:portal_gun_fire_primary_3"
+    ]
+  },
+  "portal_gun_fire_secondary": {
+    "subtitle": "sound.aperture_innovations.portal_gun_fire_secondary",
+    "sounds": [
+      "aperture_innovations:portal_gun_fire_secondary_1",
+      "aperture_innovations:portal_gun_fire_secondary_2",
+      "aperture_innovations:portal_gun_fire_secondary_3"
+    ]
+  },
+  "portal_invalid_surface": {
+    "subtitle": "sound.aperture_innovations.portal_invalid_surface",
+    "sounds": [
+      "aperture_innovations:portal_invalid_surface_1",
+      "aperture_innovations:portal_invalid_surface_2",
+      "aperture_innovations:portal_invalid_surface_3",
+      "aperture_innovations:portal_invalid_surface_4"
+    ]
+  },
+  "portal_open_primary": {
+    "subtitle": "sound.aperture_innovations.portal_open_primary",
+    "sounds": [
+      "aperture_innovations:portal_open_primary_1",
+      "aperture_innovations:portal_open_primary_2"
+    ]
+  },
+  "portal_open_secondary": {
+    "subtitle": "sound.aperture_innovations.portal_open_secondary",
+    "sounds": [
+      "aperture_innovations:portal_open_secondary_1"
+    ]
+  },
+  "portal_gun_reset": {
+    "subtitle": "sound.aperture_innovations.portal_gun_reset",
+    "sounds": [
+      "aperture_innovations:portal_gun_reset"
+    ]
+  }
+}

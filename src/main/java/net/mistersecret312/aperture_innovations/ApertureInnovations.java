@@ -38,6 +38,7 @@ import net.mistersecret312.aperture_innovations.client.overlay.CrosshairOverlay;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.init.ItemTabInit;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
+import net.mistersecret312.aperture_innovations.init.SoundInit;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 
@@ -56,6 +57,7 @@ public class ApertureInnovations
 
 		ItemInit.register(modEventBus);
 		ItemTabInit.register(modEventBus);
+		SoundInit.register(modEventBus);
 
 		NetworkInit.register();
 	}
