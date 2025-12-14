@@ -1,0 +1,31 @@
+package net.mistersecret312.aperture_innovations.init;
+
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
+import net.mistersecret312.aperture_innovations.ApertureInnovations;
+
+public class ItemTabInit
+{
+	public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB,
+			ApertureInnovations.MODID);
+
+	public static final RegistryObject<CreativeModeTab> APERTURE_INNOVATIONS = TABS.register("aperture_innovations",
+			() -> CreativeModeTab.builder()
+						  .icon(() -> new ItemStack(ItemInit.PORTAL_GUN.get()))
+						  .title(Component.translatable("tabs.aperture_innovations"))
+						  .displayItems((parameters, output) -> {
+							  output.accept(ItemInit.PORTAL_GUN.get());
+						  }
+						  ).build());
+
+	public static void register(IEventBus bus)
+	{
+		TABS.register(bus);
+	}
+}
