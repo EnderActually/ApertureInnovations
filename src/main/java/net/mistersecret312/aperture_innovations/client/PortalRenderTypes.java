@@ -16,9 +16,19 @@ public class PortalRenderTypes extends RenderType
 		super(pName, pFormat, pMode, pBufferSize, pAffectsCrumbling, pSortOnUpload, pSetupState, pClearState);
 	}
 
-	public static RenderType portal(ResourceLocation location)
+	public static RenderType portal(ResourceLocation texture)
 	{
-		return create("portal", DefaultVertexFormat.POSITION_COLOR_TEX,
+		return create("portal", DefaultVertexFormat.POSITION_COLOR,
+				VertexFormat.Mode.QUADS, 256, true, true,
+				RenderType.CompositeState.builder()
+										 .setShaderState(RenderStateShard.POSITION_COLOR_SHADER)
+										 .createCompositeState(true)
+		);
+	}
+
+	public static RenderType portalFrame(ResourceLocation location)
+	{
+		return create("portal_frame", DefaultVertexFormat.POSITION_COLOR_TEX,
 				VertexFormat.Mode.QUADS, 256, true, true,
 				RenderType.CompositeState.builder()
 										 .setShaderState(RenderStateShard.POSITION_COLOR_TEX_SHADER)
