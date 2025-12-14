@@ -1,5 +1,8 @@
 {
   "tabs.aperture_innovations": "Aperture Innovations",
 
-  "item.aperture_innovations.portal_gun": "Aperture Science Handheld Portal Device"
+  "item.aperture_innovations.portal_gun": "Aperture Science Handheld Portal Device",
+
+  "key.category.aperture_innovations": "Aperture Innovations",
+  "aperture_innovations.portal_gun.reset": "Reset Portal Gun"
 }
