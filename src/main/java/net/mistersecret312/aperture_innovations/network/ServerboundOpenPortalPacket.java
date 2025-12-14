@@ -50,7 +50,7 @@ public class ServerboundOpenPortalPacket
 			ItemStack gunStack = main.is(ItemInit.PORTAL_GUN.get()) ? main : off;
 			PortalGunItem portalGun = (PortalGunItem) gunStack.getItem();
 
-			BlockHitResult result = PortalGunItem.rayTrace(player.level(), player, 100);
+			BlockHitResult result = PortalGunItem.rayTrace(player.level(), player, 256);
 			if(!result.getType().equals(HitResult.Type.MISS))
 			{
 				UUID linkID = portalGun.getUUID(gunStack);
