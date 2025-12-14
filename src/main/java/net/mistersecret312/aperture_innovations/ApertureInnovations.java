@@ -35,10 +35,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import net.mistersecret312.aperture_innovations.client.overlay.CrosshairOverlay;
-import net.mistersecret312.aperture_innovations.init.ItemInit;
-import net.mistersecret312.aperture_innovations.init.ItemTabInit;
-import net.mistersecret312.aperture_innovations.init.NetworkInit;
-import net.mistersecret312.aperture_innovations.init.SoundInit;
+import net.mistersecret312.aperture_innovations.init.*;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 
@@ -56,6 +53,7 @@ public class ApertureInnovations
 		MinecraftForge.EVENT_BUS.register(this);
 
 		ItemInit.register(modEventBus);
+		BlockInit.register(modEventBus);
 		ItemTabInit.register(modEventBus);
 		SoundInit.register(modEventBus);
 
