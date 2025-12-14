@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/aperture-innovations.iml" filepath="$PROJECT_DIR$/.idea/modules/aperture-innovations.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/aperture-innovations.main.iml" filepath="$PROJECT_DIR$/.idea/modules/aperture-innovations.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/aperture-innovations.test.iml" filepath="$PROJECT_DIR$/.idea/modules/aperture-innovations.test.iml" />
     </modules>
