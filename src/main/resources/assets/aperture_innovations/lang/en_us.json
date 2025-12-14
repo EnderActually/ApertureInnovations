@@ -1,6 +1,14 @@
 {
   "tabs.aperture_innovations": "Aperture Innovations",
 
+  "block.aperture_innovations.concrete_surface_block": "Concrete Surface Block",
+  "block.aperture_innovations.concrete_surface_tile_block": "Concrete Surface Tile Block",
+  "block.aperture_innovations.concrete_surface_1x2_block": "Concrete Surface 1x2 Block",
+  "block.aperture_innovations.metal_surface_block": "Metal Surface Block",
+  "block.aperture_innovations.metal_surface_tile_block": "Metal Surface Tile Block",
+  "block.aperture_innovations.metal_surface_1x2_block": "Metal Surface 1x2 Block",
+  "block.aperture_innovations.metal_surface_2x2_block": "Metal Surface 2x2 Block",
+
   "item.aperture_innovations.portal_gun": "Aperture Science Handheld Portal Device",
 
   "key.category.aperture_innovations": "Aperture Innovations",

@@ -20,6 +20,15 @@ public class ItemTabInit
 						  .icon(() -> new ItemStack(ItemInit.PORTAL_GUN.get()))
 						  .title(Component.translatable("tabs.aperture_innovations"))
 						  .displayItems((parameters, output) -> {
+							  output.accept(BlockInit.CONCRETE_SURFACE_BLOCK.get());
+							  output.accept(BlockInit.CONCRETE_SURFACE_TILE_BLOCK.get());
+							  output.accept(BlockInit.CONCRETE_SURFACE_1x2_BLOCK.get());
+
+							  output.accept(BlockInit.METAL_SURFACE_BLOCK.get());
+							  output.accept(BlockInit.METAL_SURFACE_TILE_BLOCK.get());
+							  output.accept(BlockInit.METAL_SURFACE_1x2_BLOCK.get());
+							  output.accept(BlockInit.METAL_SURFACE_2x2_BLOCK.get());
+
 							  output.accept(ItemInit.PORTAL_GUN.get());
 						  }
 						  ).build());
