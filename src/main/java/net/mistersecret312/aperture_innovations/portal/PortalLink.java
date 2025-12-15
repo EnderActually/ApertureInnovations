@@ -6,9 +6,13 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.common.world.ForgeChunkManager;
+import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
 
 import java.util.UUID;
@@ -84,19 +88,45 @@ public class PortalLink
 
 		level.playSound(null, pos, SoundInit.PORTAL_OPEN_SECONDARY.get(), SoundSource.BLOCKS, 0.7f, 1f);
 
+		if(posSecondary != null)
+		{
+
+			ChunkPos portalPos = new ChunkPos(posSecondary);
+			for(int i = 0; i < 3; i++)
+			{
+				for(int j = 0; j < 3; j++)
+				{
+					ForgeChunkManager.forceChunk((ServerLevel) level, ApertureInnovations.MODID,
+							linkID, portalPos.x+i, portalPos.z+j, true, true);
+				}
+			}
+		}
+
 		PortalLinkData.get(level).setDirty();
 	}
 
 	public void reset(Level level)
 	{
+		resetPrimary(level);
+		resetSecondary(level);
+	}
+
+	public void resetPrimary(Level level)
+	{
 		level.playSound(null, posPrimary, SoundInit.PORTAL_FIZZLE.get(), SoundSource.BLOCKS, 0.5f, 1f);
-		level.playSound(null, posSecondary, SoundInit.PORTAL_FIZZLE.get(), SoundSource.BLOCKS, 0.5f, 1f);
 
 		this.posPrimary = null;
 		this.wallPrimary = false;
 		this.ceilingPrimary = false;
 		this.dimensionPrimary = null;
 		this.directionPrimary = null;
+
+		PortalLinkData.get(level).setDirty();
+	}
+
+	public void resetSecondary(Level level)
+	{
+		level.playSound(null, posSecondary, SoundInit.PORTAL_FIZZLE.get(), SoundSource.BLOCKS, 0.5f, 1f);
 
 		this.posSecondary = null;
 		this.wallSecondary = false;

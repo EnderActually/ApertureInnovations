@@ -18,10 +18,12 @@ public class PortalRenderTypes extends RenderType
 
 	public static RenderType portal(ResourceLocation texture)
 	{
-		return create("portal", DefaultVertexFormat.POSITION_COLOR,
+		return create("portal", DefaultVertexFormat.POSITION_COLOR_TEX,
 				VertexFormat.Mode.QUADS, 256, true, true,
 				RenderType.CompositeState.builder()
-										 .setShaderState(RenderStateShard.POSITION_COLOR_SHADER)
+										 .setShaderState(RenderStateShard.POSITION_COLOR_TEX_SHADER)
+										 .setTextureState(new TextureStateShard(texture, false, false))
+										 .setWriteMaskState(RenderStateShard.DEPTH_WRITE)
 										 .createCompositeState(true)
 		);
 	}
