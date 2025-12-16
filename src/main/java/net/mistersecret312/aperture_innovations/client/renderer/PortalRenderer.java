@@ -15,12 +15,16 @@ import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.client.ForgeHooksClient;
+import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.mistersecret312.aperture_innovations.events.ClientEvents;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import org.joml.Matrix4f;
@@ -58,7 +62,6 @@ public class PortalRenderer {
 
 		Minecraft mc = Minecraft.getInstance();
 		GameRenderer gameRenderer = mc.gameRenderer;
-		LightTexture lightTexture = gameRenderer.lightTexture();
 
 		float partialTick = mc.getFrameTime();
 		long finishTimeNano = System.nanoTime() + 500000000L;
@@ -89,10 +92,6 @@ public class PortalRenderer {
 				RenderSystem.clear(16640, ON_OSX);
 				FogRenderer.setupNoFog();
 				RenderSystem.enableCull();
-
-				lightTexture.updateLightTexture(partialTick);
-
-				gameRenderer.checkEntityPostEffect(DUMMIES.get(link.linkID()).getFirst().getEntity());
 
 				renderLevel(mc, fb, DUMMIES.get(link.linkID()).getFirst(), (float) fov, partialTick, finishTimeNano);
 
@@ -135,9 +134,6 @@ public class PortalRenderer {
 				FogRenderer.setupNoFog();
 				RenderSystem.enableCull();
 
-				lightTexture.updateLightTexture(partialTick);
-
-				gameRenderer.checkEntityPostEffect(DUMMIES.get(link.linkID()).getSecond().getEntity());
 				renderLevel(mc, fb, DUMMIES.get(link.linkID()).getSecond(), (float) fov, partialTick, finishTimeNano);
 				mc.renderBuffers().bufferSource().endBatch();
 
@@ -159,6 +155,7 @@ public class PortalRenderer {
 		RenderSystem.setProjectionMatrix(originalProjection, VertexSorting.DISTANCE_TO_ORIGIN);
 		originalTarget.bindWrite(true);
 	}
+
 	private static void renderLevel(Minecraft mc, RenderTarget target, Camera camera, float fov, float partialTick, long finishTimeNano)
 	{
 		GameRenderer gr = mc.gameRenderer;
@@ -175,6 +172,7 @@ public class PortalRenderer {
 		lr.renderLevel(poseStack, partialTick, finishTimeNano, false, camera, gr,
 				gr.lightTexture(), projMatrix);
 	}
+
 	@SuppressWarnings("ConstantConditions")
 	private static void setupSceneCamera(ClientPortalLink link) {
 		Pair<Camera, Camera> camera = DUMMIES.get(link.linkID());
@@ -198,15 +196,65 @@ public class PortalRenderer {
 			}
 
 			Entity dummyCameraEntity = dummy.getEntity();
-			Vec3 pos = isPrimary ? link.posPrimary().getCenter().add(0, 0.5, -0.5)
-							   : link.posSecondary().getCenter().add(0, 0.5, 0.5);
-			dummyCameraEntity.setPos(pos);
+			Vec3 pos = isPrimary ? link.posPrimary().getCenter().add(
+					Vec3.atCenterOf(link.directionPrimary().getNormal()).multiply(0f, 2f, 0f))
+							   : link.posSecondary().getCenter().add(
+					Vec3.atCenterOf(link.directionSecondary().getNormal()).multiply(0f, 1f, 1f));
+
 			float xRot = isPrimary ?  link.wallPrimary() ? 0f : link.ceilingPrimary() ? -90 : 90
 								 : link.wallSecondary() ? 0f : link.ceilingSecondary() ? -90 : 90;
-			float yRot = isPrimary ? link.directionPrimary().getOpposite().toYRot()
-								 : link.directionSecondary().getOpposite().toYRot();
+
+			if(isPrimary)
+			{
+				pos = new Vec3(
+						pos.x - (link.directionPrimary().getStepX() != 0 ?
+										 link.wallPrimary() ? 0 : link.ceilingPrimary() ?
+																			link.directionPrimary().getAxisDirection()
+																				.equals(Direction.AxisDirection.POSITIVE) ? 1 : -1
+																			:
+																			link.directionPrimary().getAxisDirection()
+																				.equals(Direction.AxisDirection.POSITIVE) ? -1 : 1
+										 : 0),
+
+						pos.y + (link.wallPrimary() ? 0 : link.ceilingPrimary() ? 0 : -1.5),
+
+						pos.z - (link.directionPrimary().getStepZ() != 0 ?
+										 link.wallPrimary() ? 0 : link.ceilingPrimary() ?
+																			link.directionPrimary().getAxisDirection()
+																				.equals(Direction.AxisDirection.POSITIVE) ? 2.5 : -1.5
+																			: 0.5
+										 : link.directionPrimary().getStepX() != 0 ? 0.5 : 0));
+			}
+			else
+			{
+				pos = new Vec3(
+						pos.x - (link.directionSecondary().getStepX() != 0 ?
+										 link.wallSecondary() ? 0 : link.ceilingSecondary() ?
+																			link.directionSecondary().getAxisDirection()
+																				.equals(Direction.AxisDirection.POSITIVE) ? 1 : -1
+																			:
+																			link.directionSecondary().getAxisDirection()
+																				.equals(Direction.AxisDirection.POSITIVE) ? -1 : 1
+										 : 0),
+
+						pos.y + (link.wallSecondary() ? 0 : link.ceilingSecondary() ? 0 : -1.5),
+
+						pos.z - (link.directionSecondary().getStepZ() != 0 ?
+										 link.wallSecondary() ? 0 : link.ceilingSecondary() ?
+																			link.directionSecondary().getAxisDirection()
+																				.equals(Direction.AxisDirection.POSITIVE) ? 2.5 : -1.5
+																			: 0.5
+										 : link.directionSecondary().getStepX() != 0 ? 0.5 : 0));
+			}
+
+			float yRot = isPrimary ? link.wallPrimary() ? link.directionPrimary().getOpposite().toYRot() : link.directionPrimary().toYRot()
+								 : link.wallSecondary() ? link.directionSecondary().getOpposite().toYRot() : link.directionSecondary().toYRot();
+
+			dummyCameraEntity.setPos(pos);
+
 			dummyCameraEntity.setXRot(xRot);
 			dummyCameraEntity.setYRot(yRot + 180);
+
 			dummy.setPosition(pos);
 			dummy.setRotation(yRot, xRot);
 		}
@@ -222,7 +270,7 @@ public class PortalRenderer {
 			matrix4f.scale(zoom, zoom, 1.0F);
 		}
 		float depthFar = gr.getDepthFar();
-		return matrix4f.perspective(fov * Mth.DEG_TO_RAD,
+		return matrix4f.setPerspective((float) (fov * Math.PI / 180F),
 				(float) target.width / (float) target.height, 0.05F, depthFar);
 	}
 }
