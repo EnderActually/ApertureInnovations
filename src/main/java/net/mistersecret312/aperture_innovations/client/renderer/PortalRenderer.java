@@ -150,9 +150,11 @@ public class PortalRenderer {
 			: link.wallSecondary() ? 0 : link.ceilingSecondary() ? -90 : 90;
 
 			if(link.directionPrimary().getOpposite() == link.directionSecondary())
-				yRot -= 180;
+				yRot -= isPrimary ? 0 : 180;
 			if(link.directionSecondary() == link.directionPrimary())
-				yRot += 180;
+				yRot += isPrimary ? 0 : 180;
+			if(link.directionSecondary().getAxis() != link.directionPrimary().getAxis())
+				yRot += isPrimary ? 180 : 0;
 
 			yRot += isPrimary ? link.wallPrimary() ? 180 : 0
 			: link.wallSecondary() ? 0 : 180;

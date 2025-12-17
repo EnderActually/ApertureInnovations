@@ -76,8 +76,10 @@ public class ClientEvents
 					renderPortalNonSee(buffer, poseStack, camera, link, false);
 				}
 
-				primaryRender(link, buffer, poseStack, camera);
-				secondaryRender(link, buffer, poseStack, camera);
+				if(link.posPrimary() != null)
+					primaryRender(link, buffer, poseStack, camera);
+				if(link.posSecondary() != null)
+					secondaryRender(link, buffer, poseStack, camera);
 
 				poseStack.popPose();
 			});
@@ -97,8 +99,10 @@ public class ClientEvents
 				final TextureAtlasSprite secondary = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
 														   .apply(TEXTURE_SECONDARY_VORTEX);
 
-				renderPortalVortex(link, camera, primary, buffer, poseStack, true);
-				renderPortalVortex(link, camera, secondary, buffer, poseStack, false);
+				if(link.posPrimary() != null)
+					renderPortalVortex(link, camera, primary, buffer, poseStack, true);
+				if(link.posSecondary() != null)
+					renderPortalVortex(link, camera, secondary, buffer, poseStack, false);
 
 				poseStack.popPose();
 			}
