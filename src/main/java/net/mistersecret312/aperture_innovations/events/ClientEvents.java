@@ -1,5 +1,6 @@
 package net.mistersecret312.aperture_innovations.events;
 
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.datafixers.util.Pair;
@@ -7,21 +8,15 @@ import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
@@ -37,14 +32,12 @@ import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.network.ServerboundOpenPortalPacket;
 import net.mistersecret312.aperture_innovations.network.ServerboundResetPortalLinkPacket;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
-import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
-
-import static net.mistersecret312.aperture_innovations.client.renderer.PortalRenderer.UPDATE_INTERVAL;
 
 @Mod.EventBusSubscriber(modid = ApertureInnovations.MODID, value = Dist.CLIENT)
 public class ClientEvents
@@ -66,12 +59,11 @@ public class ClientEvents
 	@SubscribeEvent
 	public static void renderPortals(RenderLevelStageEvent event) {
 		MultiBufferSource.BufferSource buffer = Minecraft.getInstance().renderBuffers().bufferSource();
+		Camera camera = event.getCamera();
+		PoseStack poseStack = event.getPoseStack();
 
 		if(event.getStage() == RenderLevelStageEvent.Stage.AFTER_SKY)
 		{
-			Camera camera = event.getCamera();
-			PoseStack poseStack = event.getPoseStack();
-
 			LINKS.forEach((linkID, link) -> {
 				poseStack.pushPose();
 
@@ -83,23 +75,35 @@ public class ClientEvents
 					renderPortalNonSee(buffer, poseStack, camera, link, true);
 					renderPortalNonSee(buffer, poseStack, camera, link, false);
 				}
+
+				primaryRender(link, buffer, poseStack, camera);
+				secondaryRender(link, buffer, poseStack, camera);
+
 				poseStack.popPose();
 			});
 
 		}
 
-		if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS)
+		if(event.getStage() == RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS)
 		{
+			for(Map.Entry<UUID, ClientPortalLink> linkEntry : LINKS.entrySet())
+			{
+				ClientPortalLink link = linkEntry.getValue();
 
-			Camera camera = event.getCamera();
-			PoseStack poseStack = event.getPoseStack();
+				poseStack.pushPose();
 
-			LINKS.forEach((linkID, link) ->
-				{
-					primaryRender(link, buffer, poseStack, camera);
-					secondaryRender(link, buffer, poseStack, camera);
-				});
+				final TextureAtlasSprite primary = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
+														   .apply(TEXTURE_PRIMARY_VORTEX);
+				final TextureAtlasSprite secondary = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
+														   .apply(TEXTURE_SECONDARY_VORTEX);
+
+				renderPortalVortex(link, camera, primary, buffer, poseStack, true);
+				renderPortalVortex(link, camera, secondary, buffer, poseStack, false);
+
+				poseStack.popPose();
+			}
 		}
+
 		buffer.endBatch();
 	}
 
@@ -121,18 +125,7 @@ public class ClientEvents
 					poseStack.translate(0f, 0f, 1f);
 			}
 			poseStack.translate(0.5f, 0f, 0.51f);
-
-			final TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
-													   .apply(TEXTURE_PRIMARY_VORTEX);
-
-			//renderPortalFrame(TEXTURE_PRIMARY, buffer, poseStack);
-			if (link.posSecondary() != null) {
-				poseStack.pushPose();
-				poseStack.translate(0f, 0f, 0.021f);
-				poseStack.popPose();
-			}
 			renderPortalFrame(TEXTURE_PRIMARY, buffer, poseStack);
-			renderPortalVortex(sprite, buffer, poseStack);
 
 			poseStack.popPose();
 		}
@@ -156,17 +149,7 @@ public class ClientEvents
 					poseStack.translate(0f, 0f, 1f);
 			}
 			poseStack.translate(0.5f, 0f, 0.51f);
-
-			final TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
-													   .apply(TEXTURE_SECONDARY_VORTEX);
-
-			if (link.posPrimary() != null) {
-				poseStack.pushPose();
-				poseStack.translate(0f, 0f, 0.021f);
-				poseStack.popPose();
-			}
 			renderPortalFrame(TEXTURE_SECONDARY, buffer, poseStack);
-			renderPortalVortex(sprite, buffer, poseStack);
 
 			poseStack.popPose();
 		}
@@ -255,7 +238,7 @@ public class ClientEvents
 				if (link.ceilingPrimary())
 					poseStack.translate(0f, 0f, 1f);
 			}
-			poseStack.translate(0.5f, 0f, 0.53f);
+			poseStack.translate(0.5f, 0f, 0.52f);
 		}
 		else
 		{
@@ -268,7 +251,7 @@ public class ClientEvents
 				if (link.ceilingSecondary())
 					poseStack.translate(0f, 0f, 1f);
 			}
-			poseStack.translate(0.5f, 0f, 0.53f);
+			poseStack.translate(0.5f, 0f, 0.52f);
 		}
 
 		poseStack.scale(1f,2f,1f);
@@ -295,17 +278,17 @@ public class ClientEvents
 
 		RenderSystem.depthFunc(GL11.GL_EQUAL);
 
-		Pair<DynamicTexture, DynamicTexture> pair = PortalRenderer.getTexture(link.linkID());
+		Pair<RenderTarget, RenderTarget> pair = PortalRenderer.FRAMEBUFFERS.get(link.linkID());
 
-		RenderSystem.setShaderTexture(0, isPrimary ? pair.getSecond().getId() : pair.getFirst().getId());
+		RenderSystem.setShaderTexture(0, isPrimary ? pair.getSecond().getColorTextureId() : pair.getFirst().getColorTextureId());
 		RenderSystem.setShader(GameRenderer::getPositionTexShader);
 
 		builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
 
-		builder.vertex(matrix, -0.5f, -0.5f, 0).uv(0.0f, 1.0f).endVertex();
-		builder.vertex(matrix,  0.5f, -0.5f, 0).uv(1f, 1.0f).endVertex();
-		builder.vertex(matrix,  0.5f,  0.5f, 0).uv(1f, 0.0f).endVertex();
-		builder.vertex(matrix, -0.5f,  0.5f, 0).uv(0.0f, 0.0f).endVertex();
+		builder.vertex(matrix, -0.5f, -0.5f, 0).uv(0.0f, 0.0f).endVertex();
+		builder.vertex(matrix,  0.5f, -0.5f, 0).uv(1f, 0.0f).endVertex();
+		builder.vertex(matrix,  0.5f,  0.5f, 0).uv(1f, 1.0f).endVertex();
+		builder.vertex(matrix, -0.5f,  0.5f, 0).uv(0.0f, 1.0f).endVertex();
 
 		BufferUploader.drawWithShader(builder.end());
 
@@ -338,8 +321,44 @@ public class ClientEvents
 		poseStack.popPose();
 	}
 
-	public static void renderPortalVortex(TextureAtlasSprite sprite, MultiBufferSource buffer, PoseStack poseStack) {
+	public static void renderPortalVortex(ClientPortalLink link, Camera camera,
+										  TextureAtlasSprite sprite, MultiBufferSource buffer,
+										  PoseStack poseStack, boolean isPrimary) {
 		poseStack.pushPose();
+		Vec3 pos = isPrimary ? link.posPrimary().getCenter() : link.posSecondary().getCenter();
+		Direction direction = isPrimary ? link.directionPrimary() : link.directionSecondary();
+		poseStack.translate(pos.x-camera.getPosition().x,
+				pos.y-camera.getPosition().y+0.5,
+				pos.z-camera.getPosition().z);
+		poseStack.mulPose(direction.getRotation());
+
+		if(isPrimary)
+		{
+			if (link.wallPrimary())
+				poseStack.mulPose(Axis.XP.rotationDegrees(-90));
+			else {
+				poseStack.mulPose(Axis.XP.rotationDegrees(link.ceilingPrimary() ? 0 : 180));
+				poseStack.mulPose(Axis.ZP.rotationDegrees(180));
+				poseStack.translate(0f, 0.5f, -0.5f);
+				if (link.ceilingPrimary())
+					poseStack.translate(0f, 0f, 1f);
+			}
+			poseStack.translate(0.5f, 0f, 0.52f);
+		}
+		else
+		{
+			if (link.wallSecondary())
+				poseStack.mulPose(Axis.XP.rotationDegrees(-90));
+			else {
+				poseStack.mulPose(Axis.XP.rotationDegrees(link.ceilingSecondary() ? 0 : 180));
+				poseStack.mulPose(Axis.ZP.rotationDegrees(180));
+				poseStack.translate(0f, 0.5f, -0.5f);
+				if (link.ceilingSecondary())
+					poseStack.translate(0f, 0f, 1f);
+			}
+			poseStack.translate(0.5f, 0f, 0.52f);
+		}
+
 		poseStack.translate(-0.3125f, 0f, 0.005f);
 		poseStack.scale(2f, 2f, 2f);
 
@@ -389,18 +408,21 @@ public class ClientEvents
 	@SubscribeEvent
 	public static void clientTick(TickEvent.ClientTickEvent event)
 	{
-		if (event.phase == TickEvent.Phase.END) {
+		if (event.phase == TickEvent.Phase.END)
+		{
 			Minecraft mc = Minecraft.getInstance();
-			if (mc.level != null && mc.player != null) {
-				tickCounter++;
-				if (tickCounter >= UPDATE_INTERVAL) {
-					tickCounter = 0;
-					// Schedule update on main render thread
-					ClientEvents.LINKS.forEach((linkID, link) -> {
+			if(mc.level != null && mc.player != null)
+			{
+				ClientEvents.LINKS.forEach((linkID, link) ->
+					{
 						if(link.posPrimary() != null && link.posSecondary() != null)
-							mc.execute(() -> PortalRenderer.updateTextures(linkID));
+							mc.execute(() ->
+							{
+								PortalRenderer.requestPortalUpdate(linkID, true);
+								PortalRenderer.requestPortalUpdate(linkID, false);
+								//PortalRenderer.updateTextures(linkID);
+							});
 					});
-				}
 			}
 		}
 
