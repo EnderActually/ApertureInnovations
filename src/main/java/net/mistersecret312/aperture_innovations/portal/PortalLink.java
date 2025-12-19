@@ -107,8 +107,11 @@ public class PortalLink
 
 	public void reset(Level level)
 	{
-		resetPrimary(level);
-		resetSecondary(level);
+		if(posPrimary != null)
+			resetPrimary(level);
+
+		if(posSecondary != null)
+			resetSecondary(level);
 	}
 
 	public void resetPrimary(Level level)
