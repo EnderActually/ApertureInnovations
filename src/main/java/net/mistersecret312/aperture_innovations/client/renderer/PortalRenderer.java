@@ -28,12 +28,13 @@ import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.mistersecret312.aperture_innovations.events.ClientEvents;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
-import org.joml.Matrix4f;
-import org.joml.Quaternionf;
+import org.joml.*;
 
+import java.lang.Math;
 import java.util.*;
 
 import static net.minecraft.client.Minecraft.ON_OSX;
+import static net.minecraft.util.thread.ProcessorHandle.of;
 
 public class PortalRenderer {
 	public static final Map<UUID, Pair<RenderTarget, RenderTarget>> FRAMEBUFFERS = new HashMap<>();
@@ -48,16 +49,13 @@ public class PortalRenderer {
 
 	public static void requestPortalUpdate(UUID uuid, boolean isPrimary)
 	{
-		if (FRAMEBUFFERS.isEmpty() || DUMMIES.isEmpty())
-		{
-			FRAMEBUFFERS.computeIfAbsent(uuid, k -> {
-				TextureTarget fb1 = new TextureTarget(TEXTURE_SIZE, LARGER_SIZE, true, ON_OSX);
-				TextureTarget fb2 = new TextureTarget(TEXTURE_SIZE, LARGER_SIZE, true, ON_OSX);
+		FRAMEBUFFERS.computeIfAbsent(uuid, k -> {
+			TextureTarget fb1 = new TextureTarget(TEXTURE_SIZE, LARGER_SIZE, true, ON_OSX);
+			TextureTarget fb2 = new TextureTarget(TEXTURE_SIZE, LARGER_SIZE, true, ON_OSX);
 
-				return Pair.of(fb1, fb2);
-			});
-			DUMMIES.computeIfAbsent(uuid, k -> Pair.of(new Camera(), new Camera()));
-		}
+			return Pair.of(fb1, fb2);
+		});
+		DUMMIES.computeIfAbsent(uuid, k -> Pair.of(new Camera(), new Camera()));
 
 		Minecraft mc = Minecraft.getInstance();
 
@@ -112,19 +110,24 @@ public class PortalRenderer {
 			Camera dummy = new Camera();
 			Vec3 portalPos = new Vec3(0f, 0f, 0f);
 			Vec3 cameraPos = new Vec3(0f, 0f, 0f);
+
+			Vec3 offsetPrimary = Vec3.atLowerCornerOf(link.directionPrimary().getNormal()).multiply(0.5f, 0.5f, 0.5f);
+			Vec3 offsetSecondary = Vec3.atLowerCornerOf(link.directionSecondary().getNormal()).multiply(0.5f, 0.5f, 0.5f);
+
 			boolean isPrimary = true;
 			if(i == 0)
 			{
 				dummy = camera.getFirst();
-				portalPos = link.posSecondary().getCenter().add(0f, 0.5f, 0f);
-				cameraPos = link.posPrimary().getCenter().add(0f, 0.5f, 0f);
+				portalPos = link.posSecondary().getCenter().add(0f, 0.5f, 0f).add(offsetSecondary);
+				cameraPos = link.posPrimary().getCenter().add(0f, 0.5f, 0f).add(offsetPrimary);
+
 				isPrimary = true;
 			}
 			if(i == 1)
 			{
 				dummy = camera.getSecond();
-				portalPos = link.posPrimary().getCenter().add(0f, 0.5f, 0f);
-				cameraPos = link.posSecondary().getCenter().add(0f, 0.5f, 0f);
+				portalPos = link.posPrimary().getCenter().add(0f, 0.5f, 0f).add(offsetPrimary);
+				cameraPos = link.posSecondary().getCenter().add(0f, 0.5f, 0f).add(offsetSecondary);
 				isPrimary = false;
 			}
 
@@ -136,25 +139,27 @@ public class PortalRenderer {
 			float yRotDiff = link.directionSecondary().toYRot()-link.directionPrimary().toYRot()+180f;
 
 			Vec3 playerPos = player.getEyePosition();
-			Vec3 playerPortalVec = playerPos.subtract(portalPos).yRot(yRotDiff);
-			cameraPos.add(playerPortalVec);
+			Vec3 playerPortalVec = playerPos.subtract(portalPos);
 
-			playerPortalVec = portalPos.subtract(playerPos);
+			//cameraPos = cameraPos.add(playerPortalVec);
 
-			double r = Math.sqrt(playerPortalVec.x * playerPortalVec.x + playerPortalVec.y * playerPortalVec.y + playerPortalVec.z * playerPortalVec.z);
-			float xRot = (float) (Math.toDegrees(Math.acos(playerPortalVec.y/r))-90);
+			//playerPortalVec = portalPos.subtract(playerPos);
+
+//			double r = Math.sqrt(playerPortalVec.x * playerPortalVec.x + playerPortalVec.y * playerPortalVec.y + playerPortalVec.z * playerPortalVec.z);
+//			float xRot = (float) (Math.toDegrees(Math.acos(playerPortalVec.y/r))-90);
 			float yRot = (float) (Math.toDegrees(Math.atan2(playerPortalVec.z, playerPortalVec.x))+270);
+			//float yRot = 270;
 
 			yRot = Mth.wrapDegrees(yRot + (isPrimary ? yRotDiff : -yRotDiff));
-			xRot = isPrimary ? link.wallPrimary() ? 0 : link.ceilingPrimary() ? -90 : 90
+			float xRot = isPrimary ? link.wallPrimary() ? 0 : link.ceilingPrimary() ? -90 : 90
 			: link.wallSecondary() ? 0 : link.ceilingSecondary() ? -90 : 90;
 
 			if(link.directionPrimary().getOpposite() == link.directionSecondary())
-				yRot -= isPrimary ? 0 : 180;
+				yRot -= isPrimary ? 180 : 0;
 			if(link.directionSecondary() == link.directionPrimary())
-				yRot += isPrimary ? 0 : 180;
-			if(link.directionSecondary().getAxis() != link.directionPrimary().getAxis())
 				yRot += isPrimary ? 180 : 0;
+			if(link.directionSecondary().getAxis() != link.directionPrimary().getAxis())
+				yRot += isPrimary ? 0 : 180;
 
 			yRot += isPrimary ? link.wallPrimary() ? 180 : 0
 			: link.wallSecondary() ? 0 : 180;
@@ -171,7 +176,6 @@ public class PortalRenderer {
 			dummy.setPosition(cameraPos);
 			dummy.setRotation(yRot, xRot);
 		}
-
 	}
 	private static Matrix4f createProjectionMatrix(GameRenderer gr, RenderTarget target, float fov) {
 		Matrix4f matrix4f = new Matrix4f();

@@ -33,6 +33,7 @@ import net.mistersecret312.aperture_innovations.network.ServerboundOpenPortalPac
 import net.mistersecret312.aperture_innovations.network.ServerboundResetPortalLinkPacket;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 
 import java.util.HashMap;
@@ -77,7 +78,10 @@ public class ClientEvents
 				}
 
 				if(link.posPrimary() != null)
+				{
 					primaryRender(link, buffer, poseStack, camera);
+					//renderCameraPos(buffer, poseStack, camera, link, true);
+				}
 				if(link.posSecondary() != null)
 					secondaryRender(link, buffer, poseStack, camera);
 
@@ -157,6 +161,80 @@ public class ClientEvents
 
 			poseStack.popPose();
 		}
+	}
+
+	public static void renderCameraPos(MultiBufferSource.BufferSource buffer, PoseStack poseStack, Camera camera, ClientPortalLink link, boolean isPimary)
+	{
+		poseStack.pushPose();
+		PoseStack worldStack = new PoseStack();
+		worldStack.pushPose();
+		Vec3 pos = link.posPrimary().getCenter();
+		poseStack.translate(-camera.getPosition().x + pos.x,
+				-camera.getPosition().y + pos.y + 0.5f,
+				-camera.getPosition().z + pos.z);
+		worldStack.translate(pos.x, pos.y+0.5f, pos.z);
+
+		worldStack.mulPose(link.directionPrimary().getRotation());
+		poseStack.mulPose(link.directionPrimary().getRotation());
+
+		if (link.wallPrimary())
+		{
+			poseStack.mulPose(Axis.XP.rotationDegrees(-90));
+			worldStack.mulPose(Axis.XP.rotationDegrees(-90));
+		}
+		else {
+			poseStack.mulPose(Axis.XP.rotationDegrees(link.ceilingPrimary() ? 0 : 180));
+			poseStack.mulPose(Axis.ZP.rotationDegrees(180));
+			poseStack.translate(0f, 0.5f, -0.5f);
+			if (link.ceilingPrimary())
+				poseStack.translate(0f, 0f, 1f);
+
+			worldStack.mulPose(Axis.XP.rotationDegrees(link.ceilingPrimary() ? 0 : 180));
+			worldStack.mulPose(Axis.ZP.rotationDegrees(180));
+			worldStack.translate(0f, 0.5f, -0.5f);
+			if(link.ceilingPrimary())
+				worldStack.translate(0f, 0f, 1f);
+		}
+		poseStack.translate(0.25f, 0f, 0.53f);
+		worldStack.translate(0.25f, 0f, 0.53f);
+
+		Vector3f camPos = new Vector3f().mul(worldStack.last().normal());
+		camPos.mulProject(worldStack.last().pose());
+
+		if(link.posSecondary() != null)
+		{
+			Vector3f newPos = camera.getPosition().toVector3f().sub(camPos);
+		}
+
+		PoseStack camStack = new PoseStack();
+
+		camStack.pushPose();
+		camStack.mulPose(Axis.YP.rotationDegrees(180));
+		camStack.translate(10f, 0f, 0f);
+		camStack.popPose();
+
+		poseStack.translate(0f, 0f, 1f);
+		poseStack.scale(1f, 1f, 1f);
+
+		VertexConsumer consumerA = buffer.getBuffer(PortalRenderTypes.portalFrame(TEXTURE_SECONDARY));
+		consumerA.vertex(poseStack.last().pose(), -0.5f, -0.5f, 0)
+				 .color(FastColor.ABGR32.color(255, 255, 255, 255))
+				 .uv(0, 1)
+				 .endVertex();
+		consumerA.vertex(poseStack.last().pose(), 0.5f, -0.5f, 0)
+				 .color(FastColor.ABGR32.color(255, 255, 255, 255))
+				 .uv(1, 1)
+				 .endVertex();
+		consumerA.vertex(poseStack.last().pose(), 0.5f, 0.5f, 0)
+				 .color(FastColor.ABGR32.color(255, 255, 255, 255))
+				 .uv(1, 0).endVertex();
+		consumerA.vertex(poseStack.last().pose(), -0.5f, 0.5f, 0)
+				 .color(FastColor.ABGR32.color(255, 255, 255, 255))
+				 .uv(0, 0)
+				 .endVertex();
+
+		poseStack.popPose();
+		worldStack.popPose();
 	}
 
 	public static void renderPortalNonSee(MultiBufferSource buffer, PoseStack poseStack, Camera camera, ClientPortalLink link, boolean isPrimary)
@@ -282,6 +360,11 @@ public class ClientEvents
 
 		RenderSystem.depthFunc(GL11.GL_EQUAL);
 
+		if(!PortalRenderer.FRAMEBUFFERS.containsKey(link.linkID()))
+		{
+			PortalRenderer.requestPortalUpdate(link.linkID(), true);
+			PortalRenderer.requestPortalUpdate(link.linkID(), true);
+		}
 		Pair<RenderTarget, RenderTarget> pair = PortalRenderer.FRAMEBUFFERS.get(link.linkID());
 
 		RenderSystem.setShaderTexture(0, isPrimary ? pair.getSecond().getColorTextureId() : pair.getFirst().getColorTextureId());
@@ -424,7 +507,6 @@ public class ClientEvents
 							{
 								PortalRenderer.requestPortalUpdate(linkID, true);
 								PortalRenderer.requestPortalUpdate(linkID, false);
-								//PortalRenderer.updateTextures(linkID);
 							});
 					});
 			}
