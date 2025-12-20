@@ -3,6 +3,10 @@ package net.mistersecret312.aperture_innovations;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
@@ -16,6 +20,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.mistersecret312.aperture_innovations.client.overlay.CrosshairOverlay;
 import net.mistersecret312.aperture_innovations.init.*;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
@@ -30,6 +35,9 @@ public class ApertureInnovations
 {
 	public static final String MODID = "aperture_innovations";
 	private static final Logger LOGGER = LogUtils.getLogger();
+
+	public static final TagKey<Block> SHOOT_THROUGH = TagKey.create(
+			ForgeRegistries.BLOCKS.getRegistryKey(), new ResourceLocation(MODID, "shoot_through"));
 
 	public ApertureInnovations()
 	{

@@ -2,39 +2,34 @@ package net.mistersecret312.aperture_innovations.client.renderer;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexSorting;
 import com.mojang.datafixers.util.Pair;
-import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.mistersecret312.aperture_innovations.events.ClientEvents;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import org.joml.*;
+import org.lwjgl.opengl.GL11;
 
 import java.lang.Math;
 import java.util.*;
 
 import static net.minecraft.client.Minecraft.ON_OSX;
-import static net.minecraft.util.thread.ProcessorHandle.of;
 
 public class PortalRenderer {
 	public static final Map<UUID, Pair<RenderTarget, RenderTarget>> FRAMEBUFFERS = new HashMap<>();
@@ -45,7 +40,7 @@ public class PortalRenderer {
 	private static final int LARGER_SIZE = 1024;
 
 	public static RenderTarget LIVE_FEED_BEING_RENDERED = null;
-
+	public static boolean rendering = false;
 
 	public static void requestPortalUpdate(UUID uuid, boolean isPrimary)
 	{
@@ -75,17 +70,39 @@ public class PortalRenderer {
 		FogRenderer.setupNoFog();
 		RenderSystem.enableCull();
 
-		renderLevel(mc, fb, dummy, 70, partialTick, System.nanoTime());
+		ClientPortalLink link = ClientEvents.LINKS.get(uuid);
 
+		BlockPos pos = isPrimary ? link.posPrimary() : link.posSecondary();
+
+		boolean isVisible = Minecraft.getInstance().levelRenderer.getFrustum().isVisible(
+				new AABB(pos).inflate(2f, 2f, 2f));
+		boolean isClose = Minecraft.getInstance().player
+								  .distanceToSqr((pos).getCenter())
+								  < Math.pow(Minecraft.getInstance().gameRenderer.getRenderDistance(), 2);
+		boolean isVeryClose = Minecraft.getInstance().player
+								  .distanceToSqr((pos).getCenter())
+								  < Math.pow(32, 2);
+
+		if(isClose && !rendering)
+		{
+			if(isVisible || isVeryClose)
+				renderLevel(mc, fb, dummy, 70, partialTick, System.nanoTime());
+		}
 		PortalRenderer.LIVE_FEED_BEING_RENDERED = null;
 		mainTarget.bindWrite(true);
+		rendering = false;
 
 		RenderSystem.clear(16640, ON_OSX);
 	}
+
 	private static void renderLevel(Minecraft mc, RenderTarget target, Camera camera, float fov, float partialTick, long finishTimeNano)
 	{
 		GameRenderer gr = mc.gameRenderer;
 		LevelRenderer lr = mc.levelRenderer;
+
+		//if(!lr.getFrustum().isVisible(new AABB(camera.getBlockPosition())))
+		//	return;
+
 		Matrix4f projMatrix = createProjectionMatrix(gr, target, fov);
 		PoseStack poseStack = new PoseStack();
 
@@ -93,6 +110,8 @@ public class PortalRenderer {
 		Matrix4f cameraMatrix = (new Matrix4f()).rotation(cameraRotation);
 		poseStack.mulPoseMatrix(cameraMatrix);
 		gr.resetProjectionMatrix(projMatrix);
+
+		rendering = true;
 
 		lr.prepareCullFrustum(poseStack, camera.getPosition(), projMatrix);
 		lr.renderLevel(poseStack, partialTick, finishTimeNano, false, camera, gr,
@@ -151,6 +170,7 @@ public class PortalRenderer {
 			//float yRot = 270;
 
 			yRot = Mth.wrapDegrees(yRot + (isPrimary ? yRotDiff : -yRotDiff));
+
 			float xRot = isPrimary ? link.wallPrimary() ? 0 : link.ceilingPrimary() ? -90 : 90
 			: link.wallSecondary() ? 0 : link.ceilingSecondary() ? -90 : 90;
 
@@ -158,12 +178,22 @@ public class PortalRenderer {
 				yRot -= isPrimary ? 180 : 0;
 			if(link.directionSecondary() == link.directionPrimary())
 				yRot += isPrimary ? 180 : 0;
-			if(link.directionSecondary().getAxis() != link.directionPrimary().getAxis())
+			if(link.directionSecondary().getAxis() != link.directionPrimary().getAxis() && !link.ceilingPrimary() && !link.ceilingSecondary())
 				yRot += isPrimary ? 0 : 180;
 
 			yRot += isPrimary ? link.wallPrimary() ? 180 : 0
 			: link.wallSecondary() ? 0 : 180;
 
+			if(isPrimary ? !link.wallSecondary() : !link.wallPrimary())
+			{
+				Direction direction = Direction.fromYRot(yRot);
+				if(yRot > direction.toYRot()-90)
+					yRot -= direction.toYRot()+90;
+
+				cameraPos = cameraPos.add(Vec3.atLowerCornerOf(
+													  isPrimary ? link.directionPrimary().getNormal() : link.directionSecondary().getNormal())
+											  .multiply(-0.5f, -0.5f, -0.5f));
+			}
 			//portalPos = portalPos.subtract(playerPortalVec.xRot((float) Math.toRadians(xRot)).yRot((float) Math.toRadians(yRot-90)));
 
 			Entity dummyCameraEntity = dummy.getEntity();

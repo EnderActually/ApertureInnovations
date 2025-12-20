@@ -17,6 +17,7 @@ import net.minecraft.util.FastColor;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
@@ -48,12 +49,15 @@ public class ClientEvents
 	public static HashMap<UUID, ClientPortalLink> LINKS = new HashMap<>();
 
 	public static final ResourceLocation TEXTURE_PRIMARY = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
-			"textures/block/portal/portal_blue.png");
+			"textures/block/portal/portal_blue_closed.png");
 	public static final ResourceLocation TEXTURE_PRIMARY_VORTEX = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
 			"block/portal/portal_blue_vortex");
 
+	public static final ResourceLocation TEXTURE_HIGHLIGHT = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+			"textures/block/portal/portal_highlight_blue.png");
+
 	public static final ResourceLocation TEXTURE_SECONDARY = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
-			"textures/block/portal/portal_orange.png");
+			"textures/block/portal/portal_orange_closed.png");
 	public static final ResourceLocation TEXTURE_SECONDARY_VORTEX = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
 			"block/portal/portal_orange_vortex");
 
@@ -70,19 +74,28 @@ public class ClientEvents
 
 				if(link.posPrimary() != null && link.posSecondary() != null)
 				{
-					renderPortal(buffer, camera, poseStack, link, true);
-					renderPortal(buffer, camera, poseStack, link, false);
+					if(!PortalRenderer.rendering)
+					{
+						if(Minecraft.getInstance().level.isLoaded(link.posSecondary()))
+							renderPortal(buffer, camera, poseStack, link, true);
 
-					renderPortalNonSee(buffer, poseStack, camera, link, true);
-					renderPortalNonSee(buffer, poseStack, camera, link, false);
+						if(Minecraft.getInstance().level.isLoaded(link.posPrimary()))
+							renderPortal(buffer, camera, poseStack, link, false);
+					}
+
+					if(Minecraft.getInstance().level.isLoaded(link.posPrimary()))
+						renderPortalNonSee(buffer, poseStack, camera, link, true);
+
+					if(Minecraft.getInstance().level.isLoaded(link.posSecondary()))
+						renderPortalNonSee(buffer, poseStack, camera, link, false);
 				}
 
-				if(link.posPrimary() != null)
-				{
+				if(link.posPrimary() != null && Minecraft.getInstance().level.isLoaded(link.posPrimary())
+						   && event.getLevelRenderer().getFrustum().isVisible(new AABB(link.posPrimary()).inflate(1)))
 					primaryRender(link, buffer, poseStack, camera);
-					//renderCameraPos(buffer, poseStack, camera, link, true);
-				}
-				if(link.posSecondary() != null)
+
+				if(link.posSecondary() != null && Minecraft.getInstance().level.isLoaded(link.posSecondary())
+						   && event.getLevelRenderer().getFrustum().isVisible(new AABB(link.posSecondary()).inflate(1)))
 					secondaryRender(link, buffer, poseStack, camera);
 
 				poseStack.popPose();
@@ -103,9 +116,9 @@ public class ClientEvents
 				final TextureAtlasSprite secondary = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
 														   .apply(TEXTURE_SECONDARY_VORTEX);
 
-				if(link.posPrimary() != null)
+				if(link.posPrimary() != null && !PortalRenderer.rendering)
 					renderPortalVortex(link, camera, primary, buffer, poseStack, true);
-				if(link.posSecondary() != null)
+				if(link.posSecondary() != null && !PortalRenderer.rendering)
 					renderPortalVortex(link, camera, secondary, buffer, poseStack, false);
 
 				poseStack.popPose();
@@ -344,6 +357,7 @@ public class ClientEvents
 		Matrix4f matrix = poseStack.last().pose();
 
 		RenderSystem.colorMask(false, false, false, false);
+		RenderSystem.enableDepthTest();
 
 		RenderSystem.setShader(GameRenderer::getPositionTexShader);
 		RenderSystem.setShaderTexture(0, new ResourceLocation(ApertureInnovations.MODID, "textures/block/portal/portal_mask.png"));
@@ -362,8 +376,7 @@ public class ClientEvents
 
 		if(!PortalRenderer.FRAMEBUFFERS.containsKey(link.linkID()))
 		{
-			PortalRenderer.requestPortalUpdate(link.linkID(), true);
-			PortalRenderer.requestPortalUpdate(link.linkID(), true);
+			PortalRenderer.requestPortalUpdate(link.linkID(), isPrimary);
 		}
 		Pair<RenderTarget, RenderTarget> pair = PortalRenderer.FRAMEBUFFERS.get(link.linkID());
 
@@ -379,6 +392,7 @@ public class ClientEvents
 
 		BufferUploader.drawWithShader(builder.end());
 
+		RenderSystem.disableDepthTest();
 		RenderSystem.depthFunc(GL11.GL_LEQUAL);
 
 		poseStack.popPose();
@@ -404,6 +418,34 @@ public class ClientEvents
 				 .color(FastColor.ABGR32.color(255, 255, 255, 255))
 				 .uv(0, 0)
 				 .endVertex();
+
+		poseStack.popPose();
+	}
+
+	public static void renderPortalHighlight(MultiBufferSource buffer, PoseStack poseStack) {
+		poseStack.pushPose();
+		Tesselator tesselator = Tesselator.getInstance();
+		BufferBuilder builder = tesselator.getBuilder();
+		Matrix4f matrix = poseStack.last().pose();
+
+		RenderSystem.enableDepthTest();
+		RenderSystem.depthFunc(GL11.GL_GREATER);
+
+		RenderSystem.setShader(GameRenderer::getPositionTexShader);
+		RenderSystem.setShaderTexture(0, TEXTURE_HIGHLIGHT);
+
+		builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+
+		builder.vertex(matrix, -0.5f, -0.5f, 0).uv(0.0f, 1.0f).endVertex();
+		builder.vertex(matrix,  0.5f, -0.5f, 0).uv(1f, 1.0f).endVertex();
+		builder.vertex(matrix,  0.5f,  0.5f, 0).uv(1f, 0.0f).endVertex();
+		builder.vertex(matrix, -0.5f,  0.5f, 0).uv(0.0f, 0.0f).endVertex();
+
+		BufferUploader.drawWithShader(builder.end());
+
+		RenderSystem.depthFunc(GL11.GL_LEQUAL);
+		RenderSystem.disableDepthTest();
+
 
 		poseStack.popPose();
 	}
@@ -466,6 +508,17 @@ public class ClientEvents
 				 .color(FastColor.ABGR32.color(191, 255, 255, 255))
 				 .uv(sprite.getU0(), sprite.getV0())
 				 .endVertex();
+
+		poseStack.pushPose();
+		poseStack.translate(0.15625f, 0f, 0f);
+		renderPortalHighlight(buffer, poseStack);
+		poseStack.popPose();
+
+		poseStack.pushPose();
+		poseStack.mulPose(Axis.YP.rotationDegrees(180));
+		poseStack.translate(0.3125f, 0f, 0f);
+		renderPortalHighlight(buffer, poseStack);
+		poseStack.popPose();
 
 		poseStack.popPose();
 	}

@@ -6,6 +6,7 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.network.ClientBoundPortalLinkSyncPacket;
+import net.mistersecret312.aperture_innovations.network.ClientboundTeleportMomentumPacket;
 import net.mistersecret312.aperture_innovations.network.ServerboundOpenPortalPacket;
 import net.mistersecret312.aperture_innovations.network.ServerboundResetPortalLinkPacket;
 
@@ -40,5 +41,10 @@ public class NetworkInit
 				.encoder(ServerboundResetPortalLinkPacket::encode)
 				.decoder(ServerboundResetPortalLinkPacket::new)
 				.consumerMainThread(ServerboundResetPortalLinkPacket::handle).add();
+
+		INSTANCE.messageBuilder(ClientboundTeleportMomentumPacket.class, index++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(ClientboundTeleportMomentumPacket::encode)
+				.decoder(ClientboundTeleportMomentumPacket::decode)
+				.consumerMainThread(ClientboundTeleportMomentumPacket::handle).add();
 	}
 }
