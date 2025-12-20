@@ -22,12 +22,17 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
+import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.client.renderer.PortalGunRenderer;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.portal.PortalLink;
@@ -111,6 +116,18 @@ public class PortalGunItem extends Item implements GeoItem
 
 		Vec3 lookVec = new Vec3(f6, f5, f7);
 		Vec3 endPos = eyePos.add(lookVec.scale(range));
+
+		ClipContext context = new ClipContext(eyePos, endPos, ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY, player)
+		{
+			@Override
+			public VoxelShape getBlockShape(BlockState state, BlockGetter level, BlockPos pos)
+			{
+				if(state.is(ApertureInnovations.SHOOT_THROUGH))
+					return Shapes.empty();
+
+				return super.getBlockShape(state, level, pos);
+			}
+		};
 
 		return level.clip(new ClipContext(
 				eyePos,
