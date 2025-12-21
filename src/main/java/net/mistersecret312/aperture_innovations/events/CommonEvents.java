@@ -1,5 +1,6 @@
 package net.mistersecret312.aperture_innovations.events;
 
+import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -28,6 +29,8 @@ import net.mistersecret312.aperture_innovations.network.ClientboundTeleportMomen
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import net.mistersecret312.aperture_innovations.portal.PortalLink;
 import net.mistersecret312.aperture_innovations.portal.PortalLinkData;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 import java.util.*;
 
@@ -105,33 +108,37 @@ public class CommonEvents
 								}
 
 								entity.teleportTo((ServerLevel) level, otherPortalPos.x, otherPortalPos.y, otherPortalPos.z, Set.of(),
-										entity.getYRot()+rotation,
-										entity.getXRot());
+										entity.getYRot()+ ((!wall && otherWall) ? rotation+180 : rotation),
+										(!wall && otherWall) ? entity.getXRot()-90 : entity.getXRot());
 
-								Vec3 oldSpeed = entity.getDeltaMovement();
-								Vec3 newSpeed = entity.getDeltaMovement().yRot(rotation);
+								Vector3f oldSpeed = entity.getDeltaMovement().toVector3f();
+								Quaternionf rotationQ = new Quaternionf(Axis.YP.rotationDegrees(rotation-180));
+
+								Vector3f newSpeed = oldSpeed.rotate(rotationQ);
 								if(!wall && !otherWall)
 								{
 									if(!ceiling && !otherCeiling)
-										newSpeed = new Vec3(newSpeed.x, -newSpeed.y, newSpeed.z);
+										newSpeed = new Vector3f(newSpeed.x, -newSpeed.y, newSpeed.z);
 									if(ceiling && !otherCeiling)
-										newSpeed = new Vec3(newSpeed.x, -newSpeed.y, newSpeed.z);
+										newSpeed = new Vector3f(newSpeed.x, -newSpeed.y, newSpeed.z);
 								}
 								if(!wall && otherWall)
 								{
 									if(otherDirection.getAxis() == Direction.Axis.X)
-										newSpeed = new Vec3(
+										newSpeed = new Vector3f(
 												newSpeed.x - (otherDirection.getAxisDirection().equals(
 												Direction.AxisDirection.NEGATIVE) ? -newSpeed.y : newSpeed.y),
-												0, newSpeed.z);
+												0,
+												0);
 									if(otherDirection.getAxis() == Direction.Axis.Z)
-										newSpeed = new Vec3(newSpeed.x, 0,
-												newSpeed.z - (otherDirection.getAxisDirection().equals(
-														Direction.AxisDirection.NEGATIVE) ? -newSpeed.y : newSpeed.y));
+										newSpeed = new Vector3f(0,
+												0,
+												newSpeed.z + (otherDirection.getAxisDirection().equals(
+														Direction.AxisDirection.NEGATIVE) ? newSpeed.y : -newSpeed.y));
 								}
-								entity.setDeltaMovement(newSpeed);
+								entity.setDeltaMovement(new Vec3(newSpeed));
 								if(entity instanceof ServerPlayer player)
-									NetworkInit.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), new ClientboundTeleportMomentumPacket(newSpeed));
+									NetworkInit.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), new ClientboundTeleportMomentumPacket(new Vec3(newSpeed), otherPortalPos, entity.getYRot()+rotation));
 							}
 						}
 					}
@@ -139,36 +146,6 @@ public class CommonEvents
 			}
 
 			NetworkInit.INSTANCE.send(PacketDistributor.ALL.noArg(), new ClientBoundPortalLinkSyncPacket(data.portalLinks, new HashMap<>()));
-		}
-		else if(event.side.isClient() && event.phase.equals(TickEvent.Phase.END))
-		{
-			for(Map.Entry<UUID, ClientPortalLink> entry : ClientEvents.LINKS.entrySet())
-			{
-				UUID uuid = entry.getKey();
-				ClientPortalLink link = entry.getValue();
-
-				Level level = Minecraft.getInstance().level;
-
-				for(int i = 0; i < 2; i++)
-				{
-					BlockPos pos = i == 0 ? link.posPrimary() : link.posSecondary();
-					Direction direction = i == 0 ? link.directionPrimary() : link.directionSecondary();
-
-					if(pos != null)
-					{
-						Vec3 realPos = pos.getCenter().add(Vec3.atLowerCornerOf(direction.getNormal())
-															   .multiply(0.5f, 0.5f, 0.5f)
-															   .add(0f, 0.5f, 0f));
-						boolean touchesPortal = Minecraft.getInstance().player.getBoundingBox().inflate(0.25f).contains(realPos);
-						if(touchesPortal)
-						{
-
-						}
-						level.addParticle(ParticleTypes.CRIT, realPos.x, realPos.y, realPos.z, 0f, 0f,
-								0f);
-					}
-				}
-			}
 		}
 	}
 }

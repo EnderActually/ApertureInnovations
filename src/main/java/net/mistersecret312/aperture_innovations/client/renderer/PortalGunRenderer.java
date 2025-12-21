@@ -25,6 +25,13 @@ public class PortalGunRenderer extends GeoItemRenderer<PortalGunItem>
 	public void renderCubesOfBone(PoseStack poseStack, GeoBone bone, VertexConsumer buffer, int packedLight,
 								  int packedOverlay, float red, float green, float blue, float alpha)
 	{
+		if(bone.getName().equals("Back"))
+		{
+			red *= 1;
+			blue *= 1;
+			green *= 1;
+			alpha *= 1;
+		}
 		super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, red, green, blue, alpha);
 	}
 

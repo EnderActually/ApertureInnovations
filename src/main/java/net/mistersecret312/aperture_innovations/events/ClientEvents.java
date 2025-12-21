@@ -37,6 +37,7 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 
+import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -53,8 +54,10 @@ public class ClientEvents
 	public static final ResourceLocation TEXTURE_PRIMARY_VORTEX = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
 			"block/portal/portal_blue_vortex");
 
-	public static final ResourceLocation TEXTURE_HIGHLIGHT = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+	public static final ResourceLocation TEXTURE_HIGHLIGHT_PRIMARY = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
 			"textures/block/portal/portal_highlight_blue.png");
+	public static final ResourceLocation TEXTURE_HIGHLIGHT_SECONDARY = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+			"textures/block/portal/portal_highlight_orange.png");
 
 	public static final ResourceLocation TEXTURE_SECONDARY = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
 			"textures/block/portal/portal_orange_closed.png");
@@ -66,6 +69,28 @@ public class ClientEvents
 		MultiBufferSource.BufferSource buffer = Minecraft.getInstance().renderBuffers().bufferSource();
 		Camera camera = event.getCamera();
 		PoseStack poseStack = event.getPoseStack();
+
+		if(event.getStage() == RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS)
+		{
+			for(Map.Entry<UUID, ClientPortalLink> linkEntry : LINKS.entrySet())
+			{
+				ClientPortalLink link = linkEntry.getValue();
+
+				poseStack.pushPose();
+
+				final TextureAtlasSprite primary = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
+															.apply(TEXTURE_PRIMARY_VORTEX);
+				final TextureAtlasSprite secondary = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
+															  .apply(TEXTURE_SECONDARY_VORTEX);
+
+				if(link.posPrimary() != null && !PortalRenderer.rendering)
+					renderPortalVortex(link, camera, primary, buffer, poseStack, true);
+				if(link.posSecondary() != null && !PortalRenderer.rendering)
+					renderPortalVortex(link, camera, secondary, buffer, poseStack, false);
+
+				poseStack.popPose();
+			}
+		}
 
 		if(event.getStage() == RenderLevelStageEvent.Stage.AFTER_SKY)
 		{
@@ -101,28 +126,6 @@ public class ClientEvents
 				poseStack.popPose();
 			});
 
-		}
-
-		if(event.getStage() == RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS)
-		{
-			for(Map.Entry<UUID, ClientPortalLink> linkEntry : LINKS.entrySet())
-			{
-				ClientPortalLink link = linkEntry.getValue();
-
-				poseStack.pushPose();
-
-				final TextureAtlasSprite primary = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
-														   .apply(TEXTURE_PRIMARY_VORTEX);
-				final TextureAtlasSprite secondary = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
-														   .apply(TEXTURE_SECONDARY_VORTEX);
-
-				if(link.posPrimary() != null && !PortalRenderer.rendering)
-					renderPortalVortex(link, camera, primary, buffer, poseStack, true);
-				if(link.posSecondary() != null && !PortalRenderer.rendering)
-					renderPortalVortex(link, camera, secondary, buffer, poseStack, false);
-
-				poseStack.popPose();
-			}
 		}
 
 		buffer.endBatch();
@@ -373,6 +376,7 @@ public class ClientEvents
 		RenderSystem.colorMask(true, true, true, true);
 
 		RenderSystem.depthFunc(GL11.GL_EQUAL);
+		RenderSystem.depthMask(false);
 
 		if(!PortalRenderer.FRAMEBUFFERS.containsKey(link.linkID()))
 		{
@@ -394,6 +398,7 @@ public class ClientEvents
 
 		RenderSystem.disableDepthTest();
 		RenderSystem.depthFunc(GL11.GL_LEQUAL);
+		RenderSystem.depthMask(true);
 
 		poseStack.popPose();
 	}
@@ -422,7 +427,7 @@ public class ClientEvents
 		poseStack.popPose();
 	}
 
-	public static void renderPortalHighlight(MultiBufferSource buffer, PoseStack poseStack) {
+	public static void renderPortalHighlight(MultiBufferSource buffer, PoseStack poseStack, boolean isPrimary) {
 		poseStack.pushPose();
 		Tesselator tesselator = Tesselator.getInstance();
 		BufferBuilder builder = tesselator.getBuilder();
@@ -432,7 +437,7 @@ public class ClientEvents
 		RenderSystem.depthFunc(GL11.GL_GREATER);
 
 		RenderSystem.setShader(GameRenderer::getPositionTexShader);
-		RenderSystem.setShaderTexture(0, TEXTURE_HIGHLIGHT);
+		RenderSystem.setShaderTexture(0, isPrimary ? TEXTURE_HIGHLIGHT_PRIMARY : TEXTURE_HIGHLIGHT_SECONDARY);
 
 		builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
 
@@ -445,7 +450,6 @@ public class ClientEvents
 
 		RenderSystem.depthFunc(GL11.GL_LEQUAL);
 		RenderSystem.disableDepthTest();
-
 
 		poseStack.popPose();
 	}
@@ -511,13 +515,13 @@ public class ClientEvents
 
 		poseStack.pushPose();
 		poseStack.translate(0.15625f, 0f, 0f);
-		renderPortalHighlight(buffer, poseStack);
+		renderPortalHighlight(buffer, poseStack, isPrimary);
 		poseStack.popPose();
 
 		poseStack.pushPose();
 		poseStack.mulPose(Axis.YP.rotationDegrees(180));
 		poseStack.translate(0.3125f, 0f, 0f);
-		renderPortalHighlight(buffer, poseStack);
+		renderPortalHighlight(buffer, poseStack, isPrimary);
 		poseStack.popPose();
 
 		poseStack.popPose();
