@@ -4,7 +4,9 @@
   "package": "net.mistersecret312.aperture_innovations.mixin",
   "compatibilityLevel": "JAVA_17",
   "refmap": "aperture_innovations.refmap.json",
-  "mixins": [],
+  "mixins": [
+    "CollisionMixin"
+  ],
   "client": [
     "LevelRendererMixin",
     "MinecraftMixin"

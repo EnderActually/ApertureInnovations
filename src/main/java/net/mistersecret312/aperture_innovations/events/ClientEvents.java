@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
@@ -21,6 +22,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.RenderBlockScreenEffectEvent;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -33,6 +35,7 @@ import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.network.ServerboundOpenPortalPacket;
 import net.mistersecret312.aperture_innovations.network.ServerboundResetPortalLinkPacket;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
+import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
@@ -129,6 +132,31 @@ public class ClientEvents
 		}
 
 		buffer.endBatch();
+	}
+
+	@SubscribeEvent
+	public static void renderBlockOverlay(RenderBlockScreenEffectEvent event)
+	{
+		Player player = event.getPlayer();
+		Level level = player.level();
+		BlockPos pos = event.getBlockPos();
+
+		if(event.getOverlayType().equals(RenderBlockScreenEffectEvent.OverlayType.BLOCK))
+		{
+			Pair<UUID, Boolean> portal = PortalUtilities.getClosestPortal(player);
+			UUID uuid = portal.getFirst();
+			boolean isPrimary = portal.getSecond();
+			if(uuid == null)
+				return;
+
+			Vec3 portalPos = PortalUtilities.getPortalPos(level, uuid, isPrimary);
+			Direction portalDirection = PortalUtilities.getPortalDirection(level, uuid, isPrimary);
+			boolean isOnWall = PortalUtilities.isPortalOnWall(level, uuid, isPrimary);
+
+			AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, portalDirection, isOnWall);
+			if(portalBox.contains(player.getEyePosition()))
+				event.setCanceled(true);
+		}
 	}
 
 	public static void primaryRender(ClientPortalLink link, MultiBufferSource.BufferSource buffer, PoseStack poseStack, Camera camera) {
@@ -407,20 +435,23 @@ public class ClientEvents
 		poseStack.pushPose();
 		poseStack.scale(2f, 2f, 2f);
 
+		float hue = 35;
+		Color color = Color.getHSBColor(hue/360F, 0F, 1F);
+		int argb = FastColor.ARGB32.color(255, color.getRed(), color.getGreen(), color.getBlue());
 		VertexConsumer consumerA = buffer.getBuffer(PortalRenderTypes.portalFrame(texture));
 		consumerA.vertex(poseStack.last().pose(), -0.5f, -0.5f, 0)
-				 .color(FastColor.ABGR32.color(255, 255, 255, 255))
+				 .color(argb)
 				 .uv(0, 1)
 				 .endVertex();
 		consumerA.vertex(poseStack.last().pose(), 0.5f, -0.5f, 0)
-				 .color(FastColor.ABGR32.color(255, 255, 255, 255))
+				 .color(argb)
 				 .uv(1, 1)
 				 .endVertex();
 		consumerA.vertex(poseStack.last().pose(), 0.5f, 0.5f, 0)
-				 .color(FastColor.ABGR32.color(255, 255, 255, 255))
+				 .color(argb)
 				 .uv(1, 0).endVertex();
 		consumerA.vertex(poseStack.last().pose(), -0.5f, 0.5f, 0)
-				 .color(FastColor.ABGR32.color(255, 255, 255, 255))
+				 .color(argb)
 				 .uv(0, 0)
 				 .endVertex();
 
