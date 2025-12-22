@@ -60,8 +60,11 @@ public interface CollisionMixin
 		boolean isOnWall = PortalUtilities.isPortalOnWall(level, uuid, isPrimary);
 
 		AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, portalDirection, isOnWall);
+		AABB floorBox = PortalUtilities.getPortalFloorBox(portalPos, portalDirection, isOnWall).inflate(0d, 0.01d, 0d);
 
 		list.removeIf(shape -> shape.bounds().intersects(portalBox));
+		if(entityBox.intersects(floorBox))
+			list.add(Shapes.create(floorBox));
 
 		return list;
 	}
@@ -99,10 +102,20 @@ public interface CollisionMixin
 		boolean isOnWall = PortalUtilities.isPortalOnWall(level, uuid, isPrimary);
 
 		AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, portalDirection, isOnWall);
+		AABB floorBox = PortalUtilities.getPortalFloorBox(portalPos, portalDirection, isOnWall).inflate(0d, 0.01d, 0d);
+
+		List<VoxelShape> list = new ArrayList<>();
+		blockcollisions.forEachRemaining(list::add);
+		if(entityBox.intersects(floorBox))
+			list.add(Shapes.create(floorBox));
 
 		//TODO : Add a void floor for on-wall portals so players can peek throug the portal without needing a floor
-		while(blockcollisions.hasNext()) {
-			VoxelShape shape = blockcollisions.next();
+		Iterator<VoxelShape> iterator = list.iterator();
+		while(iterator.hasNext()) {
+			VoxelShape shape = iterator.next();
+			if(!shape.isEmpty() && shape.bounds() == floorBox)
+				return true;
+
 			if (!shape.isEmpty() && !shape.bounds().intersects(portalBox)) {
 				return true;
 			}

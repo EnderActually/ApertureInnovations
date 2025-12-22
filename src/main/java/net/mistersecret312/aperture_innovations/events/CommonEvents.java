@@ -29,6 +29,7 @@ import net.mistersecret312.aperture_innovations.network.ClientboundTeleportMomen
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import net.mistersecret312.aperture_innovations.portal.PortalLink;
 import net.mistersecret312.aperture_innovations.portal.PortalLinkData;
+import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
@@ -84,7 +85,8 @@ public class CommonEvents
 						for(Entity entity : entitiesNearby)
 						{
 							AABB box = entity.getBoundingBox().expandTowards(entity.getDeltaMovement().multiply(3,3,3));
-							if(box.intersects(portal))
+							AABB teleportBox = PortalUtilities.getPortalTeleportBox(realPos, direction, wall);
+							if(teleportBox.inflate(0.1f,0f,0.1f).contains(box.getCenter()))
 							{
 								Vec3 otherPortalPos = (i == 0 ? link.posSecondary : link.posPrimary).getCenter();
 								Direction otherDirection = i == 0 ? link.directionSecondary : link.directionPrimary;
@@ -95,7 +97,7 @@ public class CommonEvents
 								float rotation = otherDirection.toYRot() - direction.toYRot() + 180;
 
 								otherPortalPos = otherPortalPos.add(Vec3.atLowerCornerOf(otherDirection.getNormal())
-																		.multiply(1.25f, 1f, 1.25f)
+																		.multiply(0.7f, 1f, 0.7f)
 																		.add(0f, 0.5f, 0f));
 								if(otherWall)
 									otherPortalPos = otherPortalPos.add(0, -0.9, 0);

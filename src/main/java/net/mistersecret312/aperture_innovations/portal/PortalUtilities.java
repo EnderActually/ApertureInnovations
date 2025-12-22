@@ -101,7 +101,7 @@ public class PortalUtilities
 	
 	public static AABB getPortalBoundingBox(Vec3 portalPos, Direction portalDirection, boolean isOnWall)
 	{
-		AABB portal = new AABB(BlockPos.ZERO);
+		AABB portal = new AABB(0D,0D,0D,0D,0D,0D);
 		if(isOnWall)
 		{
 			portal = new AABB(portalPos.x-0.25, portalPos.y-1, portalPos.z-0.25,
@@ -119,6 +119,38 @@ public class PortalUtilities
 		}
 
 		return portal;
+	}
+
+	public static AABB getPortalTeleportBox(Vec3 portalPos, Direction portalDirection, boolean isOnWall)
+	{
+		AABB portal = new AABB(0D,0D,0D,0D,0D,0D);
+		if(isOnWall)
+		{
+			portal = new AABB(portalPos.x-0.01, portalPos.y-1, portalPos.z-0.01,
+					portalPos.x+0.01, portalPos.y+1, portalPos.z+0.01);
+		}
+		else
+		{
+			Direction.Axis axis = portalDirection.getAxis();
+			if(axis.equals(Direction.Axis.X))
+				portal = new AABB(portalPos.x-1, portalPos.y-0.01, portalPos.z-0.01,
+						portalPos.x+1, portalPos.y+0.01, portalPos.z+0.01);
+			else if(axis.equals(Direction.Axis.Z))
+				portal = new AABB(portalPos.x-0.01, portalPos.y-0.01, portalPos.z-1,
+						portalPos.x+0.01, portalPos.y+0.01, portalPos.z+1);
+		}
+
+		return portal;
+	}
+
+	public static AABB getPortalFloorBox(Vec3 portalPos, Direction direction, boolean isOnWall)
+	{
+		if(isOnWall)
+		{
+			return new AABB(portalPos.x-0.25, portalPos.y-1, portalPos.z-0.25,
+					portalPos.x+0.25, portalPos.y-1, portalPos.z+0.25);
+		}
+		else return new AABB(0D,0D,0D,0D,0D,0D);
 	}
 
 	public static Pair<UUID, Boolean> getClosestPortal(Entity entity)
