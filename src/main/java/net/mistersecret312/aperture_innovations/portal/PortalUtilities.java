@@ -7,9 +7,10 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.mistersecret312.aperture_innovations.events.ClientEvents;
 
 import java.util.*;
+
+import static net.mistersecret312.aperture_innovations.client.renderer.PortalRenderer.LINKS;
 
 public class PortalUtilities
 {
@@ -24,7 +25,7 @@ public class PortalUtilities
 
 	public static HashMap<UUID, ClientPortalLink> getPortalLinks()
 	{
-		return ClientEvents.LINKS;
+		return LINKS;
 	}
 
 	public static Vec3 getPortalPos(Level level, UUID uuid, boolean isPrimary)
@@ -96,6 +97,20 @@ public class PortalUtilities
 		{
 			PortalLink link = getPortalLinks(level).get(uuid);
 			return isPrimary ? link.wallPrimary : link.wallSecondary;
+		}
+	}
+
+	public static boolean isPortalOnCeiling(Level level, UUID uuid, boolean isPrimary)
+	{
+		if(level.isClientSide())
+		{
+			ClientPortalLink link = getPortalLinks().get(uuid);
+			return isPrimary ? link.ceilingPrimary() : link.ceilingSecondary();
+		}
+		else
+		{
+			PortalLink link = getPortalLinks(level).get(uuid);
+			return isPrimary ? link.ceilingPrimary : link.ceilingSecondary;
 		}
 	}
 	

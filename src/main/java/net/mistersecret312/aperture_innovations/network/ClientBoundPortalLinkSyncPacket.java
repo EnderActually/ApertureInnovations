@@ -10,6 +10,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.network.NetworkEvent;
+import net.mistersecret312.aperture_innovations.client.renderer.PortalRenderer;
 import net.mistersecret312.aperture_innovations.events.ClientEvents;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import net.mistersecret312.aperture_innovations.portal.PortalLink;
@@ -121,7 +122,7 @@ public class ClientBoundPortalLinkSyncPacket
 
 	public boolean handle(Supplier<NetworkEvent.Context> ctx)
 	{
-		ctx.get().enqueueWork(() -> ClientEvents.LINKS = clientLinks);
+		ctx.get().enqueueWork(() -> PortalRenderer.LINKS = clientLinks);
 		return true;
 	}
 }

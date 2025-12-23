@@ -14,6 +14,8 @@ import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import net.mistersecret312.aperture_innovations.portal.PortalLink;
 import net.mistersecret312.aperture_innovations.portal.PortalLinkData;
 
+import static net.mistersecret312.aperture_innovations.client.renderer.PortalRenderer.LINKS;
+
 public class CrosshairOverlay
 {
 	public static final ResourceLocation TEXTURE = new ResourceLocation(ApertureInnovations.MODID,
@@ -32,7 +34,7 @@ public class CrosshairOverlay
 			ItemStack gunStack = main.is(ItemInit.PORTAL_GUN.get()) ? main : off;
 			PortalGunItem portalGun = (PortalGunItem) gunStack.getItem();
 
-			ClientPortalLink link = ClientEvents.LINKS.get(portalGun.getUUID(gunStack));
+			ClientPortalLink link = LINKS.get(portalGun.getUUID(gunStack));
 			if(link != null)
 			{
 				boolean hasPrimary = link.posPrimary() != null;
