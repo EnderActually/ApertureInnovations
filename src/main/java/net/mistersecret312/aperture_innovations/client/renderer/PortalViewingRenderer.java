@@ -96,7 +96,7 @@ public class PortalViewingRenderer
 		if(isClose && !rendering)
 		{
 			if(isVisible || isVeryClose)
-				renderLevel(mc, fb, dummy, 70, partialTick, System.nanoTime(), portalPos, portalDirection);
+				renderLevel(mc, fb, dummy, 70, partialTick, System.nanoTime());
 		}
 
 		PortalViewingRenderer.PORTAL_BEING_RENDERED = null;
