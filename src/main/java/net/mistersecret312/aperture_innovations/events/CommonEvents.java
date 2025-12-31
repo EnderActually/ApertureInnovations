@@ -3,6 +3,7 @@ package net.mistersecret312.aperture_innovations.events;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
@@ -11,6 +12,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySelector;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
@@ -43,6 +45,36 @@ public class CommonEvents
 	@SubscribeEvent
 	public static void levelTick(TickEvent.LevelTickEvent event)
 	{
+		if(event.side.isClient() && event.phase.equals(TickEvent.Phase.END))
+		{
+			LocalPlayer player = Minecraft.getInstance().player;
+			if(player == null)
+				return;
+
+			Pair<UUID, Boolean> pair = PortalUtilities.getClosestPortal(player);
+			UUID uuid = pair.getFirst();
+			boolean isPrimary = pair.getSecond();
+			if(uuid == null)
+				return;
+
+			Vec3 portalPos = PortalUtilities.getPortalPos(event.level, uuid, isPrimary);
+			Direction portalDirection = PortalUtilities.getPortalDirection(event.level, uuid, isPrimary);
+			boolean isOnWall = PortalUtilities.isPortalOnWall(event.level, uuid, isPrimary);
+			boolean isOnCeiling = PortalUtilities.isPortalOnCeiling(event.level, uuid, isPrimary);
+
+			AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPos, portalDirection, isOnWall, isOnCeiling);
+
+			Vec3 boxCenter = teleportBox.getCenter();
+
+			event.level.addParticle(ParticleTypes.CRIT, teleportBox.minX, teleportBox.maxY, teleportBox.minZ,
+					0, 0, 0);
+
+			event.level.addParticle(ParticleTypes.CRIT, teleportBox.maxX, teleportBox.minY, teleportBox.maxZ,
+					0, 0, 0);
+
+			event.level.addParticle(ParticleTypes.DRAGON_BREATH, boxCenter.x, boxCenter.y, boxCenter.z, 0, 0, 0);
+		}
+
 		if(event.side.isServer() && event.phase.equals(TickEvent.Phase.END))
 		{
 			Level level = event.level;
@@ -58,32 +90,48 @@ public class CommonEvents
 						return;
 
 					Vec3 portalPos = PortalUtilities.getPortalPos(serverLevel, uuid, isPrimary);
+
+					if(portalPos == null)
+						continue;
+
 					Direction portalDirection = PortalUtilities.getPortalDirection(serverLevel, uuid, isPrimary);
 					boolean isOnWall = PortalUtilities.isPortalOnWall(serverLevel, uuid, isPrimary);
 					boolean isOnCeiling = PortalUtilities.isPortalOnCeiling(serverLevel, uuid, isPrimary);
 
-					AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPos, portalDirection, isOnWall);
+					AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPos, portalDirection, isOnWall, isOnCeiling);
 
-					if(entity.getBoundingBox().expandTowards(entity.getDeltaMovement().multiply(0.1, 0.1, 0.1)).intersects(teleportBox))
+					if(entity.getBoundingBox().expandTowards(entity.getDeltaMovement().multiply(0.1, 0.15, 0.1)).intersects(teleportBox))
 					{
 						Vec3 otherPortalPos = PortalUtilities.getPortalPos(serverLevel, uuid, !isPrimary);
+						if(otherPortalPos == null)
+							continue;
+
 						Direction otherDirection = PortalUtilities.getPortalDirection(serverLevel, uuid, !isPrimary);
 
 						boolean otherWall = PortalUtilities.isPortalOnWall(serverLevel, uuid, !isPrimary);
 						boolean otherCeiling = PortalUtilities.isPortalOnCeiling(serverLevel, uuid, !isPrimary);
 
 						float rotation = otherDirection.toYRot() - portalDirection.toYRot() + 180;
+						AABB otherTeleportBox = PortalUtilities.getPortalTeleportBox(otherPortalPos, otherDirection,
+								otherWall, otherCeiling);
 
+						otherPortalPos = otherTeleportBox.getCenter();
 						if(otherWall)
 							otherPortalPos = otherPortalPos.add(0, -0.9, 0).add(
 									Vec3.atLowerCornerOf(otherDirection.getNormal()).multiply(0.35f, 1f, 0.35f));
 						else
-							otherPortalPos = otherPortalPos.add(0, 2, 0);
+							otherPortalPos = otherPortalPos.add(0, 0.1, 0);
 						if(!isOnWall && otherWall)
 						{
 							otherPortalPos = otherPortalPos.add(
 									Vec3.atLowerCornerOf(otherDirection.getNormal()));
 						}
+
+						if(!otherWall && !isOnWall && !isOnCeiling && otherCeiling)
+						{
+							otherPortalPos = otherPortalPos.add(0, -3, 0);
+						}
+
 						Vector3f oldSpeed = entity.getDeltaMovement().toVector3f();
 
 						entity.teleportTo((ServerLevel) level, otherPortalPos.x, otherPortalPos.y, otherPortalPos.z, Set.of(),

@@ -3,6 +3,7 @@ package net.mistersecret312.aperture_innovations.portal;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Vec3i;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -46,6 +47,9 @@ public class PortalUtilities
 				direction = link.directionSecondary();
 			}
 
+			if(portalPos == null)
+				return null;
+
 			return portalPos.getCenter().add(Vec3.atLowerCornerOf(direction.getNormal())
 														  .multiply(0.5f, 0.5f, 0.5f)
 														  .add(0f, 0.5f, 0f));
@@ -65,6 +69,9 @@ public class PortalUtilities
 				portalPos = link.posSecondary;
 				direction = link.directionSecondary;
 			}
+
+			if(portalPos == null)
+				return null;
 
 			return portalPos.getCenter().add(Vec3.atLowerCornerOf(direction.getNormal())
 										   .multiply(0.5f, 0.5f, 0.5f)
@@ -136,23 +143,32 @@ public class PortalUtilities
 		return portal;
 	}
 
-	public static AABB getPortalTeleportBox(Vec3 portalPos, Direction portalDirection, boolean isOnWall)
+	public static AABB getPortalTeleportBox(Vec3 portalPos, Direction portalDirection,
+											boolean isOnWall, boolean isOnCeiling)
 	{
 		AABB portal = new AABB(0D,0D,0D,0D,0D,0D);
 		if(isOnWall)
 		{
-			portal = new AABB(portalPos.x-0.01, portalPos.y-1, portalPos.z-0.01,
-					portalPos.x+0.01, portalPos.y+1, portalPos.z+0.01);
+			Direction.Axis axis = portalDirection.getAxis();
+			if(axis.equals(Direction.Axis.X))
+				portal = new AABB(portalPos.x-0.01, portalPos.y-1, portalPos.z-0.5,
+						portalPos.x+0.01, portalPos.y+1, portalPos.z+0.5);
+			else
+				portal = new AABB(portalPos.x-0.5, portalPos.y-1, portalPos.z-0.01,
+						portalPos.x+0.5, portalPos.y+1, portalPos.z+0.01);
 		}
 		else
 		{
+				portalPos = portalPos.subtract(
+						Vec3.atLowerCornerOf(isOnCeiling ? portalDirection.getNormal() : Vec3i.ZERO));
+			portalPos = portalPos.subtract(0, isOnCeiling ? 1 : 0, 0);
 			Direction.Axis axis = portalDirection.getAxis();
 			if(axis.equals(Direction.Axis.X))
-				portal = new AABB(portalPos.x-1, portalPos.y-0.01, portalPos.z-0.01,
-						portalPos.x+1, portalPos.y+0.01, portalPos.z+0.01);
+				portal = new AABB(portalPos.x-1, portalPos.y-0.01, portalPos.z-0.5,
+						portalPos.x+1, portalPos.y+0.01, portalPos.z+0.5);
 			else if(axis.equals(Direction.Axis.Z))
-				portal = new AABB(portalPos.x-0.01, portalPos.y-0.01, portalPos.z-1,
-						portalPos.x+0.01, portalPos.y+0.01, portalPos.z+1);
+				portal = new AABB(portalPos.x-0.5, portalPos.y-0.01, portalPos.z-1,
+						portalPos.x+0.5, portalPos.y+0.01, portalPos.z+1);
 		}
 
 		return portal;

@@ -12,7 +12,6 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
@@ -22,13 +21,11 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
-import net.mistersecret312.aperture_innovations.events.ClientEvents;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
 import org.joml.*;
 
 import java.lang.Math;
-import java.lang.reflect.Field;
 import java.util.*;
 
 import static net.minecraft.client.Minecraft.ON_OSX;
@@ -78,9 +75,6 @@ public class PortalViewingRenderer
 		RenderSystem.enableCull();
 
 		ClientPortalLink link = LINKS.get(uuid);
-
-		Vec3 portalPos = PortalUtilities.getPortalPos(mc.level, uuid, !isPrimary);
-		Direction portalDirection = PortalUtilities.getPortalDirection(mc.level, uuid, !isPrimary);
 
 		BlockPos pos = isPrimary ? link.posPrimary() : link.posSecondary();
 
@@ -175,17 +169,17 @@ public class PortalViewingRenderer
 			playerPortalVec = portalPos.subtract(playerPos);
 
 			double r = Math.sqrt(playerPortalVec.x * playerPortalVec.x + playerPortalVec.y * playerPortalVec.y + playerPortalVec.z * playerPortalVec.z);
-			float xRot = (float) (Math.toDegrees(Math.acos(playerPortalVec.y/r))-90);
+			//float xRot = (float) (Math.toDegrees(Math.acos(playerPortalVec.y/r))-90);
 			float yRot = (float) (Math.toDegrees(Math.atan2(playerPortalVec.z, playerPortalVec.x))+270);
 
 			yRot = Mth.wrapDegrees(yRot + (isPrimary ? yRotDiff : -yRotDiff));
 
-//			float xRot = isPrimary ? link.wallPrimary() ? 0 : link.ceilingPrimary() ? -90 : 90 : link.wallSecondary() ? 0 : link.ceilingSecondary() ? -90 : 90;
+			float xRot = isPrimary ? link.wallPrimary() ? 0 : link.ceilingPrimary() ? -90 : 90 : link.wallSecondary() ? 0 : link.ceilingSecondary() ? -90 : 90;
 
 			if(link.directionPrimary().getOpposite() == link.directionSecondary())
-				yRot -= isPrimary ? 180 : 0;
+				yRot -= isPrimary ? 0 : 180;
 			if(link.directionSecondary() == link.directionPrimary())
-				yRot += isPrimary ? 180 : 0;
+				yRot += isPrimary ? 0 : 180;
 			if(link.directionSecondary().getAxis() != link.directionPrimary().getAxis() && !link.ceilingPrimary() && !link.ceilingSecondary())
 				yRot += isPrimary ? 0 : 180;
 
@@ -209,7 +203,7 @@ public class PortalViewingRenderer
 			cameraPos = PortalUtilities.getPortalPos(Minecraft.getInstance().level, link.linkID(), isPrimary);
 
 			//cameraPos = cameraPos.add(Vec3.directionFromRotation(xRot, yRot).scale(-r));
-			xRot = -xRot;
+			//xRot = -xRot;
 
 //			Minecraft.getInstance().level.addParticle(ParticleTypes.DRAGON_BREATH, cameraPos.x, cameraPos.y, cameraPos.z,
 //					0d,0d,0d);
@@ -223,7 +217,7 @@ public class PortalViewingRenderer
 			dummyCameraEntity.setYRot(yRot + 180);
 
 			dummy.setPosition(cameraPos);
-			dummy.setRotation(yRot+180, xRot);
+			dummy.setRotation(yRot, xRot);
 		}
 	}
 	private static Matrix4f createProjectionMatrix(GameRenderer gr, RenderTarget target, float fov) {
