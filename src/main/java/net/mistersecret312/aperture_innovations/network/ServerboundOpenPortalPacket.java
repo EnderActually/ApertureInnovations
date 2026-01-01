@@ -52,6 +52,32 @@ public class ServerboundOpenPortalPacket
 			ItemStack gunStack = main.is(ItemInit.PORTAL_GUN.get()) ? main : off;
 			PortalGunItem portalGun = (PortalGunItem) gunStack.getItem();
 
+			boolean moonshot = portalGun.isLookingAtMoon(player, level);
+			if(moonshot)
+			{
+				UUID linkID = portalGun.getUUID(gunStack);
+
+				PortalLinkData linkData = PortalLinkData.get(level);
+				PortalLink link = linkData.getLink(gunStack);
+				if(link == null)
+				{
+					linkData.addFreshLink(linkID);
+					link = linkData.getLink(linkID);
+				}
+				System.out.println("Shot the moon!");
+				if(isPrimary)
+				{
+					link.setMoonshot(isPrimary, true, level);
+					level.playSound(null, player.getOnPos().above(), SoundInit.PORTAL_GUN_FIRE_PRIMARY.get(), SoundSource.PLAYERS, 0.5f, 1f);
+				}
+				else
+				{
+					link.setMoonshot(isPrimary, true, level);
+					level.playSound(null, player.getOnPos().above(), SoundInit.PORTAL_GUN_FIRE_SECONDARY.get(), SoundSource.PLAYERS, 0.5f, 1f);
+				}
+				return;
+			}
+
 			BlockHitResult result = PortalGunItem.rayTrace(player.level(), player, 256);
 			if(!result.getType().equals(HitResult.Type.MISS))
 			{

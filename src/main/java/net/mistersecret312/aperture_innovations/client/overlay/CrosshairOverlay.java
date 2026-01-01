@@ -37,8 +37,8 @@ public class CrosshairOverlay
 			ClientPortalLink link = LINKS.get(portalGun.getUUID(gunStack));
 			if(link != null)
 			{
-				boolean hasPrimary = link.posPrimary() != null;
-				boolean hasSecondary = link.posSecondary() != null;
+				boolean hasPrimary = link.posPrimary() != null || link.moonshotPrimary();
+				boolean hasSecondary = link.posSecondary() != null || link.moonshotSecondary();
 
 				if(hasPrimary && hasSecondary)
 				{

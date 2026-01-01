@@ -15,6 +15,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -81,6 +82,7 @@ public class ClientEvents
 					renderPortalVortex(link, camera, secondary, buffer, poseStack, false);
 
 				poseStack.popPose();
+				buffer.endBatch();
 			}
 		}
 
@@ -89,38 +91,52 @@ public class ClientEvents
 			LINKS.forEach((linkID, link) -> {
 				poseStack.pushPose();
 
-				if(link.posPrimary() != null && link.posSecondary() != null)
+				for(int i = 0; i < 2; i++)
 				{
-					if(!PortalViewingRenderer.rendering)
-					{
-						if(Minecraft.getInstance().level.isLoaded(link.posSecondary()))
-							renderPortal(buffer, camera, poseStack, link, true);
+					poseStack.pushPose();
 
-						if(Minecraft.getInstance().level.isLoaded(link.posPrimary()))
-							renderPortal(buffer, camera, poseStack, link, false);
+					float openingAnimTick = Math.min(7, i == 0 ? link.openingPrimary() : link.openingSecondary());
+					float maxScale = (float) openingAnimTick/6;
+					float previousScale = Math.max(0, openingAnimTick/6 - 1f/6f);
+					if(maxScale > 1)
+					{
+						maxScale = 1;
+						previousScale = 1;
 					}
 
-					if(Minecraft.getInstance().level.isLoaded(link.posPrimary()))
-						renderPortalNonSee(buffer, poseStack, camera, link, true);
+					float scale = Mth.lerp(event.getPartialTick(), previousScale, maxScale);
 
-					if(Minecraft.getInstance().level.isLoaded(link.posSecondary()))
-						renderPortalNonSee(buffer, poseStack, camera, link, false);
+					BlockPos portalPos = i == 0 ? link.posPrimary() : link.posSecondary();
+					BlockPos otherPortalPos = i == 0 ? link.posSecondary() : link.posPrimary();
+
+					if(portalPos != null && otherPortalPos != null)
+					{
+						if(!PortalViewingRenderer.rendering)
+						{
+							if(Minecraft.getInstance().level.isLoaded(otherPortalPos))
+								renderPortal(buffer, camera, poseStack, link, i == 0, scale);
+						}
+
+						if(Minecraft.getInstance().level.isLoaded(portalPos))
+							renderPortalNonSee(buffer, poseStack, camera, link, true, scale);
+					}
+
+					if(portalPos != null && Minecraft.getInstance().level.isLoaded(portalPos)
+							   && event.getLevelRenderer().getFrustum().isVisible(new AABB(portalPos).inflate(1)))
+					{
+						if(i == 0)
+						{
+							primaryRender(link, buffer, poseStack, camera, scale);
+						}
+						else secondaryRender(link, buffer, poseStack, camera, scale);
+					}
+
+					poseStack.popPose();
+					buffer.endBatch();
 				}
-
-				if(link.posPrimary() != null && Minecraft.getInstance().level.isLoaded(link.posPrimary())
-						   && event.getLevelRenderer().getFrustum().isVisible(new AABB(link.posPrimary()).inflate(1)))
-					primaryRender(link, buffer, poseStack, camera);
-
-				if(link.posSecondary() != null && Minecraft.getInstance().level.isLoaded(link.posSecondary())
-						   && event.getLevelRenderer().getFrustum().isVisible(new AABB(link.posSecondary()).inflate(1)))
-					secondaryRender(link, buffer, poseStack, camera);
-
 				poseStack.popPose();
 			});
-
 		}
-
-		buffer.endBatch();
 	}
 
 	@SubscribeEvent

@@ -45,8 +45,11 @@ public class ClientBoundPortalLinkSyncPacket
 				writer.writeBoolean(link.ceilingPrimary);
 				writer.writeResourceKey(link.dimensionPrimary);
 				writer.writeEnum(link.directionPrimary);
+				writer.writeInt(link.openingPrimary);
 			}
 			else writer.writeBoolean(false);
+
+			writer.writeBoolean(link.moonshotPrimary);
 
 			if(link.posSecondary != null)
 			{
@@ -57,8 +60,11 @@ public class ClientBoundPortalLinkSyncPacket
 				writer.writeBoolean(link.ceilingSecondary);
 				writer.writeResourceKey(link.dimensionSecondary);
 				writer.writeEnum(link.directionSecondary);
+				writer.writeInt(link.openingSecondary);
 			}
 			else writer.writeBoolean(false);
+
+			writer.writeBoolean(link.moonshotSecondary);
 		});
 	}
 
@@ -74,6 +80,7 @@ public class ClientBoundPortalLinkSyncPacket
 			boolean ceilingPrimary = false;
 			ResourceKey<Level> dimensionPrimary = null;
 			Direction directionPrimary = null;
+			int openingPrimary = 0;
 
 			if(hasPrimary)
 			{
@@ -82,7 +89,10 @@ public class ClientBoundPortalLinkSyncPacket
 				ceilingPrimary = reader.readBoolean();
 				dimensionPrimary = reader.readResourceKey(Registries.DIMENSION);
 				directionPrimary = reader.readEnum(Direction.class);
+				openingPrimary = reader.readInt();
 			}
+
+			boolean moonshotPrimary = reader.readBoolean();
 
 			boolean hasSecondary = reader.readBoolean();
 
@@ -91,6 +101,7 @@ public class ClientBoundPortalLinkSyncPacket
 			boolean ceilingSecondary = false;
 			ResourceKey<Level> dimensionSecondary = null;
 			Direction directionSecondary = null;
+			int openingSecondary = 0;
 
 			if(hasSecondary)
 			{
@@ -99,14 +110,19 @@ public class ClientBoundPortalLinkSyncPacket
 				ceilingSecondary = reader.readBoolean();
 				dimensionSecondary = reader.readResourceKey(Registries.DIMENSION);
 				directionSecondary = reader.readEnum(Direction.class);
+				openingSecondary = reader.readInt();
 			}
+
+			boolean moonshotSecondary = reader.readBoolean();
 
 			ClientPortalLink link = new ClientPortalLink(linkID,
 					posPrimary, posSecondary,
 					wallPrimary, wallSecondary,
 					ceilingPrimary, ceilingSecondary,
 					dimensionPrimary, dimensionSecondary,
-					directionPrimary, directionSecondary);
+					directionPrimary, directionSecondary,
+					moonshotPrimary, moonshotSecondary,
+					openingPrimary,openingSecondary);
 
 			return Map.entry(linkID, link);
 		});

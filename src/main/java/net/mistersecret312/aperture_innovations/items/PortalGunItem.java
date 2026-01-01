@@ -138,6 +138,28 @@ public class PortalGunItem extends Item implements GeoItem
 		));
 	}
 
+	public boolean isLookingAtMoon(Player player, Level level)
+	{
+		HitResult hit = player.pick(128.0D, 0.0F, false);
+
+		if (hit.getType() == HitResult.Type.BLOCK) {
+			return false;
+		}
+
+		float timeAngle = level.getSunAngle(0.0F);
+
+		double moonX = Math.sin(timeAngle);
+		double moonY = -Math.cos(timeAngle);
+
+		Vec3 moonVector = new Vec3(moonX, moonY, 0);
+
+		Vec3 lookVector = player.getLookAngle();
+
+		double dot = lookVector.dot(moonVector);
+
+		return dot > 0.995;
+	}
+
 	public UUID getUUID(ItemStack stack)
 	{
 		CompoundTag tag = stack.getOrCreateTag();

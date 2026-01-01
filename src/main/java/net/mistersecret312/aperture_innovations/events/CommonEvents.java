@@ -4,6 +4,7 @@ import com.mojang.datafixers.util.Pair;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
@@ -16,6 +17,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.world.ForgeChunkManager;
@@ -81,6 +83,21 @@ public class CommonEvents
 			PortalLinkData data = PortalLinkData.get(event.level);
 			if(level instanceof ServerLevel serverLevel)
 			{
+				for(Map.Entry<UUID, PortalLink> entry : PortalUtilities.getPortalLinks(serverLevel).entrySet())
+				{
+					PortalLink link = entry.getValue();
+					for(int i = 0; i < 2; i++)
+					{
+						BlockPos portalPos = i == 0 ? link.posPrimary : link.posSecondary;
+						if(portalPos != null)
+						{
+							if(i == 0)
+								link.openingPrimary += 1;
+							else link.openingSecondary += 1;
+						}
+					}
+				}
+
 				for(Entity entity : serverLevel.getAllEntities())
 				{
 					Pair<UUID, Boolean> pair = PortalUtilities.getClosestPortal(entity);
@@ -102,6 +119,15 @@ public class CommonEvents
 
 					if(entity.getBoundingBox().expandTowards(entity.getDeltaMovement().multiply(0.1, 0.15, 0.1)).intersects(teleportBox))
 					{
+						if(entity instanceof Player player)
+						{
+							BlockState stateOn = player.getBlockStateOn();
+							float friction = stateOn.getBlock().getFriction();
+							if(friction > 0)
+							{
+								System.out.print("");
+							}
+						}
 						Vec3 otherPortalPos = PortalUtilities.getPortalPos(serverLevel, uuid, !isPrimary);
 						if(otherPortalPos == null)
 							continue;

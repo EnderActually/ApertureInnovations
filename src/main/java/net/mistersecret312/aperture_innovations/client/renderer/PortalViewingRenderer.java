@@ -55,7 +55,7 @@ public class PortalViewingRenderer
 
 		Minecraft mc = Minecraft.getInstance();
 
-		if(mc.level == null)
+		if(mc.level == null || mc.levelRenderer.getFrustum() == null)
 			return;
 
 		RenderTarget mainTarget = Minecraft.getInstance().getMainRenderTarget();
@@ -76,21 +76,19 @@ public class PortalViewingRenderer
 
 		ClientPortalLink link = LINKS.get(uuid);
 
-		BlockPos pos = isPrimary ? link.posPrimary() : link.posSecondary();
+		BlockPos pos = isPrimary ? link.posSecondary() : link.posPrimary();
 
 		boolean isVisible = Minecraft.getInstance().levelRenderer.getFrustum().isVisible(
-				new AABB(pos).inflate(2f, 2f, 2f));
-		boolean isClose = Minecraft.getInstance().player
-								  .distanceToSqr((pos).getCenter())
-								  < Math.pow(Minecraft.getInstance().gameRenderer.getRenderDistance(), 2);
-		boolean isVeryClose = Minecraft.getInstance().player
-								  .distanceToSqr((pos).getCenter())
-								  < Math.pow(32, 2);
+				new AABB(pos));
+		boolean isClose = pos.closerThan(mc.player.blockPosition(), mc.gameRenderer.renderDistance);
+		boolean isVeryClose = pos.closerThan(mc.player.blockPosition(), 24);
 
-		if(isClose && !rendering)
+		if(isClose && !rendering && isVeryClose)
 		{
-			if(isVisible || isVeryClose)
-				renderLevel(mc, fb, dummy, 70, partialTick, System.nanoTime());
+			float oldDistance = mc.gameRenderer.renderDistance;
+			mc.gameRenderer.renderDistance = 20;
+			renderLevel(mc, fb, dummy, 70, partialTick, System.nanoTime());
+			mc.gameRenderer.renderDistance = oldDistance;
 		}
 
 		PortalViewingRenderer.PORTAL_BEING_RENDERED = null;
@@ -180,8 +178,9 @@ public class PortalViewingRenderer
 				yRot -= isPrimary ? 0 : 180;
 			if(link.directionSecondary() == link.directionPrimary())
 				yRot += isPrimary ? 0 : 180;
-			if(link.directionSecondary().getAxis() != link.directionPrimary().getAxis() && !link.ceilingPrimary() && !link.ceilingSecondary())
-				yRot += isPrimary ? 0 : 180;
+			if(link.directionSecondary().getAxis() != link.directionPrimary().getAxis()
+					   && !link.ceilingPrimary() && !link.ceilingSecondary())
+				yRot += isPrimary ? 180 : 0;
 
 			yRot += isPrimary ? link.wallPrimary() ? 180 : 0
 			: link.wallSecondary() ? 0 : 180;

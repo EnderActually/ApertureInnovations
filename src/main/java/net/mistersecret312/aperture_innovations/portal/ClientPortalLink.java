@@ -12,5 +12,12 @@ public record ClientPortalLink(UUID linkID, BlockPos posPrimary, BlockPos posSec
 							   boolean wallPrimary, boolean wallSecondary,
 							   boolean ceilingPrimary, boolean ceilingSecondary,
 							   ResourceKey<Level> dimensionPrimary, ResourceKey<Level> dimensionSecondary,
-							   Direction directionPrimary, Direction directionSecondary)
-{}
+							   Direction directionPrimary, Direction directionSecondary,
+							   boolean moonshotPrimary, boolean moonshotSecondary,
+							   int openingPrimary, int openingSecondary)
+{
+	public boolean isOpen()
+	{
+		return posPrimary != null && posSecondary != null;
+	}
+}

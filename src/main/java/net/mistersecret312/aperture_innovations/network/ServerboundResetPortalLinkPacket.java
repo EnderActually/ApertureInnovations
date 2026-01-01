@@ -35,21 +35,19 @@ public class ServerboundResetPortalLinkPacket
 
 	public boolean handle(Supplier<NetworkEvent.Context> ctx)
 	{
-		ctx.get().enqueueWork(() -> {
-			ServerPlayer player = ctx.get().getSender();
-			Level level = player.level();
-
-			ItemStack main = player.getMainHandItem();
-			ItemStack off = player.getOffhandItem();
-			boolean hasPortalGun = main.is(ItemInit.PORTAL_GUN.get()) || off.is(ItemInit.PORTAL_GUN.get());
-			if (!hasPortalGun) return;
-
-			ItemStack gunStack = main.is(ItemInit.PORTAL_GUN.get()) ? main : off;
-			PortalGunItem portalGun = (PortalGunItem) gunStack.getItem();
-
-			BlockHitResult result = PortalGunItem.rayTrace(player.level(), player, 100);
-			if(!result.getType().equals(HitResult.Type.MISS))
+		ctx.get().enqueueWork(() ->
 			{
+				ServerPlayer player = ctx.get().getSender();
+				Level level = player.level();
+
+				ItemStack main = player.getMainHandItem();
+				ItemStack off = player.getOffhandItem();
+				boolean hasPortalGun = main.is(ItemInit.PORTAL_GUN.get()) || off.is(ItemInit.PORTAL_GUN.get());
+				if(!hasPortalGun) return;
+
+				ItemStack gunStack = main.is(ItemInit.PORTAL_GUN.get()) ? main : off;
+				PortalGunItem portalGun = (PortalGunItem) gunStack.getItem();
+
 				UUID linkID = portalGun.getUUID(gunStack);
 
 				PortalLinkData linkData = PortalLinkData.get(level);
@@ -62,11 +60,12 @@ public class ServerboundResetPortalLinkPacket
 
 				link.reset(level);
 
-				level.playSound(null, player.getOnPos().above(), SoundInit.PORTAL_GUN_RESET.get(), SoundSource.PLAYERS, 0.7f, 1f);
-				portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "reset");
-			}
+				level.playSound(null, player.getOnPos().above(), SoundInit.PORTAL_FIZZLE.get(), SoundSource.BLOCKS, 0.5f, 1f);
 
-		});
+				level.playSound(null, player.getOnPos().above(), SoundInit.PORTAL_GUN_RESET.get(), SoundSource.PLAYERS,
+						0.7f, 1f);
+				portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "reset");
+			});
 		return true;
 	}
 }

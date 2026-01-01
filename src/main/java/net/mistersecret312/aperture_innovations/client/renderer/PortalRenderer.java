@@ -17,7 +17,6 @@ import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
@@ -43,7 +42,7 @@ public class PortalRenderer
 	public static final ResourceLocation TEXTURE_SECONDARY_VORTEX = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
 			"block/portal/portal_orange_vortex");
 
-	public static void primaryRender(ClientPortalLink link, MultiBufferSource.BufferSource buffer, PoseStack poseStack, Camera camera) {
+	public static void primaryRender(ClientPortalLink link, MultiBufferSource.BufferSource buffer, PoseStack poseStack, Camera camera, float scale) {
 		if (link.posPrimary() != null) {
 			poseStack.pushPose();
 			Vec3 pos = link.posPrimary().getCenter();
@@ -60,14 +59,17 @@ public class PortalRenderer
 				if (link.ceilingPrimary())
 					poseStack.translate(0f, 0f, 1f);
 			}
+
+			poseStack.scale(scale, scale, 1);
 			poseStack.translate(0.5f, 0f, 0.51f);
+
 			renderPortalFrame(TEXTURE_PRIMARY, buffer, poseStack);
 
 			poseStack.popPose();
 		}
 	}
 
-	public static void secondaryRender(ClientPortalLink link, MultiBufferSource.BufferSource buffer, PoseStack poseStack, Camera camera) {
+	public static void secondaryRender(ClientPortalLink link, MultiBufferSource.BufferSource buffer, PoseStack poseStack, Camera camera, float scale) {
 		if (link.posSecondary() != null) {
 			poseStack.pushPose();
 			Vec3 pos = link.posSecondary().getCenter();
@@ -84,88 +86,16 @@ public class PortalRenderer
 				if (link.ceilingSecondary())
 					poseStack.translate(0f, 0f, 1f);
 			}
+			poseStack.scale(scale, scale, 1f);
 			poseStack.translate(0.5f, 0f, 0.51f);
+
 			renderPortalFrame(TEXTURE_SECONDARY, buffer, poseStack);
 
 			poseStack.popPose();
 		}
 	}
 
-	public static void renderCameraPos(MultiBufferSource.BufferSource buffer, PoseStack poseStack, Camera camera, ClientPortalLink link, boolean isPimary)
-	{
-		poseStack.pushPose();
-		PoseStack worldStack = new PoseStack();
-		worldStack.pushPose();
-		Vec3 pos = link.posPrimary().getCenter();
-		poseStack.translate(-camera.getPosition().x + pos.x,
-				-camera.getPosition().y + pos.y + 0.5f,
-				-camera.getPosition().z + pos.z);
-		worldStack.translate(pos.x, pos.y+0.5f, pos.z);
-
-		worldStack.mulPose(link.directionPrimary().getRotation());
-		poseStack.mulPose(link.directionPrimary().getRotation());
-
-		if (link.wallPrimary())
-		{
-			poseStack.mulPose(Axis.XP.rotationDegrees(-90));
-			worldStack.mulPose(Axis.XP.rotationDegrees(-90));
-		}
-		else {
-			poseStack.mulPose(Axis.XP.rotationDegrees(link.ceilingPrimary() ? 0 : 180));
-			poseStack.mulPose(Axis.ZP.rotationDegrees(180));
-			poseStack.translate(0f, 0.5f, -0.5f);
-			if (link.ceilingPrimary())
-				poseStack.translate(0f, 0f, 1f);
-
-			worldStack.mulPose(Axis.XP.rotationDegrees(link.ceilingPrimary() ? 0 : 180));
-			worldStack.mulPose(Axis.ZP.rotationDegrees(180));
-			worldStack.translate(0f, 0.5f, -0.5f);
-			if(link.ceilingPrimary())
-				worldStack.translate(0f, 0f, 1f);
-		}
-		poseStack.translate(0.25f, 0f, 0.53f);
-		worldStack.translate(0.25f, 0f, 0.53f);
-
-		Vector3f camPos = new Vector3f().mul(worldStack.last().normal());
-		camPos.mulProject(worldStack.last().pose());
-
-		if(link.posSecondary() != null)
-		{
-			Vector3f newPos = camera.getPosition().toVector3f().sub(camPos);
-		}
-
-		PoseStack camStack = new PoseStack();
-
-		camStack.pushPose();
-		camStack.mulPose(Axis.YP.rotationDegrees(180));
-		camStack.translate(10f, 0f, 0f);
-		camStack.popPose();
-
-		poseStack.translate(0f, 0f, 1f);
-		poseStack.scale(1f, 1f, 1f);
-
-		VertexConsumer consumerA = buffer.getBuffer(PortalRenderTypes.portalFrame(TEXTURE_SECONDARY));
-		consumerA.vertex(poseStack.last().pose(), -0.5f, -0.5f, 0)
-				 .color(FastColor.ABGR32.color(255, 255, 255, 255))
-				 .uv(0, 1)
-				 .endVertex();
-		consumerA.vertex(poseStack.last().pose(), 0.5f, -0.5f, 0)
-				 .color(FastColor.ABGR32.color(255, 255, 255, 255))
-				 .uv(1, 1)
-				 .endVertex();
-		consumerA.vertex(poseStack.last().pose(), 0.5f, 0.5f, 0)
-				 .color(FastColor.ABGR32.color(255, 255, 255, 255))
-				 .uv(1, 0).endVertex();
-		consumerA.vertex(poseStack.last().pose(), -0.5f, 0.5f, 0)
-				 .color(FastColor.ABGR32.color(255, 255, 255, 255))
-				 .uv(0, 0)
-				 .endVertex();
-
-		poseStack.popPose();
-		worldStack.popPose();
-	}
-
-	public static void renderPortalNonSee(MultiBufferSource buffer, PoseStack poseStack, Camera camera, ClientPortalLink link, boolean isPrimary)
+	public static void renderPortalNonSee(MultiBufferSource buffer, PoseStack poseStack, Camera camera, ClientPortalLink link, boolean isPrimary, float scale)
 	{
 		poseStack.pushPose();
 		Vec3 pos = isPrimary ? link.posPrimary().getCenter() : link.posSecondary().getCenter();
@@ -203,7 +133,9 @@ public class PortalRenderer
 		}
 
 		poseStack.scale(1f, 2f, 1f);
+
 		poseStack.translate(-0.5,0f,0f);
+		poseStack.scale(scale, scale, scale);
 
 		VertexConsumer consumerA = buffer.getBuffer(
 				PortalRenderTypes.portal(new ResourceLocation(ApertureInnovations.MODID,
@@ -228,8 +160,9 @@ public class PortalRenderer
 		poseStack.popPose();
 	}
 
-	public static void renderPortal(MultiBufferSource buffer, Camera camera, PoseStack poseStack, ClientPortalLink link, boolean isPrimary) {
+	public static void renderPortal(MultiBufferSource buffer, Camera camera, PoseStack poseStack, ClientPortalLink link, boolean isPrimary, float scale) {
 		poseStack.pushPose();
+		MultiBufferSource.BufferSource source = (MultiBufferSource.BufferSource) buffer;
 		Vec3 pos = isPrimary ? link.posPrimary().getCenter() : link.posSecondary().getCenter();
 		Direction direction = isPrimary ? link.directionPrimary() : link.directionSecondary();
 		poseStack.translate(pos.x-camera.getPosition().x,
@@ -265,7 +198,10 @@ public class PortalRenderer
 		}
 
 		poseStack.scale(1f,2f,1f);
-		poseStack.translate(-0.5, 0f, 0f);
+
+		poseStack.translate(-0.5f, 0f, 0f);
+		poseStack.scale(scale, scale, scale);
+
 
 		Tesselator tesselator = Tesselator.getInstance();
 		BufferBuilder builder = tesselator.getBuilder();
@@ -313,6 +249,8 @@ public class PortalRenderer
 		RenderSystem.depthMask(true);
 
 		poseStack.popPose();
+
+		source.endBatch();
 	}
 
 	public static void renderPortalFrame(ResourceLocation texture, MultiBufferSource buffer, PoseStack poseStack) {
@@ -409,6 +347,11 @@ public class PortalRenderer
 
 		poseStack.translate(-0.3125f, 0f, 0.005f);
 		poseStack.scale(2f, 2f, 2f);
+
+		float openingAnimTick = Math.min(6, isPrimary ? link.openingPrimary() : link.openingSecondary());
+		float scale = openingAnimTick/6;
+
+		poseStack.scale(scale, scale, scale);
 
 		VertexConsumer consumerA = buffer.getBuffer(PortalRenderTypes.portalVortex(sprite.atlasLocation()));
 		consumerA.vertex(poseStack.last().pose(), -0.5f, -0.5f, 0)

@@ -37,6 +37,12 @@ public class PortalLink
 	public Direction directionPrimary;
 	public Direction directionSecondary;
 
+	public boolean moonshotPrimary = false;
+	public boolean moonshotSecondary = false;
+
+	public int openingPrimary = 0;
+	public int openingSecondary = 0;
+
 	public PortalLink(UUID linkID)
 	{
 		this.linkID = linkID;
@@ -73,6 +79,7 @@ public class PortalLink
 		this.directionPrimary = facing.equals(Direction.UP) ? direction : facing;
 		this.wallPrimary = facing.equals(Direction.UP);
 		this.ceilingPrimary = direction.equals(Direction.DOWN);
+		this.moonshotPrimary = false;
 
 		level.playSound(null, pos, SoundInit.PORTAL_OPEN_PRIMARY.get(), SoundSource.BLOCKS, 0.7f, 1f);
 
@@ -86,6 +93,7 @@ public class PortalLink
 		this.directionSecondary = facing.equals(Direction.UP) ? direction : facing;
 		this.wallSecondary = facing.equals(Direction.UP);
 		this.ceilingSecondary = direction.equals(Direction.DOWN);
+		this.moonshotSecondary = false;
 
 		level.playSound(null, pos, SoundInit.PORTAL_OPEN_SECONDARY.get(), SoundSource.BLOCKS, 0.7f, 1f);
 
@@ -108,35 +116,44 @@ public class PortalLink
 
 	public void reset(Level level)
 	{
-		if(posPrimary != null)
+		if(posPrimary != null || moonshotPrimary)
 			resetPrimary(level);
 
-		if(posSecondary != null)
+		if(posSecondary != null || moonshotSecondary)
 			resetSecondary(level);
 	}
 
 	public void resetPrimary(Level level)
 	{
-		level.playSound(null, posPrimary, SoundInit.PORTAL_FIZZLE.get(), SoundSource.BLOCKS, 0.5f, 1f);
-
 		this.posPrimary = null;
 		this.wallPrimary = false;
 		this.ceilingPrimary = false;
 		this.dimensionPrimary = null;
 		this.directionPrimary = null;
+		this.openingPrimary = 0;
+		this.moonshotPrimary = false;
 
 		PortalLinkData.get(level).setDirty();
 	}
 
 	public void resetSecondary(Level level)
 	{
-		level.playSound(null, posSecondary, SoundInit.PORTAL_FIZZLE.get(), SoundSource.BLOCKS, 0.5f, 1f);
-
 		this.posSecondary = null;
 		this.wallSecondary = false;
 		this.ceilingSecondary = false;
 		this.dimensionSecondary = null;
 		this.directionSecondary = null;
+		this.openingSecondary = 0;
+		this.moonshotSecondary = false;
+
+		PortalLinkData.get(level).setDirty();
+	}
+
+	public void setMoonshot(boolean isPrimary, boolean moonshot, Level level)
+	{
+		if(isPrimary)
+			moonshotPrimary = moonshot;
+		else moonshotSecondary = moonshot;
 
 		PortalLinkData.get(level).setDirty();
 	}
@@ -173,6 +190,7 @@ public class PortalLink
 		boolean ceilingPrimary = false;
 		ResourceKey<Level> dimensionPrimary = null;
 		Direction directionPrimary = null;
+		int openingPrimary = 0;
 
 		if(tag.contains("posPrimary"))
 		{
@@ -181,6 +199,7 @@ public class PortalLink
 			ceilingPrimary = tag.getBoolean("ceilingPrimary");
 			dimensionPrimary = stringToDimension(tag.getString("dimensionPrimary"));
 			directionPrimary = Direction.from3DDataValue(tag.getInt("directionPrimary"));
+			openingPrimary = tag.getInt("openingPrimary");
 		}
 
 		BlockPos posSecondary = null;
@@ -188,6 +207,7 @@ public class PortalLink
 		boolean ceilingSecondary = false;
 		ResourceKey<Level> dimensionSecondary = null;
 		Direction directionSecondary = null;
+		int openingSecondary = 0;
 
 		if(tag.contains("posSecondary"))
 		{
@@ -196,13 +216,19 @@ public class PortalLink
 			ceilingSecondary = tag.getBoolean("ceilingSecondary");
 			dimensionSecondary = stringToDimension(tag.getString("dimensionSecondary"));
 			directionSecondary = Direction.from3DDataValue(tag.getInt("directionSecondary"));
+			openingSecondary = tag.getInt("openingSecondary");
 		}
 
-		return new PortalLink(linkID, posPrimary, posSecondary,
+		PortalLink link = new PortalLink(linkID, posPrimary, posSecondary,
 				wallPrimary, wallSecondary,
 				ceilingPrimary, ceilingSecondary,
 				dimensionPrimary, dimensionSecondary,
 				directionPrimary, directionSecondary);
+
+		link.openingPrimary = openingPrimary;
+		link.openingSecondary = openingSecondary;
+
+		return link;
 	}
 
 	public CompoundTag save()
@@ -218,6 +244,7 @@ public class PortalLink
 			tag.putBoolean("ceilingPrimary", ceilingPrimary);
 			tag.putString("dimensionPrimary", dimensionPrimary.location().toString());
 			tag.putInt("directionPrimary", directionPrimary.get3DDataValue());
+			tag.putInt("openingPrimary", openingPrimary);
 		}
 
 		if(posSecondary != null)
@@ -227,6 +254,7 @@ public class PortalLink
 			tag.putBoolean("ceilingSecondary", ceilingSecondary);
 			tag.putString("dimensionSecondary", dimensionSecondary.location().toString());
 			tag.putInt("directionSecondary", directionSecondary.get3DDataValue());
+			tag.putInt("openingSecondary", openingSecondary);
 		}
 
 		return tag;
