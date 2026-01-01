@@ -64,7 +64,9 @@ public class ServerboundOpenPortalPacket
 					linkData.addFreshLink(linkID);
 					link = linkData.getLink(linkID);
 				}
-				System.out.println("Shot the moon!");
+				portalGun.stopTriggeredAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
+				portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
+
 				if(isPrimary)
 				{
 					link.setMoonshot(isPrimary, true, level);
