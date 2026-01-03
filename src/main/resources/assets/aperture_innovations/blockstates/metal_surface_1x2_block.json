@@ -1,13 +1,7 @@
 {
   "variants": {
-    "state=1": {
-      "model": "aperture_innovations:block/metal_surface_block"
-    },
-    "state=2": {
-      "model": "aperture_innovations:block/metal_surface_1x2_upper_block"
-    },
-    "state=3": {
-      "model": "aperture_innovations:block/metal_surface_1x2_lower_block"
+    "": {
+      "model": "aperture_innovations:block/metal_surface_1x2_block"
     }
   }
 }

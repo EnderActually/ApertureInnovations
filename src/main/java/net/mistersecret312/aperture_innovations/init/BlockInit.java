@@ -12,7 +12,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
-import net.mistersecret312.aperture_innovations.blocks.OneByTwoBlock;
+import net.mistersecret312.aperture_innovations.blocks.VerticalOneByTwoBlock;
 
 import java.util.function.Supplier;
 
@@ -25,7 +25,7 @@ public class BlockInit
     public static final RegistryObject<Block> METAL_SURFACE_TILE_BLOCK = registerBlock("metal_surface_tile_block",
             () -> new Block(BlockBehaviour.Properties.copy(Blocks.COPPER_BLOCK).requiresCorrectToolForDrops().mapColor(MapColor.COLOR_GRAY)));
     public static final RegistryObject<Block> METAL_SURFACE_1x2_BLOCK = registerBlock("metal_surface_1x2_block",
-            () -> new OneByTwoBlock(BlockBehaviour.Properties.copy(Blocks.COPPER_BLOCK).requiresCorrectToolForDrops().mapColor(MapColor.COLOR_GRAY)));
+            () -> new Block(BlockBehaviour.Properties.copy(Blocks.COPPER_BLOCK).requiresCorrectToolForDrops().mapColor(MapColor.COLOR_GRAY)));
     public static final RegistryObject<Block> METAL_SURFACE_2x2_BLOCK = registerBlock("metal_surface_2x2_block",
             () -> new Block(BlockBehaviour.Properties.copy(Blocks.COPPER_BLOCK).requiresCorrectToolForDrops().mapColor(MapColor.COLOR_GRAY)));
 
@@ -34,7 +34,7 @@ public class BlockInit
     public static final RegistryObject<Block> CONCRETE_SURFACE_TILE_BLOCK = registerBlock("concrete_surface_tile_block",
             () -> new Block(BlockBehaviour.Properties.copy(Blocks.WHITE_CONCRETE).requiresCorrectToolForDrops().mapColor(MapColor.TERRACOTTA_WHITE)));
     public static final RegistryObject<Block> CONCRETE_SURFACE_1x2_BLOCK = registerBlock("concrete_surface_1x2_block",
-            () -> new OneByTwoBlock(BlockBehaviour.Properties.copy(Blocks.WHITE_CONCRETE).requiresCorrectToolForDrops().mapColor(MapColor.TERRACOTTA_WHITE)));
+            () -> new VerticalOneByTwoBlock(BlockBehaviour.Properties.copy(Blocks.WHITE_CONCRETE).requiresCorrectToolForDrops().mapColor(MapColor.TERRACOTTA_WHITE)));
 
     private static <T extends Block> RegistryObject<T> registerBlock(String name, Supplier<T> block)
     {

@@ -69,5 +69,13 @@
     "sounds": [
       "aperture_innovations:portal_gun_reset"
     ]
+  },
+  "longfall_boots_land": {
+    "subtitle": "sound.aperture_innovations.longfall_boots_land",
+    "sounds": [
+      "aperture_innovations:longfall_boots_land_1",
+      "aperture_innovations:longfall_boots_land_2",
+      "aperture_innovations:longfall_boots_land_3"
+    ]
   }
 }

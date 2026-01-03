@@ -8,10 +8,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 
-public class OneByTwoBlock extends Block {
-    public final static IntegerProperty STATE = IntegerProperty.create("state", 1, 3);
+public class TwoByTwoBlock extends Block {
+    public final static IntegerProperty STATE = IntegerProperty.create("state", 1, 5);
 
-    public OneByTwoBlock(Properties pProperties) {
+    public TwoByTwoBlock(Properties pProperties) {
         super(pProperties);
         this.registerDefaultState(this.defaultBlockState().setValue(STATE, 1));
     }
@@ -22,7 +22,7 @@ public class OneByTwoBlock extends Block {
         super.createBlockStateDefinition(pBuilder);
     }
 
-    // 1 - Single; 2 - Upper; 3 - Lower
+    // 1 - Single; 2 - Upper Right; 3 - Upper Left; 4 - Lower Right; 5 - Lower Left
 
     @Override
     public BlockState updateShape(BlockState pState, Direction pDirection, BlockState pNeighborState, LevelAccessor pLevel, BlockPos pPos, BlockPos pNeighborPos) {
