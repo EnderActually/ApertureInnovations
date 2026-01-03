@@ -198,9 +198,9 @@ public class PortalUtilities
 						portalPos.x+0.5, portalPos.y+0.01, portalPos.z+0.95);
 
 			if(isOnCeiling)
-				portal = portal.expandTowards(0, 0.8,0);
+				portal = portal.expandTowards(0, 1,0);
 			else
-				portal = portal.expandTowards(0, -0.8, 0);
+				portal = portal.expandTowards(0, -1, 0);
 		}
 
 

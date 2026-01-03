@@ -13,7 +13,7 @@ public class PortalPlacement
 	public static class Result {
 		public BlockPos bottomPos;
 		public Direction rotation;
-		Direction facing;
+		public Direction facing;
 
 		public Result(BlockPos pos, Direction rot, Direction face) {
 			this.bottomPos = pos;
