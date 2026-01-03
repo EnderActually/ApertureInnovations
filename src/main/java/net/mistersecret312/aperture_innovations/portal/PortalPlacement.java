@@ -9,10 +9,11 @@ import net.minecraft.world.phys.BlockHitResult;
 
 public class PortalPlacement
 {
+	//TODO : Rewrite this placeholder bullshit
 	public static class Result {
-		public BlockPos bottomPos; // The saved coordinate
-		public Direction rotation; // The portal's "Up" (Texture orientation)
-		public Direction facing;   // The surface normal (Wall direction)
+		public BlockPos bottomPos;
+		public Direction rotation;
+		Direction facing;
 
 		public Result(BlockPos pos, Direction rot, Direction face) {
 			this.bottomPos = pos;

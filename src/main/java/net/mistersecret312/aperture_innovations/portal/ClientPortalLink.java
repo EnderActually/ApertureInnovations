@@ -18,6 +18,6 @@ public record ClientPortalLink(UUID linkID, BlockPos posPrimary, BlockPos posSec
 {
 	public boolean isOpen()
 	{
-		return posPrimary != null && posSecondary != null;
+		return (posPrimary != null || moonshotPrimary) && (posSecondary != null || moonshotSecondary);
 	}
 }

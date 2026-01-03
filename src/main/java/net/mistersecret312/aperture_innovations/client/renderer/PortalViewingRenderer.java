@@ -78,8 +78,6 @@ public class PortalViewingRenderer
 
 		BlockPos pos = isPrimary ? link.posSecondary() : link.posPrimary();
 
-		boolean isVisible = Minecraft.getInstance().levelRenderer.getFrustum().isVisible(
-				new AABB(pos));
 		boolean isClose = pos.closerThan(mc.player.blockPosition(), mc.gameRenderer.renderDistance);
 		boolean isVeryClose = pos.closerThan(mc.player.blockPosition(), 24);
 

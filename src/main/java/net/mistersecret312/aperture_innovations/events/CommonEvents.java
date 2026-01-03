@@ -15,6 +15,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -68,10 +69,10 @@ public class CommonEvents
 
 			Vec3 boxCenter = teleportBox.getCenter();
 
-			event.level.addParticle(ParticleTypes.CRIT, teleportBox.minX, teleportBox.maxY, teleportBox.minZ,
+			event.level.addParticle(ParticleTypes.CRIT, teleportBox.minX, teleportBox.minY, teleportBox.minZ,
 					0, 0, 0);
 
-			event.level.addParticle(ParticleTypes.CRIT, teleportBox.maxX, teleportBox.minY, teleportBox.maxZ,
+			event.level.addParticle(ParticleTypes.CRIT, teleportBox.maxX, teleportBox.maxY, teleportBox.maxZ,
 					0, 0, 0);
 
 			event.level.addParticle(ParticleTypes.DRAGON_BREATH, boxCenter.x, boxCenter.y, boxCenter.z, 0, 0, 0);
@@ -125,7 +126,7 @@ public class CommonEvents
 							float friction = stateOn.getBlock().getFriction();
 							if(friction > 0)
 							{
-								System.out.print("");
+
 							}
 						}
 						Vec3 otherPortalPos = PortalUtilities.getPortalPos(serverLevel, uuid, !isPrimary);
@@ -143,7 +144,7 @@ public class CommonEvents
 
 						otherPortalPos = otherTeleportBox.getCenter();
 						if(otherWall)
-							otherPortalPos = otherPortalPos.add(0, -0.9, 0).add(
+							otherPortalPos = otherPortalPos.add(0, -entity.getBoundingBox().getYsize()*0.45, 0).add(
 									Vec3.atLowerCornerOf(otherDirection.getNormal()).multiply(0.35f, 1f, 0.35f));
 						else
 							otherPortalPos = otherPortalPos.add(0, 0.1, 0);
@@ -157,12 +158,20 @@ public class CommonEvents
 						{
 							otherPortalPos = otherPortalPos.add(0, -3, 0);
 						}
+						if(!otherWall && !isOnWall && !isOnCeiling && !otherCeiling)
+						{
+							otherPortalPos = otherPortalPos.add(0, 1, 0);
+						}
+						if(!otherWall && !isOnWall && isOnCeiling && !otherCeiling)
+						{
+							otherPortalPos = otherPortalPos.add(0, 1, 0);
+						}
 
 						Vector3f oldSpeed = entity.getDeltaMovement().toVector3f();
 
 						entity.teleportTo((ServerLevel) level, otherPortalPos.x, otherPortalPos.y, otherPortalPos.z, Set.of(),
 								entity.getYRot()+ ((!isOnWall && otherWall) ? rotation+180 : rotation),
-								(!isOnWall && otherWall) ? entity.getXRot() : entity.getXRot());
+								entity.getXRot());
 
 						Quaternionf rotationQ = new Quaternionf(Axis.YP.rotationDegrees(rotation-180));
 
@@ -191,6 +200,7 @@ public class CommonEvents
 												Direction.AxisDirection.NEGATIVE) ? newSpeed.y : -newSpeed.y));
 						}
 						entity.setDeltaMovement(new Vec3(newSpeed));
+						entity.resetFallDistance();
 						if(entity instanceof ServerPlayer player)
 							NetworkInit.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), new ClientboundTeleportMomentumPacket(new Vec3(newSpeed), otherPortalPos, entity.getYRot()+rotation));
 

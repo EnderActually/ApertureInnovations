@@ -96,7 +96,7 @@ public class ClientEvents
 					poseStack.pushPose();
 
 					float openingAnimTick = Math.min(7, i == 0 ? link.openingPrimary() : link.openingSecondary());
-					float maxScale = (float) openingAnimTick/6;
+					float maxScale = openingAnimTick/6;
 					float previousScale = Math.max(0, openingAnimTick/6 - 1f/6f);
 					if(maxScale > 1)
 					{
@@ -157,8 +157,9 @@ public class ClientEvents
 			Vec3 portalPos = PortalUtilities.getPortalPos(level, uuid, isPrimary);
 			Direction portalDirection = PortalUtilities.getPortalDirection(level, uuid, isPrimary);
 			boolean isOnWall = PortalUtilities.isPortalOnWall(level, uuid, isPrimary);
+			boolean isOnCeiling = PortalUtilities.isPortalOnCeiling(level, uuid, isPrimary);
 
-			AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, portalDirection, isOnWall);
+			AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, portalDirection, isOnWall, isOnCeiling);
 			if(portalBox.contains(player.getEyePosition()))
 				event.setCanceled(true);
 		}
@@ -210,7 +211,6 @@ public class ClientEvents
 		{
 			while(ApertureInnovations.ClientModEvents.RESET_PORTAL_GUN.get().consumeClick())
 			{
-
 				NetworkInit.INSTANCE.sendToServer(new ServerboundResetPortalLinkPacket());
 			}
 		}

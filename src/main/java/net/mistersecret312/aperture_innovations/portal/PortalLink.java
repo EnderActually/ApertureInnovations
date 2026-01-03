@@ -125,6 +125,9 @@ public class PortalLink
 
 	public void resetPrimary(Level level)
 	{
+		if(posPrimary != null)
+			level.playSound(null, posPrimary, SoundInit.PORTAL_FIZZLE.get(), SoundSource.BLOCKS, 0.5f, 1f);
+
 		this.posPrimary = null;
 		this.wallPrimary = false;
 		this.ceilingPrimary = false;
@@ -138,6 +141,9 @@ public class PortalLink
 
 	public void resetSecondary(Level level)
 	{
+		if(posSecondary != null)
+			level.playSound(null, posSecondary, SoundInit.PORTAL_FIZZLE.get(), SoundSource.BLOCKS, 0.5f, 1f);
+
 		this.posSecondary = null;
 		this.wallSecondary = false;
 		this.ceilingSecondary = false;
@@ -160,7 +166,7 @@ public class PortalLink
 
 	public boolean isOpen()
 	{
-		return posPrimary != null && posSecondary != null;
+		return (posPrimary != null || moonshotPrimary) && (posSecondary != null || moonshotSecondary);
 	}
 
 	public boolean isInterdimensionalLink()

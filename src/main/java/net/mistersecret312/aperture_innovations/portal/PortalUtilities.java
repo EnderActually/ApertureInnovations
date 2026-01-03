@@ -107,6 +107,20 @@ public class PortalUtilities
 		}
 	}
 
+	public static boolean isPortalOpen(Level level, UUID uuid)
+	{
+		if(level.isClientSide())
+		{
+			ClientPortalLink link = getPortalLinks().get(uuid);
+			return link.isOpen();
+		}
+		else
+		{
+			PortalLink link = getPortalLinks(level).get(uuid);
+			return link.isOpen();
+		}
+	}
+
 	public static boolean isPortalOnCeiling(Level level, UUID uuid, boolean isPrimary)
 	{
 		if(level.isClientSide())
@@ -121,23 +135,36 @@ public class PortalUtilities
 		}
 	}
 	
-	public static AABB getPortalBoundingBox(Vec3 portalPos, Direction portalDirection, boolean isOnWall)
+	public static AABB getPortalBoundingBox(Vec3 portalPos, Direction portalDirection, boolean isOnWall, boolean isOnCeiling)
 	{
 		AABB portal = new AABB(0D,0D,0D,0D,0D,0D);
 		if(isOnWall)
 		{
-			portal = new AABB(portalPos.x-0.25, portalPos.y-1, portalPos.z-0.25,
-					portalPos.x+0.25, portalPos.y+1, portalPos.z+0.25);
+			Direction.Axis axis = portalDirection.getAxis();
+			if(axis.equals(Direction.Axis.X))
+				portal = new AABB(portalPos.x-0.25, portalPos.y-1, portalPos.z-0.25,
+						portalPos.x+0.25, portalPos.y+1, portalPos.z+0.5);
+			else
+				portal = new AABB(portalPos.x-0.25, portalPos.y-1, portalPos.z-0.25,
+						portalPos.x+0.25, portalPos.y+1, portalPos.z+0.25);
 		}
 		else
 		{
+			portalPos = portalPos.subtract(
+					Vec3.atLowerCornerOf(isOnCeiling ? portalDirection.getNormal() : Vec3i.ZERO));
+			portalPos = portalPos.subtract(0, isOnCeiling ? 1 : 0, 0);
 			Direction.Axis axis = portalDirection.getAxis();
 			if(axis.equals(Direction.Axis.X))
-				portal = new AABB(portalPos.x-1, portalPos.y-0.25, portalPos.z-0.25,
-						portalPos.x+1, portalPos.y+0.25, portalPos.z+0.25);
+				portal = new AABB(portalPos.x - 1, portalPos.y - 0.25, portalPos.z - 0.25, portalPos.x + 1,
+						portalPos.y + 0.25, portalPos.z + 0.5);
 			else if(axis.equals(Direction.Axis.Z))
-				portal = new AABB(portalPos.x-0.25, portalPos.y-0.25, portalPos.z-1,
-						portalPos.x+0.25, portalPos.y+0.25, portalPos.z+1);
+				portal = new AABB(portalPos.x - 0.25, portalPos.y - 0.25, portalPos.z - 1, portalPos.x + 0.25,
+						portalPos.y + 0.25, portalPos.z + 1);
+
+			if(isOnCeiling)
+				portal = portal.expandTowards(0, 1,0);
+			else
+				portal = portal.expandTowards(0, -1, 0);
 		}
 
 		return portal;
@@ -164,12 +191,19 @@ public class PortalUtilities
 			portalPos = portalPos.subtract(0, isOnCeiling ? 1 : 0, 0);
 			Direction.Axis axis = portalDirection.getAxis();
 			if(axis.equals(Direction.Axis.X))
-				portal = new AABB(portalPos.x-1, portalPos.y-0.01, portalPos.z-0.5,
-						portalPos.x+1, portalPos.y+0.01, portalPos.z+0.5);
+				portal = new AABB(portalPos.x-0.95, portalPos.y-0.01, portalPos.z-0.5,
+						portalPos.x+0.95, portalPos.y+0.01, portalPos.z+0.5);
 			else if(axis.equals(Direction.Axis.Z))
-				portal = new AABB(portalPos.x-0.5, portalPos.y-0.01, portalPos.z-1,
-						portalPos.x+0.5, portalPos.y+0.01, portalPos.z+1);
+				portal = new AABB(portalPos.x-0.5, portalPos.y-0.01, portalPos.z-0.95,
+						portalPos.x+0.5, portalPos.y+0.01, portalPos.z+0.95);
+
+			if(isOnCeiling)
+				portal = portal.expandTowards(0, 0.8,0);
+			else
+				portal = portal.expandTowards(0, -0.8, 0);
 		}
+
+
 
 		return portal;
 	}
@@ -197,14 +231,13 @@ public class PortalUtilities
 
 			for(Map.Entry<UUID, ClientPortalLink> entry : getPortalLinks().entrySet())
 			{
-				ClientPortalLink link = entry.getValue();
 				for(int i = 0; i < 2; i++)
 				{
-					BlockPos pos = i == 0 ? link.posPrimary() : link.posSecondary();
+					Vec3 pos = PortalUtilities.getPortalPos(entity.level(), entry.getKey(), i == 0);
 					if(pos == null)
 						continue;
 
-					double distance = entity.position().distanceTo(Vec3.atLowerCornerOf(pos));
+					double distance = entity.position().distanceTo(pos);
 					if(closestDistance > distance)
 					{
 						closestDistance = distance;
@@ -219,14 +252,13 @@ public class PortalUtilities
 		{
 			for(Map.Entry<UUID, PortalLink> entry : getPortalLinks(level).entrySet())
 			{
-				PortalLink link = entry.getValue();
 				for(int i = 0; i < 2; i++)
 				{
-					BlockPos pos = i == 0 ? link.posPrimary : link.posSecondary;
+					Vec3 pos = PortalUtilities.getPortalPos(entity.level(), entry.getKey(), i == 0);
 					if(pos == null)
 						continue;
 
-					double distance = entity.position().distanceTo(Vec3.atLowerCornerOf(pos));
+					double distance = entity.position().distanceTo(pos);
 					if(closestDistance > distance)
 					{
 						closestDistance = distance;

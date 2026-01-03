@@ -43,7 +43,8 @@ public class ServerboundResetPortalLinkPacket
 				ItemStack main = player.getMainHandItem();
 				ItemStack off = player.getOffhandItem();
 				boolean hasPortalGun = main.is(ItemInit.PORTAL_GUN.get()) || off.is(ItemInit.PORTAL_GUN.get());
-				if(!hasPortalGun) return;
+				if(!hasPortalGun)
+					return;
 
 				ItemStack gunStack = main.is(ItemInit.PORTAL_GUN.get()) ? main : off;
 				PortalGunItem portalGun = (PortalGunItem) gunStack.getItem();
@@ -57,10 +58,11 @@ public class ServerboundResetPortalLinkPacket
 					linkData.addFreshLink(linkID);
 					link = linkData.getLink(linkID);
 				}
+				if((link.posPrimary == null && !link.moonshotPrimary)
+						   && (link.posSecondary == null) && !link.moonshotSecondary)
+					return;
 
 				link.reset(level);
-
-				level.playSound(null, player.getOnPos().above(), SoundInit.PORTAL_FIZZLE.get(), SoundSource.BLOCKS, 0.5f, 1f);
 
 				level.playSound(null, player.getOnPos().above(), SoundInit.PORTAL_GUN_RESET.get(), SoundSource.PLAYERS,
 						0.7f, 1f);

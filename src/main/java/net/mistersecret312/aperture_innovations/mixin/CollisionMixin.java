@@ -55,15 +55,18 @@ public interface CollisionMixin
 		if(uuid == null)
 			return list;
 
+		boolean isOpen = PortalUtilities.isPortalOpen(level, uuid);
+
 		Vec3 portalPos = PortalUtilities.getPortalPos(level, uuid, isPrimary);
 		Direction portalDirection = PortalUtilities.getPortalDirection(level, uuid, isPrimary);
 		boolean isOnWall = PortalUtilities.isPortalOnWall(level, uuid, isPrimary);
+		boolean isOnCeiling = PortalUtilities.isPortalOnCeiling(level, uuid, isPrimary);
 
-		AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, portalDirection, isOnWall);
+		AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, portalDirection, isOnWall, isOnCeiling);
 		AABB floorBox = PortalUtilities.getPortalFloorBox(portalPos, portalDirection, isOnWall).inflate(0d, 0.01d, 0d);
 
-		list.removeIf(shape -> shape.bounds().intersects(portalBox));
-		if(entityBox.intersects(floorBox))
+		list.removeIf(shape -> shape.bounds().intersects(portalBox) && isOpen);
+		if(entityBox.intersects(floorBox) && isOpen)
 			list.add(Shapes.create(floorBox));
 
 		return list;
@@ -97,19 +100,27 @@ public interface CollisionMixin
 		if(uuid == null)
 			return original(blockcollisions);
 
+		boolean isOpen = PortalUtilities.isPortalOpen(level, uuid);
+
 		Vec3 portalPos = PortalUtilities.getPortalPos(level, uuid, isPrimary);
 		Direction portalDirection = PortalUtilities.getPortalDirection(level, uuid, isPrimary);
 		boolean isOnWall = PortalUtilities.isPortalOnWall(level, uuid, isPrimary);
+		boolean isOnCeiling = PortalUtilities.isPortalOnCeiling(level, uuid, isPrimary);
 
-		AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, portalDirection, isOnWall);
+		AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, portalDirection, isOnWall, isOnCeiling);
 		AABB floorBox = PortalUtilities.getPortalFloorBox(portalPos, portalDirection, isOnWall).inflate(0d, 0.01d, 0d);
+
+		if(!isOpen)
+		{
+			portalBox = new AABB(0D,0D,0D,0D,0D,0D);
+			floorBox = new AABB(0D,0D,0D,0D,0D,0D);
+		}
 
 		List<VoxelShape> list = new ArrayList<>();
 		blockcollisions.forEachRemaining(list::add);
 		if(entityBox.intersects(floorBox))
 			list.add(Shapes.create(floorBox));
 
-		//TODO : Add a void floor for on-wall portals so players can peek throug the portal without needing a floor
 		Iterator<VoxelShape> iterator = list.iterator();
 		while(iterator.hasNext()) {
 			VoxelShape shape = iterator.next();
@@ -120,7 +131,6 @@ public interface CollisionMixin
 				return true;
 			}
 		}
-
 		return false;
 	}
 

@@ -140,7 +140,7 @@ public class PortalGunItem extends Item implements GeoItem
 
 	public boolean isLookingAtMoon(Player player, Level level)
 	{
-		HitResult hit = player.pick(128.0D, 0.0F, false);
+		HitResult hit = player.pick(256D, 0.0F, false);
 
 		if (hit.getType() == HitResult.Type.BLOCK) {
 			return false;
