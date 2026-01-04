@@ -5,10 +5,7 @@ import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
-import net.mistersecret312.aperture_innovations.network.ClientBoundPortalLinkSyncPacket;
-import net.mistersecret312.aperture_innovations.network.ClientboundTeleportMomentumPacket;
-import net.mistersecret312.aperture_innovations.network.ServerboundOpenPortalPacket;
-import net.mistersecret312.aperture_innovations.network.ServerboundResetPortalLinkPacket;
+import net.mistersecret312.aperture_innovations.network.*;
 
 public class NetworkInit
 {
@@ -46,5 +43,48 @@ public class NetworkInit
 				.encoder(ClientboundTeleportMomentumPacket::encode)
 				.decoder(ClientboundTeleportMomentumPacket::decode)
 				.consumerMainThread(ClientboundTeleportMomentumPacket::handle).add();
+
+		INSTANCE.messageBuilder(ClientboundPortalAmbientSoundPacket.class, index++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(ClientboundPortalAmbientSoundPacket::encode)
+				.decoder(ClientboundPortalAmbientSoundPacket::decode)
+				.consumerMainThread(ClientboundPortalAmbientSoundPacket::handle).add();
+
+		//Sounds
+
+		INSTANCE.messageBuilder(ClientboundPortalSoundsPacket.FizzlePortal.class, index++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(ClientboundPortalSoundsPacket.FizzlePortal::encode)
+				.decoder(ClientboundPortalSoundsPacket.FizzlePortal::new)
+				.consumerMainThread(ClientboundPortalSoundsPacket.FizzlePortal::handle).add();
+
+		INSTANCE.messageBuilder(ClientboundPortalSoundsPacket.EnterPortal.class, index++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(ClientboundPortalSoundsPacket.EnterPortal::encode)
+				.decoder(ClientboundPortalSoundsPacket.EnterPortal::new)
+				.consumerMainThread(ClientboundPortalSoundsPacket.EnterPortal::handle).add();
+
+		INSTANCE.messageBuilder(ClientboundPortalSoundsPacket.OpenPortal.class, index++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(ClientboundPortalSoundsPacket.OpenPortal::encode)
+				.decoder(ClientboundPortalSoundsPacket.OpenPortal::new)
+				.consumerMainThread(ClientboundPortalSoundsPacket.OpenPortal::handle).add();
+
+		INSTANCE.messageBuilder(ClientboundPortalSoundsPacket.InvalidSurface.class, index++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(ClientboundPortalSoundsPacket.InvalidSurface::encode)
+				.decoder(ClientboundPortalSoundsPacket.InvalidSurface::new)
+				.consumerMainThread(ClientboundPortalSoundsPacket.InvalidSurface::handle).add();
+
+		INSTANCE.messageBuilder(ClientboundPortalSoundsPacket.ResetPortal.class, index++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(ClientboundPortalSoundsPacket.ResetPortal::encode)
+				.decoder(ClientboundPortalSoundsPacket.ResetPortal::new)
+				.consumerMainThread(ClientboundPortalSoundsPacket.ResetPortal::handle).add();
+
+		INSTANCE.messageBuilder(ClientboundPortalSoundsPacket.ShootPortal.class, index++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(ClientboundPortalSoundsPacket.ShootPortal::encode)
+				.decoder(ClientboundPortalSoundsPacket.ShootPortal::new)
+				.consumerMainThread(ClientboundPortalSoundsPacket.ShootPortal::handle).add();
+
+		INSTANCE.messageBuilder(ClientboundPortalSoundsPacket.GunActivate.class, index++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(ClientboundPortalSoundsPacket.GunActivate::encode)
+				.decoder(ClientboundPortalSoundsPacket.GunActivate::new)
+				.consumerMainThread(ClientboundPortalSoundsPacket.GunActivate::handle).add();
+
 	}
 }

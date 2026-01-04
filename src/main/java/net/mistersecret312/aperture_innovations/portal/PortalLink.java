@@ -2,6 +2,7 @@ package net.mistersecret312.aperture_innovations.portal;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.resources.ResourceKey;
@@ -13,8 +14,12 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.world.ForgeChunkManager;
+import net.minecraftforge.network.PacketDistributor;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
+import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
+import net.mistersecret312.aperture_innovations.network.ClientboundPortalSoundsPacket;
 
 import java.util.UUID;
 
@@ -43,16 +48,23 @@ public class PortalLink
 	public int openingPrimary = 0;
 	public int openingSecondary = 0;
 
-	public PortalLink(UUID linkID)
+	public ResourceLocation variantKey = null;
+
+	public PortalLink(UUID linkID, ResourceLocation variantKey)
 	{
 		this.linkID = linkID;
+
+		if(variantKey == null)
+			this.variantKey = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "chell");
+		else this.variantKey = variantKey;
 	}
 
 	public PortalLink(UUID linkID, BlockPos posPrimary, BlockPos posSecondary,
 					  boolean wallPrimary, boolean wallSecondary,
 					  boolean ceilingPrimary, boolean ceilingSecondary,
 					  ResourceKey<Level> dimensionPrimary, ResourceKey<Level> dimensionSecondary,
-					  Direction directionPrimary, Direction directionSecondary)
+					  Direction directionPrimary, Direction directionSecondary,
+					  ResourceLocation variantKey)
 	{
 		this.linkID = linkID;
 
@@ -70,6 +82,8 @@ public class PortalLink
 
 		this.directionPrimary = directionPrimary;
 		this.directionSecondary = directionSecondary;
+
+		this.variantKey = variantKey;
 	}
 
 	public void createPrimaryPortal(Level level, BlockPos pos, ResourceKey<Level> dimension, Direction direction, Direction facing)
@@ -81,8 +95,13 @@ public class PortalLink
 		this.ceilingPrimary = direction.equals(Direction.DOWN);
 		this.moonshotPrimary = false;
 
-		level.playSound(null, pos, SoundInit.PORTAL_OPEN_PRIMARY.get(), SoundSource.BLOCKS, 0.7f, 1f);
-
+		Level portalLevel = level.getServer().getLevel(dimensionPrimary);
+		if(portalLevel != null)
+		{
+			NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(
+							() -> portalLevel.getChunkAt(pos)),
+					new ClientboundPortalSoundsPacket.OpenPortal(linkID, true));
+		}
 		PortalLinkData.get(level).setDirty();
 	}
 
@@ -95,22 +114,13 @@ public class PortalLink
 		this.ceilingSecondary = direction.equals(Direction.DOWN);
 		this.moonshotSecondary = false;
 
-		level.playSound(null, pos, SoundInit.PORTAL_OPEN_SECONDARY.get(), SoundSource.BLOCKS, 0.7f, 1f);
-
-		if(posSecondary != null)
+		Level portalLevel = level.getServer().getLevel(dimensionSecondary);
+		if(portalLevel != null)
 		{
-
-			ChunkPos portalPos = new ChunkPos(posSecondary);
-			for(int i = 0; i < 3; i++)
-			{
-				for(int j = 0; j < 3; j++)
-				{
-					ForgeChunkManager.forceChunk((ServerLevel) level, ApertureInnovations.MODID,
-							linkID, portalPos.x+i, portalPos.z+j, true, true);
-				}
-			}
+			NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(
+							() -> portalLevel.getChunkAt(pos)),
+					new ClientboundPortalSoundsPacket.OpenPortal(linkID, false));
 		}
-
 		PortalLinkData.get(level).setDirty();
 	}
 
@@ -126,7 +136,15 @@ public class PortalLink
 	public void resetPrimary(Level level)
 	{
 		if(posPrimary != null)
-			level.playSound(null, posPrimary, SoundInit.PORTAL_FIZZLE.get(), SoundSource.BLOCKS, 0.5f, 1f);
+		{
+			Level portalLevel = level.getServer().getLevel(dimensionPrimary);
+			if(portalLevel != null)
+			{
+				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(
+								() -> portalLevel.getChunkAt(posPrimary)),
+						new ClientboundPortalSoundsPacket.FizzlePortal(linkID, true));
+			}
+		}
 
 		this.posPrimary = null;
 		this.wallPrimary = false;
@@ -142,7 +160,15 @@ public class PortalLink
 	public void resetSecondary(Level level)
 	{
 		if(posSecondary != null)
-			level.playSound(null, posSecondary, SoundInit.PORTAL_FIZZLE.get(), SoundSource.BLOCKS, 0.5f, 1f);
+		{
+			Level portalLevel = level.getServer().getLevel(dimensionSecondary);
+			if(portalLevel != null)
+			{
+				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(
+								() -> portalLevel.getChunkAt(posSecondary)),
+						new ClientboundPortalSoundsPacket.FizzlePortal(linkID, true));
+			}
+		}
 
 		this.posSecondary = null;
 		this.wallSecondary = false;
@@ -158,8 +184,15 @@ public class PortalLink
 	public void setMoonshot(boolean isPrimary, boolean moonshot, Level level)
 	{
 		if(isPrimary)
+		{
+			posPrimary = null;
 			moonshotPrimary = moonshot;
-		else moonshotSecondary = moonshot;
+		}
+		else
+		{
+			posSecondary = null;
+			moonshotSecondary = moonshot;
+		};
 
 		PortalLinkData.get(level).setDirty();
 	}
@@ -175,16 +208,6 @@ public class PortalLink
 			return false;
 
 		return dimensionPrimary != dimensionSecondary;
-	}
-
-	public boolean isWallPrimary()
-	{
-		return wallPrimary;
-	}
-
-	public boolean isWallSecondary()
-	{
-		return wallSecondary;
 	}
 
 	public static PortalLink load(CompoundTag tag)
@@ -225,11 +248,14 @@ public class PortalLink
 			openingSecondary = tag.getInt("openingSecondary");
 		}
 
+		ResourceLocation variantKey = ResourceLocation.parse(tag.getString("variantKey"));
+
 		PortalLink link = new PortalLink(linkID, posPrimary, posSecondary,
 				wallPrimary, wallSecondary,
 				ceilingPrimary, ceilingSecondary,
 				dimensionPrimary, dimensionSecondary,
-				directionPrimary, directionSecondary);
+				directionPrimary, directionSecondary,
+				variantKey);
 
 		link.openingPrimary = openingPrimary;
 		link.openingSecondary = openingSecondary;
@@ -263,7 +289,18 @@ public class PortalLink
 			tag.putInt("openingSecondary", openingSecondary);
 		}
 
+		if(variantKey == null)
+			variantKey = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "chell");
+		tag.putString("variantKey", variantKey.toString());
+
 		return tag;
+	}
+
+	public PortalGunVariant getGunVariant(Level level)
+	{
+		Registry<PortalGunVariant> registry =  level.getServer().registryAccess()
+													.registryOrThrow(PortalGunVariant.REGISTRY_KEY);
+		return registry.get(variantKey);
 	}
 
 	public static ResourceKey<Level> stringToDimension(String dimensionString)

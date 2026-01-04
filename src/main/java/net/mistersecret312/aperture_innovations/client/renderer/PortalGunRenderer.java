@@ -1,14 +1,25 @@
 package net.mistersecret312.aperture_innovations.client.renderer;
 
+import com.google.common.collect.Lists;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.client.ColorUtil;
 import net.mistersecret312.aperture_innovations.client.renderer.geckolib.DynamicGeoItemRenderer;
+import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortalGunVariant;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
+import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
+import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
 import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.cache.object.GeoBone;
 import software.bernie.geckolib.model.DefaultedItemGeoModel;
+import software.bernie.geckolib.renderer.layer.AutoGlowingGeoLayer;
+
+import java.awt.*;
+import java.util.List;
 
 public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
 {
@@ -18,10 +29,83 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
 	}
 
 	@Override
+	protected boolean boneRenderOverride(PoseStack poseStack, GeoBone bone, MultiBufferSource bufferSource,
+										 VertexConsumer buffer, float partialTick, int packedLight, int packedOverlay,
+										 float red, float green, float blue, float alpha)
+	{
+		if(bone.getName().equals("StripePrimary") || bone.getName().equals("StripeSecondary"))
+		{
+			boolean isPrimary = bone.getName().equals("StripePrimary");
+			int stripeColor = isPrimary ? this.getAnimatable().getPrimaryStripeColor(this.currentItemStack) :
+					this.getAnimatable().getSecondaryStripeColor(this.currentItemStack);
+			if(stripeColor == -1)
+			{
+				ClientPortalLink link = PortalUtilities.getPortalLinks().get(this.getAnimatable().getUUID(this.currentItemStack));
+				ClientPortalGunVariant variant = ClientPortalGunVariant.DEFAULT_VARIANT;
+				if(link != null)
+					variant = link.getVariant();
+				ColorUtil.RGBA color = isPrimary ? variant.getPrimaryStripeColor() : variant.getSecondaryStripeColor();
+
+				red *= color.red();
+				green *= color.green();
+				blue *= color.blue();
+				alpha *= color.alpha();
+
+				renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+				return true;
+			}
+			else
+			{
+				Color color = new Color(stripeColor, true);
+
+				red *= color.getRed()/255f;
+				green *= color.getGreen()/255f;
+				blue *= color.getBlue()/255f;
+				alpha *= color.getAlpha()/255f;
+
+				renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+				return true;
+			}
+		}
+
+		return super.boneRenderOverride(poseStack, bone, bufferSource, buffer, partialTick, packedLight, packedOverlay,
+				red, green, blue, alpha);
+	}
+
+	@Override
+	protected @Nullable RenderType getRenderTypeOverrideForBone(GeoBone bone, PortalGunItem animatable,
+																ResourceLocation texturePath,
+																MultiBufferSource bufferSource, float partialTick)
+	{
+		List<String> gunCore = Lists.newArrayList("CoreOuter", "CoreInner", "PortalLight", "Muzzle");
+		if(gunCore.contains(bone.getName()))
+		{
+			return DynamicGeoItemRenderer.GLOWING_FUNCTION.apply(getTextureOverrideForBone(bone, animatable, partialTick));
+		}
+		return super.getRenderTypeOverrideForBone(bone, animatable, texturePath, bufferSource, partialTick);
+	}
+
+	@Override
 	protected @Nullable ResourceLocation getTextureOverrideForBone(GeoBone bone, PortalGunItem animatable,
 																   float partialTick)
 	{
-		return super.getTextureOverrideForBone(bone, animatable, partialTick);
+		List<String> gunCore = Lists.newArrayList("CoreOuter", "CoreInner", "PortalLight", "Muzzle");
+		if(gunCore.contains(bone.getName()))
+		{
+			int portal = this.getAnimatable().getLastShotPortal(this.currentItemStack);
+			ClientPortalLink link = PortalUtilities.getPortalLinks().get(this.getAnimatable().getUUID(this.currentItemStack));
+			ClientPortalGunVariant variant = ClientPortalGunVariant.DEFAULT_VARIANT;
+			if(link != null)
+				variant = link.getVariant();
+
+			if(portal == -1)
+				return variant.getIdleCoreTexture();
+			if(portal == 0)
+				return variant.getPrimaryPortal().getCoreTexture();
+			if(portal == 1)
+				return variant.getSecondaryPortal().getCoreTexture();
+		}
+		return new ResourceLocation(ApertureInnovations.MODID, "textures/item/portal_gun_2.png");
 	}
 
 	@Override

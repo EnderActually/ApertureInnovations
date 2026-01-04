@@ -9,12 +9,17 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.network.PacketDistributor;
+import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
+import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.portal.PortalLink;
 import net.mistersecret312.aperture_innovations.portal.PortalLinkData;
 import net.mistersecret312.aperture_innovations.portal.PortalPlacement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.bernie.geckolib.animatable.GeoItem;
 
 import java.util.UUID;
@@ -22,6 +27,7 @@ import java.util.function.Supplier;
 
 public class ServerboundOpenPortalPacket
 {
+	private static final Logger log = LoggerFactory.getLogger(ServerboundOpenPortalPacket.class);
 	boolean isPrimary;
 	public ServerboundOpenPortalPacket(boolean isPrimary)
 	{
@@ -68,15 +74,12 @@ public class ServerboundOpenPortalPacket
 				portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
 
 				if(isPrimary)
-				{
 					link.setMoonshot(isPrimary, true, level);
-					level.playSound(null, player.getOnPos().above(), SoundInit.PORTAL_GUN_FIRE_PRIMARY.get(), SoundSource.PLAYERS, 0.5f, 1f);
-				}
 				else
-				{
 					link.setMoonshot(isPrimary, true, level);
-					level.playSound(null, player.getOnPos().above(), SoundInit.PORTAL_GUN_FIRE_SECONDARY.get(), SoundSource.PLAYERS, 0.5f, 1f);
-				}
+
+				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(player.blockPosition())),
+						new ClientboundPortalSoundsPacket.ShootPortal(linkID, player.blockPosition(), isPrimary));
 				return;
 			}
 
@@ -84,6 +87,19 @@ public class ServerboundOpenPortalPacket
 			if(!result.getType().equals(HitResult.Type.MISS))
 			{
 				UUID linkID = portalGun.getUUID(gunStack);
+
+				if(level.getBlockState(result.getBlockPos()).is(ApertureInnovations.IMPORTALABLE)
+				|| !level.getFluidState(result.getBlockPos()).isEmpty())
+				{
+					portalGun.stopTriggeredAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
+					portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
+
+					NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(player.blockPosition())),
+							new ClientboundPortalSoundsPacket.ShootPortal(linkID, player.blockPosition(), isPrimary));
+					NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(player.blockPosition())),
+							new ClientboundPortalSoundsPacket.InvalidSurface(linkID, result.getBlockPos(), isPrimary));
+					return;
+				}
 
 				PortalLinkData linkData = PortalLinkData.get(level);
 				PortalLink link = linkData.getLink(gunStack);
@@ -99,14 +115,21 @@ public class ServerboundOpenPortalPacket
 					portalGun.stopTriggeredAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
 					portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
 
-					if(isPrimary) {
+					if(isPrimary)
+					{
+						portalGun.setLastShotPortal(gunStack, 0);
 						link.createPrimaryPortal(level, placement.bottomPos, level.dimension(), placement.facing, placement.rotation);
-						level.playSound(null, player.getOnPos().above(), SoundInit.PORTAL_GUN_FIRE_PRIMARY.get(), SoundSource.PLAYERS, 0.5f, 1f);
+
+						NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(player.blockPosition())),
+								new ClientboundPortalSoundsPacket.ShootPortal(linkID, player.blockPosition(), isPrimary));
 					}
-					else {
+					else
+					{
+						portalGun.setLastShotPortal(gunStack, 1);
 						link.createSecondaryPortal(level, placement.bottomPos, level.dimension(), placement.facing, placement.rotation);
-						level.playSound(null, player.getOnPos().above(), SoundInit.PORTAL_GUN_FIRE_SECONDARY.get(), SoundSource.PLAYERS, 0.5f, 1f);
-					}
+
+						NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(player.blockPosition())),
+								new ClientboundPortalSoundsPacket.ShootPortal(linkID, player.blockPosition(), isPrimary));					}
 				}
 			}
 

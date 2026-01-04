@@ -7,6 +7,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.network.NetworkEvent;
@@ -65,6 +66,8 @@ public class ClientBoundPortalLinkSyncPacket
 			else writer.writeBoolean(false);
 
 			writer.writeBoolean(link.moonshotSecondary);
+
+			writer.writeResourceLocation(link.variantKey);
 		});
 	}
 
@@ -115,6 +118,8 @@ public class ClientBoundPortalLinkSyncPacket
 
 			boolean moonshotSecondary = reader.readBoolean();
 
+			ResourceLocation variantKey = reader.readResourceLocation();
+
 			ClientPortalLink link = new ClientPortalLink(linkID,
 					posPrimary, posSecondary,
 					wallPrimary, wallSecondary,
@@ -122,7 +127,8 @@ public class ClientBoundPortalLinkSyncPacket
 					dimensionPrimary, dimensionSecondary,
 					directionPrimary, directionSecondary,
 					moonshotPrimary, moonshotSecondary,
-					openingPrimary,openingSecondary);
+					openingPrimary,openingSecondary,
+					variantKey);
 
 			return Map.entry(linkID, link);
 		});

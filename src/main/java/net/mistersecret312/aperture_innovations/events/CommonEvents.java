@@ -8,9 +8,11 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.LivingEntity;
@@ -31,7 +33,10 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.network.PacketDistributor;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
+import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.network.ClientBoundPortalLinkSyncPacket;
+import net.mistersecret312.aperture_innovations.network.ClientboundPortalAmbientSoundPacket;
+import net.mistersecret312.aperture_innovations.network.ClientboundPortalSoundsPacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundTeleportMomentumPacket;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import net.mistersecret312.aperture_innovations.portal.PortalLink;
@@ -68,14 +73,14 @@ public class CommonEvents
 			AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPos, portalDirection, isOnWall, isOnCeiling);
 
 			Vec3 boxCenter = teleportBox.getCenter();
-
-			event.level.addParticle(ParticleTypes.CRIT, teleportBox.minX, teleportBox.minY, teleportBox.minZ,
-					0, 0, 0);
-
-			event.level.addParticle(ParticleTypes.CRIT, teleportBox.maxX, teleportBox.maxY, teleportBox.maxZ,
-					0, 0, 0);
-
-			event.level.addParticle(ParticleTypes.DRAGON_BREATH, boxCenter.x, boxCenter.y, boxCenter.z, 0, 0, 0);
+//
+//			event.level.addParticle(ParticleTypes.CRIT, teleportBox.minX, teleportBox.minY, teleportBox.minZ,
+//					0, 0, 0);
+//
+//			event.level.addParticle(ParticleTypes.CRIT, teleportBox.maxX, teleportBox.maxY, teleportBox.maxZ,
+//					0, 0, 0);
+//
+//			event.level.addParticle(ParticleTypes.DRAGON_BREATH, boxCenter.x, boxCenter.y, boxCenter.z, 0, 0, 0);
 		}
 
 		if(event.side.isServer() && event.phase.equals(TickEvent.Phase.END))
@@ -87,14 +92,29 @@ public class CommonEvents
 				for(Map.Entry<UUID, PortalLink> entry : PortalUtilities.getPortalLinks(serverLevel).entrySet())
 				{
 					PortalLink link = entry.getValue();
+
 					for(int i = 0; i < 2; i++)
 					{
 						BlockPos portalPos = i == 0 ? link.posPrimary : link.posSecondary;
+
+						if(link.isOpen())
+						{
+							if(portalPos != null)
+								NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(portalPos)),
+									new ClientboundPortalAmbientSoundPacket(link.linkID, i == 0, false));
+						}
+						else
+						{
+							if(portalPos != null)
+								NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(portalPos)),
+									new ClientboundPortalAmbientSoundPacket(link.linkID, i == 0,true));
+						}
+
 						if(portalPos != null)
 						{
 							if(i == 0)
-								link.openingPrimary += 1;
-							else link.openingSecondary += 1;
+								link.openingPrimary = 7;
+							else link.openingSecondary = 7;
 						}
 					}
 				}
@@ -137,6 +157,7 @@ public class CommonEvents
 
 						boolean otherWall = PortalUtilities.isPortalOnWall(serverLevel, uuid, !isPrimary);
 						boolean otherCeiling = PortalUtilities.isPortalOnCeiling(serverLevel, uuid, !isPrimary);
+						ResourceKey<Level> otherDimension = PortalUtilities.getPortalDimension(serverLevel, uuid, !isPrimary);
 
 						float rotation = otherDirection.toYRot() - portalDirection.toYRot() + 180;
 						AABB otherTeleportBox = PortalUtilities.getPortalTeleportBox(otherPortalPos, otherDirection,
@@ -169,9 +190,20 @@ public class CommonEvents
 
 						Vector3f oldSpeed = entity.getDeltaMovement().toVector3f();
 
-						entity.teleportTo((ServerLevel) level, otherPortalPos.x, otherPortalPos.y, otherPortalPos.z, Set.of(),
+						Level otherPortalLevel = serverLevel.getServer().getLevel(otherDimension);
+
+						entity.teleportTo((ServerLevel) otherPortalLevel, otherPortalPos.x, otherPortalPos.y, otherPortalPos.z, Set.of(),
 								entity.getYRot()+ ((!isOnWall && otherWall) ? rotation+180 : rotation),
 								entity.getXRot());
+
+						Vec3 otherPos = otherPortalPos;
+
+						NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(
+										BlockPos.containing(portalPos))),
+								new ClientboundPortalSoundsPacket.EnterPortal(uuid, isPrimary));
+						NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> otherPortalLevel.getChunkAt(
+										BlockPos.containing(otherPos))),
+								new ClientboundPortalSoundsPacket.EnterPortal(uuid, isPrimary));
 
 						Quaternionf rotationQ = new Quaternionf(Axis.YP.rotationDegrees(rotation-180));
 

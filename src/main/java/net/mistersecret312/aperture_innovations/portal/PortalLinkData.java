@@ -68,7 +68,7 @@ public class PortalLinkData extends SavedData
 
 	public void addFreshLink(UUID uuid)
 	{
-		this.portalLinks.put(uuid, new PortalLink(uuid));
+		this.portalLinks.put(uuid, new PortalLink(uuid, null));
 		this.setDirty();
 	}
 	

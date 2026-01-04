@@ -4,6 +4,7 @@ import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -132,6 +133,20 @@ public class PortalUtilities
 		{
 			PortalLink link = getPortalLinks(level).get(uuid);
 			return isPrimary ? link.ceilingPrimary : link.ceilingSecondary;
+		}
+	}
+
+	public static ResourceKey<Level> getPortalDimension(Level level, UUID uuid, boolean isPrimary)
+	{
+		if(level.isClientSide())
+		{
+			ClientPortalLink link = getPortalLinks().get(uuid);
+			return isPrimary ? link.dimensionPrimary() : link.dimensionSecondary();
+		}
+		else
+		{
+			PortalLink link = getPortalLinks(level).get(uuid);
+			return isPrimary ? link.dimensionPrimary : link.dimensionSecondary;
 		}
 	}
 	

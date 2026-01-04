@@ -13,6 +13,7 @@ import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
@@ -63,41 +64,23 @@ public class ClientEvents
 		Camera camera = event.getCamera();
 		PoseStack poseStack = event.getPoseStack();
 
-		if(event.getStage() == RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS)
-		{
-			for(Map.Entry<UUID, ClientPortalLink> linkEntry : LINKS.entrySet())
-			{
-				ClientPortalLink link = linkEntry.getValue();
-
-				poseStack.pushPose();
-
-				final TextureAtlasSprite primary = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
-															.apply(TEXTURE_PRIMARY_VORTEX);
-				final TextureAtlasSprite secondary = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
-															  .apply(TEXTURE_SECONDARY_VORTEX);
-
-				if(link.posPrimary() != null && !PortalViewingRenderer.rendering)
-					renderPortalVortex(link, camera, primary, buffer, poseStack, true);
-				if(link.posSecondary() != null && !PortalViewingRenderer.rendering)
-					renderPortalVortex(link, camera, secondary, buffer, poseStack, false);
-
-				poseStack.popPose();
-				buffer.endBatch();
-			}
-		}
-
 		if(event.getStage() == RenderLevelStageEvent.Stage.AFTER_SKY)
 		{
+			Level level = Minecraft.getInstance().level;
 			LINKS.forEach((linkID, link) -> {
 				poseStack.pushPose();
 
 				for(int i = 0; i < 2; i++)
 				{
+					ResourceKey<Level> dimension = i == 0 ? link.dimensionPrimary() : link.dimensionSecondary();
+					if(level.dimension() != dimension)
+						continue;
+
 					poseStack.pushPose();
 
 					float openingAnimTick = Math.min(7, i == 0 ? link.openingPrimary() : link.openingSecondary());
-					float maxScale = openingAnimTick/6;
-					float previousScale = Math.max(0, openingAnimTick/6 - 1f/6f);
+					float maxScale = openingAnimTick / 6;
+					float previousScale = Math.max(0, openingAnimTick / 6 - 1f / 6f);
 					if(maxScale > 1)
 					{
 						maxScale = 1;
@@ -111,31 +94,89 @@ public class ClientEvents
 
 					if(portalPos != null && otherPortalPos != null)
 					{
-						if(!PortalViewingRenderer.rendering)
-						{
-							if(Minecraft.getInstance().level.isLoaded(otherPortalPos))
-								renderPortal(buffer, camera, poseStack, link, i == 0, scale);
-						}
-
-						if(Minecraft.getInstance().level.isLoaded(portalPos))
-							renderPortalNonSee(buffer, poseStack, camera, link, true, scale);
+						if(level.isLoaded(portalPos))
+							renderPortalNonSee(buffer, poseStack, camera, link, i == 0, scale);
 					}
-
-					if(portalPos != null && Minecraft.getInstance().level.isLoaded(portalPos)
-							   && event.getLevelRenderer().getFrustum().isVisible(new AABB(portalPos).inflate(1)))
-					{
-						if(i == 0)
-						{
-							primaryRender(link, buffer, poseStack, camera, scale);
-						}
-						else secondaryRender(link, buffer, poseStack, camera, scale);
-					}
-
 					poseStack.popPose();
 					buffer.endBatch();
 				}
 				poseStack.popPose();
 			});
+		}
+
+		if(event.getStage() == RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS)
+		{
+			for(Map.Entry<UUID, ClientPortalLink> linkEntry : LINKS.entrySet())
+			{
+				ClientPortalLink link = linkEntry.getValue();
+
+				poseStack.pushPose();
+
+				ResourceLocation texturePrimary = link.getVariant().getPrimaryPortal().getVortexTexture();
+				ResourceLocation textureSecondary = link.getVariant().getSecondaryPortal().getVortexTexture();
+
+				final TextureAtlasSprite primary = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
+															.apply(texturePrimary);
+				final TextureAtlasSprite secondary = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
+															  .apply(textureSecondary);
+
+				if(!PortalViewingRenderer.rendering)
+				{
+					for(int i = 0; i < 2; i++)
+					{
+						ResourceKey<Level> dimension = i == 0 ? link.dimensionPrimary() : link.dimensionSecondary();
+						if(Minecraft.getInstance().level.dimension() != dimension)
+							continue;
+
+						poseStack.pushPose();
+
+						float openingAnimTick = Math.min(7, i == 0 ? link.openingPrimary() : link.openingSecondary());
+						float maxScale = openingAnimTick/6;
+						float previousScale = Math.max(0, openingAnimTick/6 - 1f/6f);
+						if(maxScale > 1)
+						{
+							maxScale = 1;
+							previousScale = 1;
+						}
+
+						float scale = Mth.lerp(event.getPartialTick(), previousScale, maxScale);
+
+						BlockPos portalPos = i == 0 ? link.posPrimary() : link.posSecondary();
+						BlockPos otherPortalPos = i == 0 ? link.posSecondary() : link.posPrimary();
+
+						if(portalPos != null && otherPortalPos != null)
+						{
+							if(!PortalViewingRenderer.rendering)
+							{
+								if(Minecraft.getInstance().level.isLoaded(otherPortalPos))
+									renderPortal(buffer, camera, poseStack, link, i == 0, scale);
+							}
+						}
+
+						poseStack.popPose();
+
+						if(portalPos != null && Minecraft.getInstance().level.isLoaded(portalPos)
+								   && event.getLevelRenderer().getFrustum().isVisible(new AABB(portalPos).inflate(1)))
+						{
+							if(i == 0)
+							{
+								primaryRender(link, buffer, poseStack, camera, scale);
+							}
+							else secondaryRender(link, buffer, poseStack, camera, scale);
+						}
+
+
+						if(i == 0 && link.posPrimary() != null)
+							renderPortalVortex(link, camera, primary, buffer, poseStack, true);
+						else if(link.posSecondary() != null)
+							renderPortalVortex(link, camera, secondary, buffer, poseStack, false);
+					}
+					RenderSystem.clear(GL11.GL_STENCIL_BUFFER_BIT, Minecraft.ON_OSX);
+				}
+
+				poseStack.popPose();
+				buffer.endBatch();
+			}
 		}
 	}
 
@@ -200,8 +241,10 @@ public class ClientEvents
 						if(link.posPrimary() != null && link.posSecondary() != null)
 							mc.execute(() ->
 							{
-								PortalViewingRenderer.requestPortalUpdate(linkID, true);
-								PortalViewingRenderer.requestPortalUpdate(linkID, false);
+								if(mc.level.dimension() == link.dimensionPrimary())
+									PortalViewingRenderer.requestPortalUpdate(linkID, true);
+								if(mc.level.dimension() == link.dimensionSecondary())
+									PortalViewingRenderer.requestPortalUpdate(linkID, false);
 							});
 					});
 			}

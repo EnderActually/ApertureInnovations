@@ -10,7 +10,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.network.PacketDistributor;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
+import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.portal.PortalLink;
@@ -64,8 +66,10 @@ public class ServerboundResetPortalLinkPacket
 
 				link.reset(level);
 
-				level.playSound(null, player.getOnPos().above(), SoundInit.PORTAL_GUN_RESET.get(), SoundSource.PLAYERS,
-						0.7f, 1f);
+				portalGun.setLastShotPortal(gunStack, -1);
+				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(player.blockPosition())),
+						new ClientboundPortalSoundsPacket.ResetPortal(linkID, player.blockPosition()));
+
 				portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "reset");
 			});
 		return true;

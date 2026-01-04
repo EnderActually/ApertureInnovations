@@ -1,20 +1,28 @@
 package net.mistersecret312.aperture_innovations.client.renderer;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.client.ColorUtil;
 import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
+import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortalGunVariant;
+import net.mistersecret312.aperture_innovations.init.ItemInit;
+import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
@@ -26,21 +34,6 @@ import java.util.UUID;
 public class PortalRenderer
 {
 	public static HashMap<UUID, ClientPortalLink> LINKS = new HashMap<>();
-
-	public static final ResourceLocation TEXTURE_PRIMARY = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
-			"textures/block/portal/portal_blue_closed.png");
-	public static final ResourceLocation TEXTURE_PRIMARY_VORTEX = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
-			"block/portal/portal_blue_vortex");
-
-	public static final ResourceLocation TEXTURE_HIGHLIGHT_PRIMARY = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
-			"textures/block/portal/portal_highlight_blue.png");
-	public static final ResourceLocation TEXTURE_HIGHLIGHT_SECONDARY = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
-			"textures/block/portal/portal_highlight_orange.png");
-
-	public static final ResourceLocation TEXTURE_SECONDARY = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
-			"textures/block/portal/portal_orange_closed.png");
-	public static final ResourceLocation TEXTURE_SECONDARY_VORTEX = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
-			"block/portal/portal_orange_vortex");
 
 	public static void primaryRender(ClientPortalLink link, MultiBufferSource.BufferSource buffer, PoseStack poseStack, Camera camera, float scale) {
 		if (link.posPrimary() != null) {
@@ -63,7 +56,8 @@ public class PortalRenderer
 			poseStack.scale(scale, scale, 1);
 			poseStack.translate(0.5f, 0f, 0.51f);
 
-			renderPortalFrame(TEXTURE_PRIMARY, buffer, poseStack);
+			renderPortalFrame(link.getVariant().primaryPortal.getClosedTexture(), link.getVariant().primaryPortal.getColor(),
+					buffer, poseStack);
 
 			poseStack.popPose();
 		}
@@ -89,7 +83,7 @@ public class PortalRenderer
 			poseStack.scale(scale, scale, 1f);
 			poseStack.translate(0.5f, 0f, 0.51f);
 
-			renderPortalFrame(TEXTURE_SECONDARY, buffer, poseStack);
+			renderPortalFrame(link.getVariant().secondaryPortal.getClosedTexture(), link.getVariant().secondaryPortal.getColor(), buffer, poseStack);
 
 			poseStack.popPose();
 		}
@@ -138,8 +132,8 @@ public class PortalRenderer
 		poseStack.scale(scale, scale, scale);
 
 		VertexConsumer consumerA = buffer.getBuffer(
-				PortalRenderTypes.portal(new ResourceLocation(ApertureInnovations.MODID,
-						"textures/block/portal/portal_mask.png")));
+				PortalRenderTypes.portal(isPrimary ? link.getVariant().primaryPortal.getMaskTexture()
+												 : link.getVariant().secondaryPortal.getMaskTexture()));
 
 		consumerA.vertex(poseStack.last().pose(), -0.5f, -0.5f, 0)
 				 .color(FastColor.ABGR32.color(255, 255, 255, 255))
@@ -202,16 +196,19 @@ public class PortalRenderer
 		poseStack.translate(-0.5f, 0f, 0f);
 		poseStack.scale(scale, scale, scale);
 
-
 		Tesselator tesselator = Tesselator.getInstance();
 		BufferBuilder builder = tesselator.getBuilder();
 		Matrix4f matrix = poseStack.last().pose();
+
+		RenderSystem.stencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_REPLACE);
 
 		RenderSystem.colorMask(false, false, false, false);
 		RenderSystem.enableDepthTest();
 
 		RenderSystem.setShader(GameRenderer::getPositionTexShader);
-		RenderSystem.setShaderTexture(0, new ResourceLocation(ApertureInnovations.MODID, "textures/block/portal/portal_mask.png"));
+		RenderSystem.setShaderTexture(0, isPrimary ? link.getVariant().primaryPortal.getMaskTexture()
+												 : link.getVariant().secondaryPortal.getMaskTexture());
+
 
 		builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
 		builder.vertex(matrix, -0.5f, -0.5f, 0).uv(0f, 0f).endVertex();
@@ -221,10 +218,11 @@ public class PortalRenderer
 
 		BufferUploader.drawWithShader(builder.end());
 
+		RenderSystem.stencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_KEEP);
 		RenderSystem.colorMask(true, true, true, true);
 
 		RenderSystem.depthFunc(GL11.GL_EQUAL);
-		RenderSystem.depthMask(false);
+		RenderSystem.depthMask(true);
 
 		if(!PortalViewingRenderer.FRAMEBUFFERS.containsKey(link.linkID()))
 		{
@@ -246,41 +244,39 @@ public class PortalRenderer
 
 		RenderSystem.disableDepthTest();
 		RenderSystem.depthFunc(GL11.GL_LEQUAL);
-		RenderSystem.depthMask(true);
+
+		RenderSystem.stencilFunc(GL11.GL_ALWAYS, 0, 0xFF);
 
 		poseStack.popPose();
 
 		source.endBatch();
 	}
 
-	public static void renderPortalFrame(ResourceLocation texture, MultiBufferSource buffer, PoseStack poseStack) {
+	public static void renderPortalFrame(ResourceLocation texture, ColorUtil.RGBA color, MultiBufferSource buffer, PoseStack poseStack) {
 		poseStack.pushPose();
 		poseStack.scale(2f, 2f, 2f);
-
-		float hue = 35;
-		Color color = Color.getHSBColor(hue/360F, 0F, 1F);
-		int argb = FastColor.ARGB32.color(255, color.getRed(), color.getGreen(), color.getBlue());
 		VertexConsumer consumerA = buffer.getBuffer(PortalRenderTypes.portalFrame(texture));
 		consumerA.vertex(poseStack.last().pose(), -0.5f, -0.5f, 0)
-				 .color(argb)
+				 .color(color.red(), color.green(), color.blue(), color.alpha())
 				 .uv(0, 1)
 				 .endVertex();
 		consumerA.vertex(poseStack.last().pose(), 0.5f, -0.5f, 0)
-				 .color(argb)
+				 .color(color.red(), color.green(), color.blue(), color.alpha())
 				 .uv(1, 1)
 				 .endVertex();
 		consumerA.vertex(poseStack.last().pose(), 0.5f, 0.5f, 0)
-				 .color(argb)
+				 .color(color.red(), color.green(), color.blue(), color.alpha())
 				 .uv(1, 0).endVertex();
 		consumerA.vertex(poseStack.last().pose(), -0.5f, 0.5f, 0)
-				 .color(argb)
+				 .color(color.red(), color.green(), color.blue(), color.alpha())
 				 .uv(0, 0)
 				 .endVertex();
 
 		poseStack.popPose();
 	}
 
-	public static void renderPortalHighlight(MultiBufferSource buffer, PoseStack poseStack, boolean isPrimary) {
+	public static void renderPortalHighlight(MultiBufferSource buffer, PoseStack poseStack,
+											 ResourceLocation texture, ColorUtil.RGBA color, boolean isPrimary) {
 		poseStack.pushPose();
 		Tesselator tesselator = Tesselator.getInstance();
 		BufferBuilder builder = tesselator.getBuilder();
@@ -289,8 +285,13 @@ public class PortalRenderer
 		RenderSystem.enableDepthTest();
 		RenderSystem.depthFunc(GL11.GL_GREATER);
 
+		GL11.glEnable(GL11.GL_STENCIL_TEST);
+		RenderSystem.stencilFunc(GL11.GL_NOTEQUAL, 1, 0xFF);
+		RenderSystem.stencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_KEEP);
+
 		RenderSystem.setShader(GameRenderer::getPositionTexShader);
-		RenderSystem.setShaderTexture(0, isPrimary ? TEXTURE_HIGHLIGHT_PRIMARY : TEXTURE_HIGHLIGHT_SECONDARY);
+		RenderSystem.setShaderTexture(0, texture);
+		RenderSystem.setShaderColor(color.red(), color.green(), color.blue(), color.alpha());
 
 		builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
 
@@ -301,8 +302,10 @@ public class PortalRenderer
 
 		BufferUploader.drawWithShader(builder.end());
 
-		RenderSystem.depthFunc(GL11.GL_LEQUAL);
+		GL11.glDisable(GL11.GL_STENCIL_TEST);
+
 		RenderSystem.disableDepthTest();
+		RenderSystem.depthFunc(GL11.GL_LEQUAL);
 
 		poseStack.popPose();
 	}
@@ -353,34 +356,58 @@ public class PortalRenderer
 
 		poseStack.scale(scale, scale, scale);
 
+		ColorUtil.RGBA color = isPrimary ? link.getVariant().primaryPortal.getColor() : link.getVariant().secondaryPortal.getColor();
+
 		VertexConsumer consumerA = buffer.getBuffer(PortalRenderTypes.portalVortex(sprite.atlasLocation()));
 		consumerA.vertex(poseStack.last().pose(), -0.5f, -0.5f, 0)
-				 .color(FastColor.ABGR32.color(191, 255, 255, 255))
+				 .color(color.red(), color.green(), color.blue(), color.alpha())
 				 .uv(sprite.getU0(), sprite.getV1())
 				 .endVertex();
 		consumerA.vertex(poseStack.last().pose(), 0.5f, -0.5f, 0)
-				 .color(FastColor.ABGR32.color(191, 255, 255, 255))
+				 .color(color.red(), color.green(), color.blue(), color.alpha())
 				 .uv(sprite.getU1(), sprite.getV1())
 				 .endVertex();
 		consumerA.vertex(poseStack.last().pose(), 0.5f, 0.5f, 0)
-				 .color(FastColor.ABGR32.color(191, 255, 255, 255))
+				 .color(color.red(), color.green(), color.blue(), color.alpha())
 				 .uv(sprite.getU1(), sprite.getV0())
 				 .endVertex();
 		consumerA.vertex(poseStack.last().pose(), -0.5f, 0.5f, 0)
-				 .color(FastColor.ABGR32.color(191, 255, 255, 255))
+				 .color(color.red(), color.green(), color.blue(), color.alpha())
 				 .uv(sprite.getU0(), sprite.getV0())
 				 .endVertex();
 
-		poseStack.pushPose();
-		poseStack.translate(0.15625f, 0f, 0f);
-		renderPortalHighlight(buffer, poseStack, isPrimary);
-		poseStack.popPose();
+		LocalPlayer player = Minecraft.getInstance().player;
+		if (player == null)
+			return;
 
-		poseStack.pushPose();
-		poseStack.mulPose(Axis.YP.rotationDegrees(180));
-		poseStack.translate(0.3125f, 0f, 0f);
-		renderPortalHighlight(buffer, poseStack, isPrimary);
-		poseStack.popPose();
+		ItemStack main = player.getMainHandItem();
+		ItemStack off = player.getOffhandItem();
+		boolean hasPortalGun = main.is(ItemInit.PORTAL_GUN.get()) || off.is(ItemInit.PORTAL_GUN.get());
+		if (hasPortalGun)
+		{
+			ItemStack gunStack = main.is(ItemInit.PORTAL_GUN.get()) ? main : off;
+			PortalGunItem portalGun = (PortalGunItem) gunStack.getItem();
+
+			ClientPortalGunVariant variant = link.getVariant();
+
+			UUID linkID = portalGun.getUUID(gunStack);
+			if(linkID.equals(link.linkID()))
+			{
+				ResourceLocation texture = isPrimary ? variant.primaryPortal.getHighlightTexture() :
+												   variant.secondaryPortal.getHighlightTexture();
+
+				poseStack.pushPose();
+				poseStack.translate(0.15625f, 0f, 0f);
+				renderPortalHighlight(buffer, poseStack, texture, color, isPrimary);
+				poseStack.popPose();
+
+				poseStack.pushPose();
+				poseStack.mulPose(Axis.YP.rotationDegrees(180));
+				poseStack.translate(0.3125f, 0f, 0f);
+				renderPortalHighlight(buffer, poseStack, texture, color, isPrimary);
+				poseStack.popPose();
+			}
+		}
 
 		poseStack.popPose();
 	}

@@ -1,10 +1,17 @@
 package net.mistersecret312.aperture_innovations.client.renderer.geckolib;
 
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.ints.IntIntPair;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.minecraft.Util;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
@@ -19,6 +26,7 @@ import software.bernie.geckolib.renderer.GeoItemRenderer;
 import software.bernie.geckolib.util.RenderUtils;
 
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Extended special-entity renderer for more dynamic entity rendering.<br>
@@ -113,12 +121,12 @@ public abstract class DynamicGeoItemRenderer<T extends Item & GeoAnimatable> ext
 			super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, red, green, blue, alpha);
 
 		if (renderTypeOverride != null)
-			buffer = bufferSource.getBuffer(renderType);
+			buffer = bufferSource.getBuffer(renderTypeOverride);
 
 		if (!isReRender)
-			applyRenderLayersForBone(poseStack, animatable, bone, renderType, bufferSource, buffer, partialTick, packedLight, packedOverlay);
+			applyRenderLayersForBone(poseStack, animatable, bone, renderTypeOverride, bufferSource, buffer, partialTick, packedLight, packedOverlay);
 
-		super.renderChildBones(poseStack, animatable, bone, renderType, bufferSource, buffer, isReRender, partialTick, packedLight, packedOverlay, red, green, blue, alpha);
+		super.renderChildBones(poseStack, animatable, bone, renderTypeOverride, bufferSource, buffer, isReRender, partialTick, packedLight, packedOverlay, red, green, blue, alpha);
 
 		poseStack.popPose();
 	}
@@ -181,4 +189,26 @@ public abstract class DynamicGeoItemRenderer<T extends Item & GeoAnimatable> ext
 	protected IntIntPair computeTextureSize(ResourceLocation texture) {
 		return TEXTURE_DIMENSIONS_CACHE.computeIfAbsent(texture, RenderUtils::getTextureDimensions);
 	}
+
+
+	private static final RenderStateShard.ShaderStateShard SHADER_STATE = new RenderStateShard.ShaderStateShard(
+			GameRenderer::getRendertypeEntityTranslucentEmissiveShader);
+	private static final RenderStateShard.TransparencyStateShard TRANSPARENCY_STATE = new RenderStateShard.TransparencyStateShard("translucent_transparency", () -> {
+		RenderSystem.enableBlend();
+		RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+	}, () -> {
+		RenderSystem.disableBlend();
+		RenderSystem.defaultBlendFunc();
+	});
+	private static final RenderStateShard.WriteMaskStateShard WRITE_MASK = new RenderStateShard.WriteMaskStateShard(true, true);
+	public static final Function<ResourceLocation, RenderType> GLOWING_FUNCTION = Util.memoize(texture -> {
+		RenderStateShard.TextureStateShard textureState = new RenderStateShard.TextureStateShard(texture, false, false);
+
+		return RenderType.create("geo_glowing_layer", DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 256, false, true,
+				RenderType.CompositeState.builder()
+										 .setShaderState(SHADER_STATE)
+										 .setTextureState(textureState)
+										 .setTransparencyState(TRANSPARENCY_STATE)
+										 .setWriteMaskState(WRITE_MASK).createCompositeState(false));
+	});
 }
