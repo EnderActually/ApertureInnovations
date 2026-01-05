@@ -38,6 +38,7 @@ import net.mistersecret312.aperture_innovations.network.ServerboundOpenPortalPac
 import net.mistersecret312.aperture_innovations.network.ServerboundResetPortalLinkPacket;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
+import net.mistersecret312.aperture_innovations.sounds.PortalSoundWrapper;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
@@ -78,16 +79,7 @@ public class ClientEvents
 
 					poseStack.pushPose();
 
-					float openingAnimTick = Math.min(7, i == 0 ? link.openingPrimary() : link.openingSecondary());
-					float maxScale = openingAnimTick / 6;
-					float previousScale = Math.max(0, openingAnimTick / 6 - 1f / 6f);
-					if(maxScale > 1)
-					{
-						maxScale = 1;
-						previousScale = 1;
-					}
-
-					float scale = Mth.lerp(event.getPartialTick(), previousScale, maxScale);
+					float scale = PortalUtilities.getPortalOpeningAnimationProgress(linkID, i == 0);
 
 					BlockPos portalPos = i == 0 ? link.posPrimary() : link.posSecondary();
 					BlockPos otherPortalPos = i == 0 ? link.posSecondary() : link.posPrimary();
@@ -95,7 +87,9 @@ public class ClientEvents
 					if(portalPos != null && otherPortalPos != null)
 					{
 						if(level.isLoaded(portalPos))
+						{
 							renderPortalNonSee(buffer, poseStack, camera, link, i == 0, scale);
+						}
 					}
 					poseStack.popPose();
 					buffer.endBatch();
@@ -130,27 +124,18 @@ public class ClientEvents
 
 						poseStack.pushPose();
 
-						float openingAnimTick = Math.min(7, i == 0 ? link.openingPrimary() : link.openingSecondary());
-						float maxScale = openingAnimTick/6;
-						float previousScale = Math.max(0, openingAnimTick/6 - 1f/6f);
-						if(maxScale > 1)
-						{
-							maxScale = 1;
-							previousScale = 1;
-						}
-
-						float scale = Mth.lerp(event.getPartialTick(), previousScale, maxScale);
+						float scale = PortalUtilities.getPortalOpeningAnimationProgress(link.linkID(), i == 0);
 
 						BlockPos portalPos = i == 0 ? link.posPrimary() : link.posSecondary();
 						BlockPos otherPortalPos = i == 0 ? link.posSecondary() : link.posPrimary();
 
 						if(portalPos != null && otherPortalPos != null)
 						{
-							if(!PortalViewingRenderer.rendering)
-							{
-								if(Minecraft.getInstance().level.isLoaded(otherPortalPos))
-									renderPortal(buffer, camera, poseStack, link, i == 0, scale);
-							}
+//							if(!PortalViewingRenderer.rendering)
+//							{
+//								if(Minecraft.getInstance().level.isLoaded(otherPortalPos))
+//									renderPortal(buffer, camera, poseStack, link, i == 0, scale);
+//							}
 						}
 
 						poseStack.popPose();
@@ -171,7 +156,6 @@ public class ClientEvents
 						else if(link.posSecondary() != null)
 							renderPortalVortex(link, camera, secondary, buffer, poseStack, false);
 					}
-					RenderSystem.clear(GL11.GL_STENCIL_BUFFER_BIT, Minecraft.ON_OSX);
 				}
 
 				poseStack.popPose();
@@ -238,7 +222,30 @@ public class ClientEvents
 			{
 				LINKS.forEach((linkID, link) ->
 					{
-						if(link.posPrimary() != null && link.posSecondary() != null)
+						for(int i = 0; i < 2; i++)
+						{
+							boolean isPrimary = i == 0;
+							BlockPos portalPos = isPrimary ? link.posPrimary() : link.posSecondary();
+
+							if(portalPos != null)
+							{
+								float progress = PortalUtilities.getPortalOpeningAnimationProgress(linkID, isPrimary);
+								if(progress < 1F)
+								{
+									progress += 0.25F;
+									PortalUtilities.setPortalOpeningAnimationProgress(progress, linkID, isPrimary);
+								}
+							}
+
+							if(!link.isOpen())
+							{
+								PortalSoundWrapper.PortalAmbient ambient = PortalUtilities.getAmbientSound(linkID, isPrimary);
+								if(ambient != null)
+									ambient.stopSound();
+							}
+						}
+
+						if(link.posPrimary() != null && link.posSecondary() != null && false)
 							mc.execute(() ->
 							{
 								if(mc.level.dimension() == link.dimensionPrimary())

@@ -17,6 +17,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -83,17 +84,16 @@ public class PortalGunItem extends Item implements GeoItem
 	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> components,
 								TooltipFlag flag)
 	{
-		if(stack.getTag() != null && stack.getTag().contains("link"))
-		{
-			ClientPortalLink link = PortalUtilities.getPortalLinks().get(getUUID(stack));
-			if(link != null) components.add(
-					Component.translatable("aperture_innovations.portal_gun.variant_" + link.variantKey().getPath()));
-		}
+		ClientPortalLink link = PortalUtilities.getPortalLinks().get(getUUID(stack, false));
+		if(link != null) components.add(
+				Component.translatable("aperture_innovations.portal_gun.variant_" + link.variantKey().getPath()));
+
 	}
 
 	@Override
 	public void inventoryTick(ItemStack stack, Level level, Entity entity, int slot, boolean isSelected)
 	{
+
 		if(level.isClientSide() || !(entity instanceof Player player))
 			return;
 
@@ -101,7 +101,7 @@ public class PortalGunItem extends Item implements GeoItem
 			setInitialized(stack, true);
 			PortalLinkData data = PortalLinkData.get(level);
 
-			UUID linkID = getUUID(stack);
+			UUID linkID = getUUID(stack, true);
 
 			PortalLink link = data.getLink(linkID);
 			if (link == null) {
@@ -110,12 +110,20 @@ public class PortalGunItem extends Item implements GeoItem
 				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(player.blockPosition())), new ClientboundPortalSoundsPacket.GunActivate(linkID, player.blockPosition()));
 			}
 		}
+		else
+		{
+			PortalLink link = PortalUtilities.getPortalLinks(level).get(getUUID(stack, false));
+			if(link != null && isSelected)
+			{
+				link.updateColors(level, getPrimaryPortalColor(stack), getSecondaryPortalColor(stack));
+			}
+		}
 	}
 
 	@Override
 	public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged)
 	{
-		return false;
+		return slotChanged;
 	}
 
 	@Override
@@ -175,17 +183,19 @@ public class PortalGunItem extends Item implements GeoItem
 		return dot > 0.995;
 	}
 
-	public UUID getUUID(ItemStack stack)
+	public UUID getUUID(ItemStack stack, boolean generateIfEmpty)
 	{
 		CompoundTag tag = stack.getOrCreateTag();
 		if(tag.contains("link"))
 			return tag.getUUID("link");
-		else
+		else if(generateIfEmpty)
 		{
 			UUID uuid = UUID.randomUUID();
 			setUUID(stack, uuid);
 			return uuid;
 		}
+
+		return null;
 	}
 
 	public void setUUID(ItemStack stack, UUID uuid)

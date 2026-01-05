@@ -54,14 +54,14 @@
   "portal_open_primary": {
     "subtitle": "sound.aperture_innovations.portal_open_primary",
     "sounds": [
-      "aperture_innovations:portal_open_primary_1",
-      "aperture_innovations:portal_open_primary_2"
+      "aperture_innovations:portal_open_primary_1"
     ]
   },
   "portal_open_secondary": {
     "subtitle": "sound.aperture_innovations.portal_open_secondary",
     "sounds": [
-      "aperture_innovations:portal_open_secondary_1"
+      "aperture_innovations:portal_open_secondary_1",
+      "aperture_innovations:portal_open_secondary_2"
     ]
   },
   "portal_gun_reset": {

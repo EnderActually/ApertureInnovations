@@ -10,6 +10,7 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
@@ -24,6 +25,7 @@ import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortal
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
+import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 
@@ -56,7 +58,7 @@ public class PortalRenderer
 			poseStack.scale(scale, scale, 1);
 			poseStack.translate(0.5f, 0f, 0.51f);
 
-			renderPortalFrame(link.getVariant().primaryPortal.getClosedTexture(), link.getVariant().primaryPortal.getColor(),
+			renderPortalFrame(link.getVariant().primaryPortal.getClosedTexture(), PortalUtilities.getPortalColor(link, true),
 					buffer, poseStack);
 
 			poseStack.popPose();
@@ -83,7 +85,8 @@ public class PortalRenderer
 			poseStack.scale(scale, scale, 1f);
 			poseStack.translate(0.5f, 0f, 0.51f);
 
-			renderPortalFrame(link.getVariant().secondaryPortal.getClosedTexture(), link.getVariant().secondaryPortal.getColor(), buffer, poseStack);
+			renderPortalFrame(link.getVariant().secondaryPortal.getClosedTexture(), PortalUtilities.getPortalColor(link, false),
+					buffer, poseStack);
 
 			poseStack.popPose();
 		}
@@ -200,8 +203,6 @@ public class PortalRenderer
 		BufferBuilder builder = tesselator.getBuilder();
 		Matrix4f matrix = poseStack.last().pose();
 
-		RenderSystem.stencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_REPLACE);
-
 		RenderSystem.colorMask(false, false, false, false);
 		RenderSystem.enableDepthTest();
 
@@ -301,8 +302,11 @@ public class PortalRenderer
 		builder.vertex(matrix, -0.5f,  0.5f, 0).uv(0.0f, 0.0f).endVertex();
 
 		BufferUploader.drawWithShader(builder.end());
+		RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
 
 		GL11.glDisable(GL11.GL_STENCIL_TEST);
+		if(!isPrimary)
+			RenderSystem.clear(GL11.GL_STENCIL_BUFFER_BIT, Minecraft.ON_OSX);
 
 		RenderSystem.disableDepthTest();
 		RenderSystem.depthFunc(GL11.GL_LEQUAL);
@@ -351,12 +355,11 @@ public class PortalRenderer
 		poseStack.translate(-0.3125f, 0f, 0.005f);
 		poseStack.scale(2f, 2f, 2f);
 
-		float openingAnimTick = Math.min(6, isPrimary ? link.openingPrimary() : link.openingSecondary());
-		float scale = openingAnimTick/6;
+		float scale = isPrimary ? link.openingPrimary() : link.openingSecondary();
 
-		poseStack.scale(scale, scale, scale);
-
-		ColorUtil.RGBA color = isPrimary ? link.getVariant().primaryPortal.getColor() : link.getVariant().secondaryPortal.getColor();
+		poseStack.scale(scale, scale, 1f);
+		poseStack.translate((1-scale)*(-0.5f), 0f, 0f);
+		ColorUtil.RGBA color = PortalUtilities.getPortalColor(link, isPrimary);
 
 		VertexConsumer consumerA = buffer.getBuffer(PortalRenderTypes.portalVortex(sprite.atlasLocation()));
 		consumerA.vertex(poseStack.last().pose(), -0.5f, -0.5f, 0)
@@ -390,7 +393,7 @@ public class PortalRenderer
 
 			ClientPortalGunVariant variant = link.getVariant();
 
-			UUID linkID = portalGun.getUUID(gunStack);
+			UUID linkID = portalGun.getUUID(gunStack, false);
 			if(linkID.equals(link.linkID()))
 			{
 				ResourceLocation texture = isPrimary ? variant.primaryPortal.getHighlightTexture() :

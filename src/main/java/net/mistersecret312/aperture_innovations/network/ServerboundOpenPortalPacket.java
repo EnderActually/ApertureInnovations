@@ -61,7 +61,7 @@ public class ServerboundOpenPortalPacket
 			boolean moonshot = portalGun.isLookingAtMoon(player, level);
 			if(moonshot)
 			{
-				UUID linkID = portalGun.getUUID(gunStack);
+				UUID linkID = portalGun.getUUID(gunStack, true);
 
 				PortalLinkData linkData = PortalLinkData.get(level);
 				PortalLink link = linkData.getLink(gunStack);
@@ -86,7 +86,7 @@ public class ServerboundOpenPortalPacket
 			BlockHitResult result = PortalGunItem.rayTrace(player.level(), player, 256);
 			if(!result.getType().equals(HitResult.Type.MISS))
 			{
-				UUID linkID = portalGun.getUUID(gunStack);
+				UUID linkID = portalGun.getUUID(gunStack, true);
 
 				if(level.getBlockState(result.getBlockPos()).is(ApertureInnovations.IMPORTALABLE)
 				|| !level.getFluidState(result.getBlockPos()).isEmpty())
@@ -109,7 +109,7 @@ public class ServerboundOpenPortalPacket
 					link = linkData.getLink(linkID);
 				}
 
-				PortalPlacement.Result placement = PortalPlacement.getBestPlacement(level, result, player);
+				PortalPlacement.Result placement = PortalPlacement.getBestPlacement(level, result, player, linkID, isPrimary);
 				if(placement != null)
 				{
 					portalGun.stopTriggeredAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");

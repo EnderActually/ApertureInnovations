@@ -34,7 +34,7 @@ public class CrosshairOverlay
 			ItemStack gunStack = main.is(ItemInit.PORTAL_GUN.get()) ? main : off;
 			PortalGunItem portalGun = (PortalGunItem) gunStack.getItem();
 
-			ClientPortalLink link = LINKS.get(portalGun.getUUID(gunStack));
+			ClientPortalLink link = LINKS.get(portalGun.getUUID(gunStack, false));
 			if(link != null)
 			{
 				boolean hasPrimary = link.posPrimary() != null || link.moonshotPrimary();

@@ -8,8 +8,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.storage.DimensionDataStorage;
+import net.minecraftforge.network.PacketDistributor;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
+import net.mistersecret312.aperture_innovations.network.ClientBoundPortalLinkSyncPacket;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -82,7 +85,7 @@ public class PortalLinkData extends SavedData
 	{
 		if(stack.getItem() instanceof PortalGunItem portalGun)
 		{
-			return this.portalLinks.get(portalGun.getUUID(stack));
+			return this.portalLinks.get(portalGun.getUUID(stack, true));
 		}
 		else return null;
 	}
@@ -91,6 +94,8 @@ public class PortalLinkData extends SavedData
 	public void setDirty()
 	{
 		super.setDirty();
+		NetworkInit.INSTANCE.send(
+				PacketDistributor.ALL.noArg(), new ClientBoundPortalLinkSyncPacket(portalLinks, new HashMap<>()));
 	}
 
 	public PortalLinkData(MinecraftServer server)

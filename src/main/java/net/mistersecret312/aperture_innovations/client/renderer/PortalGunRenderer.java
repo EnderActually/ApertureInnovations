@@ -40,11 +40,14 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
 					this.getAnimatable().getSecondaryStripeColor(this.currentItemStack);
 			if(stripeColor == -1)
 			{
-				ClientPortalLink link = PortalUtilities.getPortalLinks().get(this.getAnimatable().getUUID(this.currentItemStack));
+				ClientPortalLink link = PortalUtilities.getPortalLinks().get(this.getAnimatable().getUUID(this.currentItemStack, false));
 				ClientPortalGunVariant variant = ClientPortalGunVariant.DEFAULT_VARIANT;
 				if(link != null)
 					variant = link.getVariant();
 				ColorUtil.RGBA color = isPrimary ? variant.getPrimaryStripeColor() : variant.getSecondaryStripeColor();
+
+				if(color.red() == 1F && color.green() == 1F && color.blue() == 1F && color.alpha() == 1F)
+					return true;
 
 				red *= color.red();
 				green *= color.green();
@@ -57,6 +60,8 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
 			else
 			{
 				Color color = new Color(stripeColor, true);
+				if(color.getRGB() == -1)
+					return true;
 
 				red *= color.getRed()/255f;
 				green *= color.getGreen()/255f;
@@ -93,7 +98,7 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
 		if(gunCore.contains(bone.getName()))
 		{
 			int portal = this.getAnimatable().getLastShotPortal(this.currentItemStack);
-			ClientPortalLink link = PortalUtilities.getPortalLinks().get(this.getAnimatable().getUUID(this.currentItemStack));
+			ClientPortalLink link = PortalUtilities.getPortalLinks().get(this.getAnimatable().getUUID(this.currentItemStack, false));
 			ClientPortalGunVariant variant = ClientPortalGunVariant.DEFAULT_VARIANT;
 			if(link != null)
 				variant = link.getVariant();

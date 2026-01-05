@@ -20,12 +20,15 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.world.ForgeChunkManager;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -73,14 +76,19 @@ public class CommonEvents
 			AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPos, portalDirection, isOnWall, isOnCeiling);
 
 			Vec3 boxCenter = teleportBox.getCenter();
+			if(isOnWall)
+			{
+				boxCenter = boxCenter.relative(portalDirection.getOpposite(), 0.5D);
+			}
+			AABB centerBox = new AABB(boxCenter, boxCenter).inflate(0.25D);
+//			if(event.level.getBlockStates(centerBox).anyMatch(BlockBehaviour.BlockStateBase::isAir))
+//			{
+//				event.level.addParticle(ParticleTypes.BUBBLE_POP, boxCenter.x, boxCenter.y, boxCenter.z, 0,0, 0);
+//			}
 //
-//			event.level.addParticle(ParticleTypes.CRIT, teleportBox.minX, teleportBox.minY, teleportBox.minZ,
-//					0, 0, 0);
+//			event.level.addParticle(ParticleTypes.DRAGON_BREATH, centerBox.minX, centerBox.minY, centerBox.minZ, 0, 0, 0);
 //
-//			event.level.addParticle(ParticleTypes.CRIT, teleportBox.maxX, teleportBox.maxY, teleportBox.maxZ,
-//					0, 0, 0);
-//
-//			event.level.addParticle(ParticleTypes.DRAGON_BREATH, boxCenter.x, boxCenter.y, boxCenter.z, 0, 0, 0);
+//			event.level.addParticle(ParticleTypes.DRAGON_BREATH, centerBox.maxX, centerBox.maxY, centerBox.maxZ, 0, 0, 0);
 		}
 
 		if(event.side.isServer() && event.phase.equals(TickEvent.Phase.END))
@@ -92,29 +100,55 @@ public class CommonEvents
 				for(Map.Entry<UUID, PortalLink> entry : PortalUtilities.getPortalLinks(serverLevel).entrySet())
 				{
 					PortalLink link = entry.getValue();
+					UUID uuid = entry.getKey();
 
 					for(int i = 0; i < 2; i++)
 					{
-						BlockPos portalPos = i == 0 ? link.posPrimary : link.posSecondary;
+						boolean isPrimary = i == 0;
+
+						Vec3 portalPos = PortalUtilities.getPortalPos(serverLevel, uuid, isPrimary);
+						if(portalPos ==  null)
+							continue;
+
+						Direction portalDirection = PortalUtilities.getPortalDirection(serverLevel, uuid, isPrimary);
+						boolean isOnWall = PortalUtilities.isPortalOnWall(serverLevel, uuid, isPrimary);
+						boolean isOnCeiling = PortalUtilities.isPortalOnCeiling(serverLevel, uuid, isPrimary);
+
+						AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPos, portalDirection, isOnWall, isOnCeiling);
+
+						Vec3 boxCenter = teleportBox.getCenter();
+						if(isOnWall)
+						{
+							boxCenter = boxCenter.relative(portalDirection.getOpposite(), 0.5D);
+						}
+						AABB centerBox = new AABB(boxCenter, boxCenter).inflate(0.25D);
+						if(level.getBlockStates(centerBox).anyMatch(
+						state -> {
+							return state.is(Blocks.AIR);
+						}))
+						{
+							if(isPrimary)
+								link.resetPrimary(level);
+							else link.resetSecondary(level);
+							continue;
+						}
 
 						if(link.isOpen())
 						{
 							if(portalPos != null)
-								NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(portalPos)),
-									new ClientboundPortalAmbientSoundPacket(link.linkID, i == 0, false));
-						}
-						else
-						{
-							if(portalPos != null)
-								NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(portalPos)),
-									new ClientboundPortalAmbientSoundPacket(link.linkID, i == 0,true));
+							{
+								Level finalLevel = level;
+								NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> finalLevel.getChunkAt(
+												BlockPos.containing(portalPos))),
+									new ClientboundPortalAmbientSoundPacket(link.linkID, isPrimary, false));
+							}
 						}
 
 						if(portalPos != null)
 						{
 							if(i == 0)
-								link.openingPrimary = 7;
-							else link.openingSecondary = 7;
+								link.openingPrimary++;
+							else link.openingSecondary++;
 						}
 					}
 				}
@@ -138,17 +172,11 @@ public class CommonEvents
 
 					AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPos, portalDirection, isOnWall, isOnCeiling);
 
-					if(entity.getBoundingBox().expandTowards(entity.getDeltaMovement().multiply(0.1, 0.15, 0.1)).intersects(teleportBox))
-					{
-						if(entity instanceof Player player)
-						{
-							BlockState stateOn = player.getBlockStateOn();
-							float friction = stateOn.getBlock().getFriction();
-							if(friction > 0)
-							{
+					Vec3 entityCenter = entity.getBoundingBox().getCenter();
+					AABB entityCenterBox = new AABB(entityCenter, entityCenter).inflate(0.25D);
 
-							}
-						}
+					if(entityCenterBox.expandTowards(entity.getDeltaMovement().multiply(0.1, 1, 0.1)).intersects(teleportBox))
+					{
 						Vec3 otherPortalPos = PortalUtilities.getPortalPos(serverLevel, uuid, !isPrimary);
 						if(otherPortalPos == null)
 							continue;
@@ -198,7 +226,8 @@ public class CommonEvents
 
 						Vec3 otherPos = otherPortalPos;
 
-						NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(
+						Level finalLevel1 = level;
+						NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> finalLevel1.getChunkAt(
 										BlockPos.containing(portalPos))),
 								new ClientboundPortalSoundsPacket.EnterPortal(uuid, isPrimary));
 						NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> otherPortalLevel.getChunkAt(
@@ -239,8 +268,18 @@ public class CommonEvents
 					}
 				}
 			}
+		}
+	}
 
-			NetworkInit.INSTANCE.send(PacketDistributor.ALL.noArg(), new ClientBoundPortalLinkSyncPacket(data.portalLinks, new HashMap<>()));
+	@SubscribeEvent
+	public static void playerJoin(PlayerEvent.PlayerLoggedInEvent event)
+	{
+		Player player = event.getEntity();
+		if(player instanceof ServerPlayer serverPlayer)
+		{
+			PortalLinkData data = PortalLinkData.get(serverPlayer.level());
+			NetworkInit.INSTANCE.send(PacketDistributor.PLAYER.with(() -> serverPlayer),
+					new ClientBoundPortalLinkSyncPacket(data.portalLinks, new HashMap<>()));
 		}
 	}
 }

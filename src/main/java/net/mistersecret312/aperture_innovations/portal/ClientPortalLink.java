@@ -37,10 +37,13 @@ public class ClientPortalLink
 	private boolean moonshotPrimary;
 	private boolean moonshotSecondary;
 
-	private int openingPrimary;
-	private int openingSecondary;
+	public float openingPrimary;
+	public float openingSecondary;
 	
 	private ResourceLocation variantKey;
+
+	public int primaryPortalColor = -1;
+	public int secondaryPortalColor = -1;
 	
 	public PortalSoundWrapper.PortalAmbient primaryAmbient = null;
 	public PortalSoundWrapper.PortalAmbient secondaryAmbient = null;
@@ -51,8 +54,8 @@ public class ClientPortalLink
 					 ResourceKey<Level> dimensionPrimary, ResourceKey<Level> dimensionSecondary,
 					 Direction directionPrimary, Direction directionSecondary,
 					 boolean moonshotPrimary, boolean moonshotSecondary,
-					 int openingPrimary, int openingSecondary,
-					 ResourceLocation variantKey)
+					 float openingPrimary, float openingSecondary,
+					 ResourceLocation variantKey, int primaryPortalColor, int secondaryPortalColor)
 	{
 		this.linkID = linkID;
 		
@@ -78,6 +81,9 @@ public class ClientPortalLink
 		this.openingSecondary = openingSecondary;
 		
 		this.variantKey = variantKey;
+
+		this.primaryPortalColor = primaryPortalColor;
+		this.secondaryPortalColor = secondaryPortalColor;
 	}
 
 	public boolean isOpen()
@@ -129,12 +135,12 @@ public class ClientPortalLink
 		return dimensionSecondary;
 	}
 
-	public int openingPrimary()
+	public float openingPrimary()
 	{
 		return openingPrimary;
 	}
 
-	public int openingSecondary()
+	public float openingSecondary()
 	{
 		return openingSecondary;
 	}
@@ -174,20 +180,33 @@ public class ClientPortalLink
 		return wallSecondary;
 	}
 
+	public int primaryPortalColor()
+	{
+		return primaryPortalColor;
+	}
+
+	public int secondaryPortalColor()
+	{
+		return secondaryPortalColor;
+	}
+
 	public void stopAmbient(boolean isPrimary)
 	{
-		if(isPrimary)
+		if(primaryAmbient != null)
 			primaryAmbient.stopSound();
-		else secondaryAmbient.stopSound();
+		if(secondaryAmbient != null)
+			secondaryAmbient.stopSound();
 	}
 
 	public void playAmbient(boolean isPrimary)
 	{
-		if(!this.primaryAmbient.isPlaying() && !this.secondaryAmbient.isPlaying())
-		{
-			if(isPrimary)
+		if(this.primaryAmbient != null)
+			if(!this.primaryAmbient.isPlaying())
 				primaryAmbient.playSound();
-			else secondaryAmbient.playSound();
-		}
+
+		if(this.secondaryAmbient != null)
+			if(!this.secondaryAmbient.isPlaying())
+				secondaryAmbient.playSound();
+
 	}
 }

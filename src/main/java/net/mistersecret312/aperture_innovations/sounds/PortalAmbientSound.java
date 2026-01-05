@@ -9,7 +9,7 @@ public class PortalAmbientSound extends PortalSound<ClientPortalLink>
 	private static final float VOLUME_MAX = 0.2F;
 
 	public PortalAmbientSound(ClientPortalLink fountain, boolean isPrimary, SoundEvent soundEvent) {
-		super(fountain, isPrimary, soundEvent, 23, 32);
+		super(fountain, isPrimary, soundEvent, 2, 4);
 		this.looping = true;
 		this.volume = VOLUME_MIN;
 	}
@@ -17,7 +17,7 @@ public class PortalAmbientSound extends PortalSound<ClientPortalLink>
 	@Override
 	public void tick()
 	{
-		if(getDistanceFromSource() <= 32)
+		if(getDistanceFromSource() <= 4)
 			fadeIn();
 		else
 			fadeOut();

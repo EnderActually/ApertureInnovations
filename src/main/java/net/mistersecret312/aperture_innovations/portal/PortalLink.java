@@ -19,6 +19,7 @@ import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
+import net.mistersecret312.aperture_innovations.network.ClientboundPortalAmbientSoundPacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalSoundsPacket;
 
 import java.util.UUID;
@@ -50,6 +51,9 @@ public class PortalLink
 
 	public ResourceLocation variantKey = null;
 
+	public int primaryPortalColor = -1;
+	public int secondaryPortalColor = -1;
+
 	public PortalLink(UUID linkID, ResourceLocation variantKey)
 	{
 		this.linkID = linkID;
@@ -64,7 +68,7 @@ public class PortalLink
 					  boolean ceilingPrimary, boolean ceilingSecondary,
 					  ResourceKey<Level> dimensionPrimary, ResourceKey<Level> dimensionSecondary,
 					  Direction directionPrimary, Direction directionSecondary,
-					  ResourceLocation variantKey)
+					  ResourceLocation variantKey, int primaryPortalColor, int secondaryPortalColor)
 	{
 		this.linkID = linkID;
 
@@ -83,6 +87,9 @@ public class PortalLink
 		this.directionPrimary = directionPrimary;
 		this.directionSecondary = directionSecondary;
 
+		this.primaryPortalColor = primaryPortalColor;
+		this.secondaryPortalColor = secondaryPortalColor;
+
 		this.variantKey = variantKey;
 	}
 
@@ -94,6 +101,7 @@ public class PortalLink
 		this.wallPrimary = facing.equals(Direction.UP);
 		this.ceilingPrimary = direction.equals(Direction.DOWN);
 		this.moonshotPrimary = false;
+		this.openingPrimary = 0;
 
 		Level portalLevel = level.getServer().getLevel(dimensionPrimary);
 		if(portalLevel != null)
@@ -113,6 +121,7 @@ public class PortalLink
 		this.wallSecondary = facing.equals(Direction.UP);
 		this.ceilingSecondary = direction.equals(Direction.DOWN);
 		this.moonshotSecondary = false;
+		this.openingSecondary = 0;
 
 		Level portalLevel = level.getServer().getLevel(dimensionSecondary);
 		if(portalLevel != null)
@@ -121,6 +130,15 @@ public class PortalLink
 							() -> portalLevel.getChunkAt(pos)),
 					new ClientboundPortalSoundsPacket.OpenPortal(linkID, false));
 		}
+
+		PortalLinkData.get(level).setDirty();
+	}
+
+	public void updateColors(Level level, int primaryPortalColor, int secondaryPortalColor)
+	{
+		this.primaryPortalColor = primaryPortalColor;
+		this.secondaryPortalColor = secondaryPortalColor;
+
 		PortalLinkData.get(level).setDirty();
 	}
 
@@ -131,6 +149,8 @@ public class PortalLink
 
 		if(posSecondary != null || moonshotSecondary)
 			resetSecondary(level);
+
+		PortalLinkData.get(level).setDirty();
 	}
 
 	public void resetPrimary(Level level)
@@ -153,8 +173,6 @@ public class PortalLink
 		this.directionPrimary = null;
 		this.openingPrimary = 0;
 		this.moonshotPrimary = false;
-
-		PortalLinkData.get(level).setDirty();
 	}
 
 	public void resetSecondary(Level level)
@@ -166,7 +184,7 @@ public class PortalLink
 			{
 				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(
 								() -> portalLevel.getChunkAt(posSecondary)),
-						new ClientboundPortalSoundsPacket.FizzlePortal(linkID, true));
+						new ClientboundPortalSoundsPacket.FizzlePortal(linkID, false));
 			}
 		}
 
@@ -177,8 +195,6 @@ public class PortalLink
 		this.directionSecondary = null;
 		this.openingSecondary = 0;
 		this.moonshotSecondary = false;
-
-		PortalLinkData.get(level).setDirty();
 	}
 
 	public void setMoonshot(boolean isPrimary, boolean moonshot, Level level)
@@ -249,13 +265,15 @@ public class PortalLink
 		}
 
 		ResourceLocation variantKey = ResourceLocation.parse(tag.getString("variantKey"));
+		int primaryPortalColor = tag.getInt("primaryPortalColor");
+		int secondaryPortalColor = tag.getInt("secondaryPortalColor");
 
 		PortalLink link = new PortalLink(linkID, posPrimary, posSecondary,
 				wallPrimary, wallSecondary,
 				ceilingPrimary, ceilingSecondary,
 				dimensionPrimary, dimensionSecondary,
 				directionPrimary, directionSecondary,
-				variantKey);
+				variantKey, primaryPortalColor, secondaryPortalColor);
 
 		link.openingPrimary = openingPrimary;
 		link.openingSecondary = openingSecondary;
@@ -292,6 +310,9 @@ public class PortalLink
 		if(variantKey == null)
 			variantKey = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "chell");
 		tag.putString("variantKey", variantKey.toString());
+
+		tag.putInt("primaryPortalColor", primaryPortalColor);
+		tag.putInt("secondaryPortalColor", secondaryPortalColor);
 
 		return tag;
 	}

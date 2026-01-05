@@ -51,7 +51,7 @@ public class ServerboundResetPortalLinkPacket
 				ItemStack gunStack = main.is(ItemInit.PORTAL_GUN.get()) ? main : off;
 				PortalGunItem portalGun = (PortalGunItem) gunStack.getItem();
 
-				UUID linkID = portalGun.getUUID(gunStack);
+				UUID linkID = portalGun.getUUID(gunStack, true);
 
 				PortalLinkData linkData = PortalLinkData.get(level);
 				PortalLink link = linkData.getLink(gunStack);
