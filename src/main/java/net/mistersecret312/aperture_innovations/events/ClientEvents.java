@@ -37,6 +37,7 @@ import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.network.ServerboundOpenPortalPacket;
 import net.mistersecret312.aperture_innovations.network.ServerboundResetPortalLinkPacket;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
+import net.mistersecret312.aperture_innovations.portal.ClientPortalUtilities;
 import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
 import net.mistersecret312.aperture_innovations.sounds.PortalSoundWrapper;
 import org.joml.Matrix4f;
@@ -79,12 +80,15 @@ public class ClientEvents
 
 					poseStack.pushPose();
 
-					float scale = PortalUtilities.getPortalOpeningAnimationProgress(linkID, i == 0);
+					float scale = ClientPortalUtilities.getPortalOpeningAnimationProgress(linkID, i == 0);
 
 					BlockPos portalPos = i == 0 ? link.posPrimary() : link.posSecondary();
 					BlockPos otherPortalPos = i == 0 ? link.posSecondary() : link.posPrimary();
 
-					if(portalPos != null && otherPortalPos != null)
+					boolean moonshot = i == 0 ? link.moonshotPrimary() : link.moonshotSecondary();
+					boolean otherMoonshot = i == 0 ? link.moonshotSecondary() : link.moonshotPrimary();
+
+					if((portalPos != null || moonshot) && (otherPortalPos != null || otherMoonshot))
 					{
 						if(level.isLoaded(portalPos))
 						{
@@ -106,8 +110,8 @@ public class ClientEvents
 
 				poseStack.pushPose();
 
-				ResourceLocation texturePrimary = link.getVariant().getPrimaryPortal().getVortexTexture();
-				ResourceLocation textureSecondary = link.getVariant().getSecondaryPortal().getVortexTexture();
+				ResourceLocation texturePrimary = ClientPortalUtilities.getPortalVortexTexture(link, true);
+				ResourceLocation textureSecondary = ClientPortalUtilities.getPortalVortexTexture(link, false);
 
 				final TextureAtlasSprite primary = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
 															.apply(texturePrimary);
@@ -124,7 +128,7 @@ public class ClientEvents
 
 						poseStack.pushPose();
 
-						float scale = PortalUtilities.getPortalOpeningAnimationProgress(link.linkID(), i == 0);
+						float scale = ClientPortalUtilities.getPortalOpeningAnimationProgress(link.linkID(), i == 0);
 
 						BlockPos portalPos = i == 0 ? link.posPrimary() : link.posSecondary();
 						BlockPos otherPortalPos = i == 0 ? link.posSecondary() : link.posPrimary();
@@ -229,17 +233,17 @@ public class ClientEvents
 
 							if(portalPos != null)
 							{
-								float progress = PortalUtilities.getPortalOpeningAnimationProgress(linkID, isPrimary);
+								float progress = ClientPortalUtilities.getPortalOpeningAnimationProgress(linkID, isPrimary);
 								if(progress < 1F)
 								{
 									progress += 0.25F;
-									PortalUtilities.setPortalOpeningAnimationProgress(progress, linkID, isPrimary);
+									ClientPortalUtilities.setPortalOpeningAnimationProgress(progress, linkID, isPrimary);
 								}
 							}
 
 							if(!link.isOpen())
 							{
-								PortalSoundWrapper.PortalAmbient ambient = PortalUtilities.getAmbientSound(linkID, isPrimary);
+								PortalSoundWrapper.PortalAmbient ambient = ClientPortalUtilities.getAmbientSound(linkID, isPrimary);
 								if(ambient != null)
 									ambient.stopSound();
 							}

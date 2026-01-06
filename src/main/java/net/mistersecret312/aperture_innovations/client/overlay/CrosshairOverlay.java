@@ -1,16 +1,20 @@
 package net.mistersecret312.aperture_innovations.client.overlay;
 
 import ca.weblite.objc.Client;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.client.ColorUtil;
 import net.mistersecret312.aperture_innovations.events.ClientEvents;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
+import net.mistersecret312.aperture_innovations.portal.ClientPortalUtilities;
 import net.mistersecret312.aperture_innovations.portal.PortalLink;
 import net.mistersecret312.aperture_innovations.portal.PortalLinkData;
 
@@ -18,13 +22,12 @@ import static net.mistersecret312.aperture_innovations.client.renderer.PortalRen
 
 public class CrosshairOverlay
 {
-	public static final ResourceLocation TEXTURE = new ResourceLocation(ApertureInnovations.MODID,
-			"textures/gui/portal_crosshair.png");
-
 	public static final IGuiOverlay OVERLAY = ((gui, guiGraphics, partialTick, screenWidth, screenHeight)
 													   -> {
 			LocalPlayer player = Minecraft.getInstance().player;
 			if (player == null) return;
+
+			PoseStack poseStack = guiGraphics.pose();
 
 			ItemStack main = player.getMainHandItem();
 			ItemStack off = player.getOffhandItem();
@@ -40,30 +43,40 @@ public class CrosshairOverlay
 				boolean hasPrimary = link.posPrimary() != null || link.moonshotPrimary();
 				boolean hasSecondary = link.posSecondary() != null || link.moonshotSecondary();
 
-				if(hasPrimary && hasSecondary)
-				{
-					guiGraphics.blit(TEXTURE, (screenWidth-17)/2, (screenHeight-33)/2,
-							0,0, 17, 33, 68, 33);
-					return;
-				}
+				ColorUtil.RGBA primaryColor = ClientPortalUtilities.getPortalColor(link, true);
+				ColorUtil.RGBA secondaryColor = ClientPortalUtilities.getPortalColor(link, false);
 
-				if(hasPrimary)
-				{
-					guiGraphics.blit(TEXTURE, (screenWidth-17)/2, (screenHeight-33)/2,
-							17,0, 17, 33, 68, 33);
-					return;
-				}
 
-				if(hasSecondary)
-				{
-					guiGraphics.blit(TEXTURE, (screenWidth-17)/2, (screenHeight-33)/2,
-							34,0, 17, 33, 68, 33);
-					return;
-				}
+				RenderSystem.setShaderColor(primaryColor.red(), primaryColor.green(), primaryColor.blue(),
+						primaryColor.alpha());
 
-				guiGraphics.blit(TEXTURE, (screenWidth - 17) / 2, (screenHeight - 33) / 2, 51, 0, 17, 33, 68, 33);
+				poseStack.pushPose();
+				poseStack.translate(hasPrimary ? -1 : -2, 0, 0);
+
+				ResourceLocation primaryCrosshairTexture = ClientPortalUtilities.getCrosshairTexture(link, true);
+				guiGraphics.blit(primaryCrosshairTexture, (screenWidth - 16) / 2, (screenHeight - 32) / 2,
+						hasPrimary ? 0 : 16, 0,
+						16, 32,
+						32, 32);
+
+				poseStack.popPose();
+
+				RenderSystem.setShaderColor(secondaryColor.red(), secondaryColor.green(), secondaryColor.blue(),
+						secondaryColor.alpha());
+
+				poseStack.pushPose();
+				poseStack.translate(hasSecondary ? 1 : 0, 0, 0);
+
+				ResourceLocation secondaryCrosshairTexture = ClientPortalUtilities.getCrosshairTexture(link, false);
+				guiGraphics.blit(secondaryCrosshairTexture, (screenWidth - 16) / 2, (screenHeight - 32) / 2,
+						hasSecondary ? 0 : 16, 0,
+						16, 32,
+						32, 32);
+
+				poseStack.popPose();
+
+				RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
 				return;
-
 			}
 
 		});

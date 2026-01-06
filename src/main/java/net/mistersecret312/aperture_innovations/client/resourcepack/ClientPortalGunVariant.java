@@ -20,8 +20,10 @@ public class ClientPortalGunVariant
 			ResourceLocation.fromNamespaceAndPath(MODID, "textures/block/portal/generic/portal_closed.png"),
 			ResourceLocation.fromNamespaceAndPath(MODID, "textures/block/portal/generic/portal_highlight.png"),
 			ResourceLocation.fromNamespaceAndPath(MODID, "textures/block/portal/generic/portal_vortex.png"),
-			ResourceLocation.fromNamespaceAndPath(MODID, "textures/block/portal/generic/gun_core.png")
-	);
+			ResourceLocation.fromNamespaceAndPath(MODID, "textures/block/portal/generic/gun_core.png"),
+			ResourceLocation.fromNamespaceAndPath(MODID, "textures/gui/generic_crosshair_primary.png"),
+			ResourceLocation.fromNamespaceAndPath(MODID, "textures/gui/generic_crosshair_secondary.png")
+			);
 
 	public static final Portal DEFAULT_PRIMARY = new Portal(
 			ResourceLocation.fromNamespaceAndPath(MODID, "textures/block/portal/portal_blue_closed.png"),
@@ -29,7 +31,8 @@ public class ClientPortalGunVariant
 			ResourceLocation.fromNamespaceAndPath(MODID, "textures/block/portal/portal_blue_vortex.png"),
 			ResourceLocation.fromNamespaceAndPath(MODID, "textures/item/chell_blue_core.png"),
 			ResourceLocation.fromNamespaceAndPath(MODID, "textures/block/portal/portal_mask.png"),
-			FULL_COLOR,
+			ResourceLocation.fromNamespaceAndPath(MODID, "textures/gui/chell_crosshair_primary.png"),
+			FULL_COLOR, true,
 			ResourceLocation.fromNamespaceAndPath(MODID, "portal_open_primary"),
 			ResourceLocation.fromNamespaceAndPath(MODID, "portal_gun_fire_primary"),
 			ResourceLocation.fromNamespaceAndPath(MODID, "portal_enter"),
@@ -44,7 +47,8 @@ public class ClientPortalGunVariant
 			ResourceLocation.fromNamespaceAndPath(MODID, "textures/block/portal/portal_orange_vortex.png"),
 			ResourceLocation.fromNamespaceAndPath(MODID, "textures/item/chell_orange_core.png"),
 			ResourceLocation.fromNamespaceAndPath(MODID, "textures/block/portal/portal_mask.png"),
-			FULL_COLOR,
+			ResourceLocation.fromNamespaceAndPath(MODID, "textures/gui/chell_crosshair_secondary.png"),
+			FULL_COLOR, true,
 			ResourceLocation.fromNamespaceAndPath(MODID, "portal_open_secondary"),
 			ResourceLocation.fromNamespaceAndPath(MODID, "portal_gun_fire_secondary"),
 			ResourceLocation.fromNamespaceAndPath(MODID, "portal_enter"),
@@ -54,7 +58,8 @@ public class ClientPortalGunVariant
 	);
 
 	public static final ClientPortalGunVariant DEFAULT_VARIANT = new ClientPortalGunVariant(
-			DEFAULT_TEXTURE, DEFAULT_IDLE_CORE_TEXTURE, DEFAULT_GENERIC, DEFAULT_PRIMARY, DEFAULT_SECONDARY,
+			DEFAULT_TEXTURE, DEFAULT_IDLE_CORE_TEXTURE,
+			DEFAULT_GENERIC, DEFAULT_PRIMARY, DEFAULT_SECONDARY,
 			FULL_COLOR, FULL_COLOR,
 			ResourceLocation.fromNamespaceAndPath(MODID, "portal_gun_activation"),
 			ResourceLocation.fromNamespaceAndPath(MODID, "portal_gun_reset")
@@ -103,10 +108,10 @@ public class ClientPortalGunVariant
 	public final ResourceLocation resetSound;
 
 	public ClientPortalGunVariant(ResourceLocation texture, ResourceLocation idleCoreTexture,
-								  GenericPortal genericPortal, Portal primaryPortal,
-								  Portal secondaryPortal, RGBA primaryStripeColor,
-								  RGBA secondaryStripeColor, ResourceLocation activationSound,
-								  ResourceLocation resetSound)
+								  GenericPortal genericPortal,
+								  Portal primaryPortal, Portal secondaryPortal,
+								  RGBA primaryStripeColor, RGBA secondaryStripeColor,
+								  ResourceLocation activationSound, ResourceLocation resetSound)
 	{
 		this.texture = texture;
 		this.idleCoreTexture = idleCoreTexture;
@@ -177,7 +182,10 @@ public class ClientPortalGunVariant
 
 		public static final String MASK_TEXTURE = "portal_mask_texture";
 
+		public static final String CROSSHAIR_TEXTURE = "crosshair_texture";
+
 		public static final String COLOR = "color";
+		public static final String GENERIC_COLORING = "generic_coloring";
 
 		public static final String OPENING_SOUND = "opening_sound";
 		public static final String SHOT_SOUND = "shot_sound";
@@ -191,9 +199,12 @@ public class ClientPortalGunVariant
 				ResourceLocation.CODEC.fieldOf(HIGHLIGHT_TEXTURE).forGetter(Portal::getHighlightTexture),
 				ResourceLocation.CODEC.fieldOf(VORTEX_TEXTURE).forGetter(Portal::getVortexTexture),
 				ResourceLocation.CODEC.fieldOf(CORE_TEXTURE).forGetter(Portal::getCoreTexture),
+
 				ResourceLocation.CODEC.fieldOf(MASK_TEXTURE).forGetter(Portal::getMaskTexture),
+				ResourceLocation.CODEC.fieldOf(CROSSHAIR_TEXTURE).forGetter(Portal::getCrosshairTexture),
 
 				RGBA.CODEC.optionalFieldOf(COLOR, FULL_COLOR).forGetter(Portal::getColor),
+				Codec.BOOL.optionalFieldOf(GENERIC_COLORING, true).forGetter(Portal::isGenericColoring),
 
 				ResourceLocation.CODEC.fieldOf(OPENING_SOUND).forGetter(Portal::getOpeningSound),
 				ResourceLocation.CODEC.fieldOf(SHOT_SOUND).forGetter(Portal::getShotSound),
@@ -209,8 +220,10 @@ public class ClientPortalGunVariant
 		private final ResourceLocation coreTexture;
 
 		private final ResourceLocation maskTexture;
+		private final ResourceLocation crosshairTexture;
 
 		private final RGBA color;
+		private final boolean genericColoring;
 
 		private final ResourceLocation openingSound;
 		private final ResourceLocation shotSound;
@@ -221,7 +234,8 @@ public class ClientPortalGunVariant
 
 		public Portal(ResourceLocation closedTexture, ResourceLocation highlightTexture,
 					  ResourceLocation vortexTexture, ResourceLocation coreTexture,
-					  ResourceLocation maskTexture, RGBA color,
+					  ResourceLocation maskTexture, ResourceLocation crosshairTexture,
+					  RGBA color, boolean genericColoring,
 					  ResourceLocation openingSound, ResourceLocation shotSound,
 					  ResourceLocation enterSound, ResourceLocation ambientSound,
 					  ResourceLocation invalidSurfaceSound, ResourceLocation fizzleSound)
@@ -232,8 +246,10 @@ public class ClientPortalGunVariant
 			this.coreTexture = coreTexture;
 
 			this.maskTexture = maskTexture;
+			this.crosshairTexture = crosshairTexture;
 
 			this.color = color;
+			this.genericColoring = genericColoring;
 
 			this.openingSound = openingSound;
 			this.shotSound = shotSound;
@@ -268,9 +284,19 @@ public class ClientPortalGunVariant
 			return maskTexture;
 		}
 
+		public ResourceLocation getCrosshairTexture()
+		{
+			return crosshairTexture;
+		}
+
 		public RGBA getColor()
 		{
 			return color;
+		}
+
+		public boolean isGenericColoring()
+		{
+			return genericColoring;
 		}
 
 		public ResourceLocation getOpeningSound()
@@ -311,11 +337,17 @@ public class ClientPortalGunVariant
 		public static final String VORTEX_TEXTURE = "vortex_texture";
 		public static final String CORE_TEXTURE = "core_texture";
 
+		public static final String PRIMARY_CROSSHAIR_TEXTURE = "primary_crosshair_texture";
+		public static final String SECONDARY_CROSSHAIR_TEXTURE = "secondary_crosshair_texture";
+
 		public static final Codec<GenericPortal> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 				ResourceLocation.CODEC.fieldOf(CLOSED_TEXTURE).forGetter(GenericPortal::getClosedTexture),
 				ResourceLocation.CODEC.fieldOf(HIGHLIGHT_TEXTURE).forGetter(GenericPortal::getHighlightTexture),
 				ResourceLocation.CODEC.fieldOf(VORTEX_TEXTURE).forGetter(GenericPortal::getVortexTexture),
-				ResourceLocation.CODEC.fieldOf(CORE_TEXTURE).forGetter(GenericPortal::getCoreTexture)
+				ResourceLocation.CODEC.fieldOf(CORE_TEXTURE).forGetter(GenericPortal::getCoreTexture),
+
+				ResourceLocation.CODEC.fieldOf(PRIMARY_CROSSHAIR_TEXTURE).forGetter(GenericPortal::getPrimaryCrosshairTexture),
+				ResourceLocation.CODEC.fieldOf(SECONDARY_CROSSHAIR_TEXTURE).forGetter(GenericPortal::getSecondaryCrosshairTexture)
 		).apply(instance, GenericPortal::new));
 
 		public final ResourceLocation closedTexture;
@@ -323,13 +355,20 @@ public class ClientPortalGunVariant
 		public final ResourceLocation vortexTexture;
 		public final ResourceLocation coreTexture;
 
+		public final ResourceLocation primaryCrosshairTexture;
+		public final ResourceLocation secondaryCrosshairTexture;
+
 		public GenericPortal(ResourceLocation closedTexture, ResourceLocation highlightTexture,
-							 ResourceLocation vortexTexture, ResourceLocation coreTexture)
+							 ResourceLocation vortexTexture, ResourceLocation coreTexture,
+							 ResourceLocation primaryCrosshairTexture, ResourceLocation secondaryCrosshairTexture)
 		{
 			this.closedTexture = closedTexture;
 			this.highlightTexture = highlightTexture;
 			this.vortexTexture = vortexTexture;
 			this.coreTexture = coreTexture;
+
+			this.primaryCrosshairTexture = primaryCrosshairTexture;
+			this.secondaryCrosshairTexture=  secondaryCrosshairTexture;
 		}
 
 		public ResourceLocation getVortexTexture()
@@ -350,6 +389,16 @@ public class ClientPortalGunVariant
 		public ResourceLocation getCoreTexture()
 		{
 			return coreTexture;
+		}
+
+		public ResourceLocation getPrimaryCrosshairTexture()
+		{
+			return primaryCrosshairTexture;
+		}
+
+		public ResourceLocation getSecondaryCrosshairTexture()
+		{
+			return secondaryCrosshairTexture;
 		}
 	}
 }

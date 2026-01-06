@@ -149,8 +149,6 @@ public class PortalLink
 
 		if(posSecondary != null || moonshotSecondary)
 			resetSecondary(level);
-
-		PortalLinkData.get(level).setDirty();
 	}
 
 	public void resetPrimary(Level level)
@@ -173,6 +171,8 @@ public class PortalLink
 		this.directionPrimary = null;
 		this.openingPrimary = 0;
 		this.moonshotPrimary = false;
+
+		PortalLinkData.get(level).setDirty();
 	}
 
 	public void resetSecondary(Level level)
@@ -195,6 +195,8 @@ public class PortalLink
 		this.directionSecondary = null;
 		this.openingSecondary = 0;
 		this.moonshotSecondary = false;
+
+		PortalLinkData.get(level).setDirty();
 	}
 
 	public void setMoonshot(boolean isPrimary, boolean moonshot, Level level)

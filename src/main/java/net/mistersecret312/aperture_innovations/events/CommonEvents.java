@@ -107,12 +107,18 @@ public class CommonEvents
 						boolean isPrimary = i == 0;
 
 						Vec3 portalPos = PortalUtilities.getPortalPos(serverLevel, uuid, isPrimary);
-						if(portalPos ==  null)
+						if(portalPos == null)
+							continue;
+
+						ResourceKey<Level> dimension = PortalUtilities.getPortalDimension(serverLevel, uuid, isPrimary);
+						if(!serverLevel.dimension().equals(dimension))
 							continue;
 
 						Direction portalDirection = PortalUtilities.getPortalDirection(serverLevel, uuid, isPrimary);
 						boolean isOnWall = PortalUtilities.isPortalOnWall(serverLevel, uuid, isPrimary);
 						boolean isOnCeiling = PortalUtilities.isPortalOnCeiling(serverLevel, uuid, isPrimary);
+
+						boolean otherMoonshot = isPrimary ? link.moonshotSecondary : link.moonshotPrimary;
 
 						AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPos, portalDirection, isOnWall, isOnCeiling);
 
@@ -137,8 +143,23 @@ public class CommonEvents
 						{
 							if(portalPos != null)
 							{
-								Level finalLevel = level;
-								NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> finalLevel.getChunkAt(
+								if(otherMoonshot)
+								{
+									List<Entity> entities = level.getEntitiesOfClass(Entity.class, new AABB(BlockPos.containing(portalPos))
+																				   .inflate(5D));
+									for(Entity entity : entities)
+									{
+										Vec3 pushVector = portalPos.subtract(entity.position())
+																   .multiply(0.08, 0.08, 0.08);
+										entity.push(pushVector.x, pushVector.y, pushVector.z);
+										if(entity instanceof ServerPlayer player)
+											NetworkInit.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player),
+													new ClientboundTeleportMomentumPacket(entity.getDeltaMovement(), player.position(), entity.getYRot()));
+
+									}
+								}
+
+								NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(
 												BlockPos.containing(portalPos))),
 									new ClientboundPortalAmbientSoundPacket(link.linkID, isPrimary, false));
 							}
@@ -166,6 +187,10 @@ public class CommonEvents
 					if(portalPos == null)
 						continue;
 
+					ResourceKey<Level> dimension = PortalUtilities.getPortalDimension(serverLevel, uuid, isPrimary);
+					if(!serverLevel.dimension().equals(dimension))
+						continue;
+
 					Direction portalDirection = PortalUtilities.getPortalDirection(serverLevel, uuid, isPrimary);
 					boolean isOnWall = PortalUtilities.isPortalOnWall(serverLevel, uuid, isPrimary);
 					boolean isOnCeiling = PortalUtilities.isPortalOnCeiling(serverLevel, uuid, isPrimary);
@@ -175,17 +200,24 @@ public class CommonEvents
 					Vec3 entityCenter = entity.getBoundingBox().getCenter();
 					AABB entityCenterBox = new AABB(entityCenter, entityCenter).inflate(0.25D);
 
-					if(entityCenterBox.expandTowards(entity.getDeltaMovement().multiply(0.1, 1, 0.1)).intersects(teleportBox))
+					if(entityCenterBox.expandTowards(entity.getDeltaMovement().multiply(1, 1, 1)).intersects(teleportBox))
 					{
 						Vec3 otherPortalPos = PortalUtilities.getPortalPos(serverLevel, uuid, !isPrimary);
+						PortalLink link = PortalUtilities.getPortalLinks(serverLevel).get(uuid);
+						boolean otherMoonshot = isPrimary ? link.moonshotSecondary : link.moonshotPrimary;
+						if(otherPortalPos == null && otherMoonshot)
+							otherPortalPos = portalPos.add(0, 1000, 0);
 						if(otherPortalPos == null)
 							continue;
 
-						Direction otherDirection = PortalUtilities.getPortalDirection(serverLevel, uuid, !isPrimary);
+						Direction otherDirection = PortalUtilities.getPortalDirection(serverLevel, uuid, otherMoonshot == isPrimary);
 
-						boolean otherWall = PortalUtilities.isPortalOnWall(serverLevel, uuid, !isPrimary);
-						boolean otherCeiling = PortalUtilities.isPortalOnCeiling(serverLevel, uuid, !isPrimary);
-						ResourceKey<Level> otherDimension = PortalUtilities.getPortalDimension(serverLevel, uuid, !isPrimary);
+						boolean otherWall = PortalUtilities.isPortalOnWall(serverLevel, uuid,
+								otherMoonshot == isPrimary);
+						boolean otherCeiling = PortalUtilities.isPortalOnCeiling(serverLevel, uuid,
+								otherMoonshot == isPrimary);
+						ResourceKey<Level> otherDimension = PortalUtilities.getPortalDimension(serverLevel, uuid,
+								otherMoonshot == isPrimary);
 
 						float rotation = otherDirection.toYRot() - portalDirection.toYRot() + 180;
 						AABB otherTeleportBox = PortalUtilities.getPortalTeleportBox(otherPortalPos, otherDirection,
@@ -215,6 +247,14 @@ public class CommonEvents
 						{
 							otherPortalPos = otherPortalPos.add(0, 1, 0);
 						}
+						if(isOnWall && otherCeiling)
+						{
+							otherPortalPos = otherPortalPos.add(0, -3, 0);
+						}
+						if(isOnWall && !otherWall && !otherCeiling)
+						{
+							otherPortalPos = otherPortalPos.add(0, 1, 0);
+						}
 
 						Vector3f oldSpeed = entity.getDeltaMovement().toVector3f();
 
@@ -226,8 +266,7 @@ public class CommonEvents
 
 						Vec3 otherPos = otherPortalPos;
 
-						Level finalLevel1 = level;
-						NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> finalLevel1.getChunkAt(
+						NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(
 										BlockPos.containing(portalPos))),
 								new ClientboundPortalSoundsPacket.EnterPortal(uuid, isPrimary));
 						NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> otherPortalLevel.getChunkAt(
@@ -259,6 +298,10 @@ public class CommonEvents
 										0,
 										newSpeed.z + (otherDirection.getAxisDirection().equals(
 												Direction.AxisDirection.NEGATIVE) ? newSpeed.y : -newSpeed.y));
+						}
+						if(isOnWall && !otherWall && !otherCeiling)
+						{
+							newSpeed = new Vector3f(0F, (float) (0.25F+entity.getDeltaMovement().length()), 0F);
 						}
 						entity.setDeltaMovement(new Vec3(newSpeed));
 						entity.resetFallDistance();

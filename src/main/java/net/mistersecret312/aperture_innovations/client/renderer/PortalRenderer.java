@@ -25,6 +25,7 @@ import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortal
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
+import net.mistersecret312.aperture_innovations.portal.ClientPortalUtilities;
 import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
@@ -58,7 +59,7 @@ public class PortalRenderer
 			poseStack.scale(scale, scale, 1);
 			poseStack.translate(0.5f, 0f, 0.51f);
 
-			renderPortalFrame(link.getVariant().primaryPortal.getClosedTexture(), PortalUtilities.getPortalColor(link, true),
+			renderPortalFrame(ClientPortalUtilities.getPortalClosedTexture(link, true), ClientPortalUtilities.getPortalColor(link, true),
 					buffer, poseStack);
 
 			poseStack.popPose();
@@ -85,7 +86,7 @@ public class PortalRenderer
 			poseStack.scale(scale, scale, 1f);
 			poseStack.translate(0.5f, 0f, 0.51f);
 
-			renderPortalFrame(link.getVariant().secondaryPortal.getClosedTexture(), PortalUtilities.getPortalColor(link, false),
+			renderPortalFrame(ClientPortalUtilities.getPortalClosedTexture(link, false), ClientPortalUtilities.getPortalColor(link, false),
 					buffer, poseStack);
 
 			poseStack.popPose();
@@ -359,7 +360,7 @@ public class PortalRenderer
 
 		poseStack.scale(scale, scale, 1f);
 		poseStack.translate((1-scale)*(-0.5f), 0f, 0f);
-		ColorUtil.RGBA color = PortalUtilities.getPortalColor(link, isPrimary);
+		ColorUtil.RGBA color = ClientPortalUtilities.getPortalColor(link, isPrimary);
 
 		VertexConsumer consumerA = buffer.getBuffer(PortalRenderTypes.portalVortex(sprite.atlasLocation()));
 		consumerA.vertex(poseStack.last().pose(), -0.5f, -0.5f, 0)
@@ -396,8 +397,7 @@ public class PortalRenderer
 			UUID linkID = portalGun.getUUID(gunStack, false);
 			if(linkID.equals(link.linkID()))
 			{
-				ResourceLocation texture = isPrimary ? variant.primaryPortal.getHighlightTexture() :
-												   variant.secondaryPortal.getHighlightTexture();
+				ResourceLocation texture = ClientPortalUtilities.getPortalHighlightTexture(link, isPrimary);
 
 				poseStack.pushPose();
 				poseStack.translate(0.15625f, 0f, 0f);

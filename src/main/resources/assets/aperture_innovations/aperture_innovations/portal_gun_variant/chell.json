@@ -8,7 +8,9 @@
     "closed_texture": "aperture_innovations:textures/block/portal/generic/portal_closed.png",
     "highlight_texture": "aperture_innovations:textures/block/portal/generic/portal_highlight.png",
     "vortex_texture": "aperture_innovations:block/portal/generic/portal_vortex",
-    "core_texture": "aperture_innovations:textures/block/portal/generic/gun_core.png"
+    "core_texture": "aperture_innovations:textures/block/portal/generic/gun_core.png",
+    "primary_crosshair_texture": "aperture_innovations:textures/gui/generic_crosshair_primary.png",
+    "secondary_crosshair_texture": "aperture_innovations:textures/gui/generic_crosshair_secondary.png"
   },
 
   "primary_portal":
@@ -19,7 +21,10 @@
     "core_texture": "aperture_innovations:textures/item/chell_blue_core.png",
 
     "portal_mask_texture": "aperture_innovations:textures/block/portal/portal_mask.png",
+    "crosshair_texture": "aperture_innovations:textures/gui/chell_crosshair_primary.png",
+
     "color": { "red": 1.0, "green": 1.0, "blue": 1.0, "alpha": 1.0 },
+    "generic_coloring": true,
 
     "opening_sound": "aperture_innovations:portal_open_primary",
     "shot_sound": "aperture_innovations:portal_gun_fire_primary",
@@ -37,7 +42,10 @@
     "core_texture": "aperture_innovations:textures/item/chell_orange_core.png",
 
     "portal_mask_texture": "aperture_innovations:textures/block/portal/portal_mask.png",
+    "crosshair_texture": "aperture_innovations:textures/gui/chell_crosshair_secondary.png",
+
     "color": { "red": 1.0, "green": 1.0, "blue": 1.0, "alpha": 1.0 },
+    "generic_coloring": true,
 
     "opening_sound": "aperture_innovations:portal_open_secondary",
     "shot_sound": "aperture_innovations:portal_gun_fire_secondary",

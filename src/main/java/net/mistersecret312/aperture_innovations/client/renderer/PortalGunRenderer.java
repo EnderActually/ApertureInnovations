@@ -12,6 +12,7 @@ import net.mistersecret312.aperture_innovations.client.renderer.geckolib.Dynamic
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortalGunVariant;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
+import net.mistersecret312.aperture_innovations.portal.ClientPortalUtilities;
 import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
 import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.cache.object.GeoBone;
@@ -33,6 +34,27 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
 										 VertexConsumer buffer, float partialTick, int packedLight, int packedOverlay,
 										 float red, float green, float blue, float alpha)
 	{
+		List<String> gunCore = Lists.newArrayList("CoreOuter", "CoreInner", "PortalLight", "Muzzle");
+		if(gunCore.contains(bone.getName()))
+		{
+			int portal = this.getAnimatable().getLastShotPortal(this.currentItemStack);
+			ClientPortalLink link = PortalUtilities.getPortalLinks().get(this.getAnimatable().getUUID(this.currentItemStack, false));
+
+			if(portal == -1)
+				return super.boneRenderOverride(poseStack, bone, bufferSource, buffer,
+						partialTick, packedLight, packedOverlay, red, green, blue, alpha);
+
+			ColorUtil.RGBA color = ClientPortalUtilities.getPortalColor(link, portal == 0);
+
+			red *= color.red();
+			green *= color.green();
+			blue *= color.blue();
+			alpha *= color.alpha();
+
+			renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+			return true;
+		}
+
 		if(bone.getName().equals("StripePrimary") || bone.getName().equals("StripeSecondary"))
 		{
 			boolean isPrimary = bone.getName().equals("StripePrimary");
@@ -99,16 +121,8 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
 		{
 			int portal = this.getAnimatable().getLastShotPortal(this.currentItemStack);
 			ClientPortalLink link = PortalUtilities.getPortalLinks().get(this.getAnimatable().getUUID(this.currentItemStack, false));
-			ClientPortalGunVariant variant = ClientPortalGunVariant.DEFAULT_VARIANT;
 			if(link != null)
-				variant = link.getVariant();
-
-			if(portal == -1)
-				return variant.getIdleCoreTexture();
-			if(portal == 0)
-				return variant.getPrimaryPortal().getCoreTexture();
-			if(portal == 1)
-				return variant.getSecondaryPortal().getCoreTexture();
+				return ClientPortalUtilities.getPortalGunCoreTexture(link, portal);
 		}
 		return new ResourceLocation(ApertureInnovations.MODID, "textures/item/portal_gun_2.png");
 	}

@@ -9,6 +9,7 @@ import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortalGunVariant;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
+import net.mistersecret312.aperture_innovations.portal.ClientPortalUtilities;
 import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
 
 import java.util.Optional;
@@ -26,14 +27,14 @@ public class SoundAccess
 		if(minecraft.level.dimension() != PortalUtilities.getPortalDimension(minecraft.level, uuid, isPrimary))
 			return;
 
-		PortalSoundWrapper.PortalAmbient ambientSound = PortalUtilities.getAmbientSound(uuid, isPrimary);
+		PortalSoundWrapper.PortalAmbient ambientSound = ClientPortalUtilities.getAmbientSound(uuid, isPrimary);
 
 		if(link.isOpen() && PortalUtilities.getPortalPos(minecraft.level, uuid, isPrimary) != null)
 		{
 			if(ambientSound == null)
 			{
 				ambientSound = new PortalSoundWrapper.PortalAmbient(link, isPrimary);
-				PortalUtilities.setAmbientSound(ambientSound, uuid, isPrimary);
+				ClientPortalUtilities.setAmbientSound(ambientSound, uuid, isPrimary);
 			}
 
 			BlockPos portalPos = isPrimary ? link.posPrimary() : link.posSecondary();
@@ -41,7 +42,7 @@ public class SoundAccess
 			{
 				ambientSound.stopSound();
 				ambientSound = new PortalSoundWrapper.PortalAmbient(link, isPrimary);
-				PortalUtilities.setAmbientSound(ambientSound, uuid, isPrimary);
+				ClientPortalUtilities.setAmbientSound(ambientSound, uuid, isPrimary);
 			}
 		}
 
@@ -59,7 +60,7 @@ public class SoundAccess
 			return;
 		GenericPortalSound sound = new GenericPortalSound(PortalUtilities.getPortalLinks().get(linkID), isPrimary,
 				getPortalOpenSound(linkID, isPrimary), 5, 10, 0.5F);
-		PortalUtilities.setPortalOpeningAnimationProgress(0F, linkID, isPrimary);
+		ClientPortalUtilities.setPortalOpeningAnimationProgress(0F, linkID, isPrimary);
 		//playPortalAmbient(linkID, isPrimary, false);
 		minecraft.getSoundManager().play(sound);
 	}
@@ -79,7 +80,7 @@ public class SoundAccess
 			return;
 		GenericPortalSound sound = new GenericPortalSound(PortalUtilities.getPortalLinks().get(linkID), isPrimary,
 				getFizzlePortalSound(linkID, isPrimary), 5, 10, 0.5F);
-		PortalUtilities.setPortalOpeningAnimationProgress(0F, linkID, isPrimary);
+		ClientPortalUtilities.setPortalOpeningAnimationProgress(0F, linkID, isPrimary);
 		playPortalAmbient(linkID, isPrimary, true);
 		minecraft.getSoundManager().play(sound);
 	}

@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -21,9 +22,6 @@ import static net.mistersecret312.aperture_innovations.client.renderer.PortalRen
 
 public class PortalUtilities
 {
-	public static HashMap<UUID, Pair<PortalSoundWrapper.PortalAmbient, PortalSoundWrapper.PortalAmbient>> AMBIENTS = new HashMap<>();
-	public static HashMap<UUID, Pair<Float, Float>> OPENING_ANIMATIONS = new HashMap<>();
-
 	public static HashMap<UUID, PortalLink> getPortalLinks(Level level)
 	{
 		if(level.isClientSide())
@@ -290,69 +288,5 @@ public class PortalUtilities
 			}
 			return Pair.of(uuid, isPrimary);
 		}
-	}
-
-	public static ColorUtil.RGBA getPortalColor(ClientPortalLink link, boolean isPrimary)
-	{
-		ClientPortalGunVariant variant = link.getVariant();
-		int gunColor = isPrimary ? link.primaryPortalColor() : link.secondaryPortalColor();
-		ColorUtil.RGBA variantColor = isPrimary ? variant.getPrimaryPortal().getColor() : variant.secondaryPortal.getColor();
-		if(gunColor == -1)
-			return variantColor;
-		else
-		{
-			Color rgbaColor = new Color(gunColor, true);
-			return new ColorUtil.RGBA(rgbaColor.getRed(), rgbaColor.getGreen(), rgbaColor.getBlue(), rgbaColor.getAlpha());
-		}
-	}
-
-	public static ColorUtil.RGBA getPortalTexture(ClientPortalLink link, boolean isPrimary)
-	{
-		ClientPortalGunVariant variant = link.getVariant();
-		int gunColor = isPrimary ? link.primaryPortalColor() : link.secondaryPortalColor();
-		ColorUtil.RGBA variantColor = isPrimary ? variant.getPrimaryPortal().getColor() : variant.secondaryPortal.getColor();
-		if(gunColor == -1)
-			return variantColor;
-		else
-		{
-			Color rgbaColor = new Color(gunColor, true);
-			return new ColorUtil.RGBA(rgbaColor.getRed(), rgbaColor.getGreen(), rgbaColor.getBlue(), rgbaColor.getAlpha());
-		}
-	}
-
-	public static PortalSoundWrapper.PortalAmbient getAmbientSound(UUID uuid, boolean isPrimary)
-	{
-		Pair<PortalSoundWrapper.PortalAmbient, PortalSoundWrapper.PortalAmbient> pair = AMBIENTS.getOrDefault(uuid, new Pair<>(null, null));
-		if(isPrimary)
-			return pair.getFirst();
-		else return pair.getSecond();
-	}
-
-	public static void setAmbientSound(PortalSoundWrapper.PortalAmbient ambient, UUID uuid, boolean isPrimary)
-	{
-		Pair<PortalSoundWrapper.PortalAmbient, PortalSoundWrapper.PortalAmbient> pair = AMBIENTS.getOrDefault(uuid, new Pair<>(null, null));
-		if(isPrimary)
-			pair = new Pair<>(ambient, pair.getSecond());
-		else pair = new Pair<>(pair.getFirst(), ambient);
-
-		AMBIENTS.put(uuid, pair);
-	}
-
-	public static float getPortalOpeningAnimationProgress(UUID uuid, boolean isPrimary)
-	{
-		Pair<Float, Float> pair = OPENING_ANIMATIONS.getOrDefault(uuid, new Pair<>(0F, 0F));
-		if(isPrimary)
-			return pair.getFirst();
-		else return pair.getSecond();
-	}
-
-	public static void setPortalOpeningAnimationProgress(float progress, UUID uuid, boolean isPrimary)
-	{
-		Pair<Float, Float> pair = OPENING_ANIMATIONS.getOrDefault(uuid, new Pair<>(0F, 0F));
-		if(isPrimary)
-			pair = new Pair<>(progress, pair.getSecond());
-		else pair = new Pair<>(pair.getFirst(), progress);
-
-		OPENING_ANIMATIONS.put(uuid, pair);
 	}
 }
