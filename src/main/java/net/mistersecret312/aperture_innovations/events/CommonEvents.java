@@ -92,6 +92,8 @@ public class CommonEvents
 				boxCenter = boxCenter.relative(portalDirection.getOpposite(), 0.5D);
 			}
 			AABB centerBox = new AABB(boxCenter, boxCenter).inflate(0.25D);
+
+//			centerBox = PortalUtilities.getPortalBoundingBox(portalPos, portalDirection, isOnWall, isOnCeiling);
 //			if(event.level.getBlockStates(centerBox).anyMatch(BlockBehaviour.BlockStateBase::isAir))
 //			{
 //				event.level.addParticle(ParticleTypes.BUBBLE_POP, boxCenter.x, boxCenter.y, boxCenter.z, 0,0, 0);
@@ -118,6 +120,7 @@ public class CommonEvents
 						boolean isPrimary = i == 0;
 
 						Vec3 portalPos = PortalUtilities.getPortalPos(serverLevel, uuid, isPrimary);
+						BlockPos portalBlockPos = isPrimary ? link.posPrimary : link.posSecondary;
 						if(portalPos == null)
 							continue;
 
@@ -141,7 +144,9 @@ public class CommonEvents
 						AABB centerBox = new AABB(boxCenter, boxCenter).inflate(0.25D);
 						if(level.getBlockStates(centerBox).anyMatch(
 						state -> {
-							return state.is(Blocks.AIR);
+							BlockPos statePos = portalBlockPos.relative(portalDirection.getOpposite());
+							boolean isSturdy = state.isFaceSturdy(level, statePos, portalDirection);
+							return state.is(Blocks.AIR) || !isSturdy;
 						}))
 						{
 							if(isPrimary)

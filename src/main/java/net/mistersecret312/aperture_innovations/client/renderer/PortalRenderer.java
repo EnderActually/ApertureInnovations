@@ -392,10 +392,8 @@ public class PortalRenderer
 			ItemStack gunStack = main.is(ItemInit.PORTAL_GUN.get()) ? main : off;
 			PortalGunItem portalGun = (PortalGunItem) gunStack.getItem();
 
-			ClientPortalGunVariant variant = link.getVariant();
-
 			UUID linkID = portalGun.getUUID(gunStack, false);
-			if(linkID.equals(link.linkID()))
+			if(linkID != null && linkID.equals(link.linkID()))
 			{
 				ResourceLocation texture = ClientPortalUtilities.getPortalHighlightTexture(link, isPrimary);
 

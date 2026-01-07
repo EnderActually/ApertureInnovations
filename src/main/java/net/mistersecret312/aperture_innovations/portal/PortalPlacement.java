@@ -4,6 +4,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.SupportType;
+import net.minecraft.world.level.block.TorchBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
@@ -88,6 +90,10 @@ public class PortalPlacement
 			return false;
 
 		if (!isReplaceable(level, portalBottom) || !isReplaceable(level, portalTop))
+			return false;
+
+		if (!level.getBlockState(bottomPos).isFaceSturdy(level, bottomPos, face)
+					|| !level.getBlockState(topPos).isFaceSturdy(level, topPos, face))
 			return false;
 
 		if(hasExistingPortal(level, portalBottom, uuid, isPrimary) || hasExistingPortal(level, portalTop, uuid, isPrimary))

@@ -86,10 +86,10 @@ public class ServerboundOpenPortalPacket
 			BlockHitResult result = PortalGunItem.rayTrace(player.level(), player, 256);
 			if(!result.getType().equals(HitResult.Type.MISS))
 			{
-				UUID linkID = portalGun.getUUID(gunStack, true);
+				UUID linkID = portalGun.getUUID(gunStack, false);
 
-				if(level.getBlockState(result.getBlockPos()).is(ApertureInnovations.IMPORTALABLE)
-				|| !level.getFluidState(result.getBlockPos()).isEmpty())
+				if(linkID != null && !level.getBlockState(result.getBlockPos()).is(ApertureInnovations.SHOOT_THROUGH) && (level.getBlockState(result.getBlockPos()).is(ApertureInnovations.IMPORTALABLE)
+				|| !level.getFluidState(result.getBlockPos()).isEmpty()))
 				{
 					portalGun.stopTriggeredAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
 					portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
@@ -97,7 +97,7 @@ public class ServerboundOpenPortalPacket
 					NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(player.blockPosition())),
 							new ClientboundPortalSoundsPacket.ShootPortal(linkID, player.blockPosition(), isPrimary));
 					NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(player.blockPosition())),
-							new ClientboundPortalSoundsPacket.InvalidSurface(linkID, result.getBlockPos(), isPrimary));
+							new ClientboundPortalSoundsPacket.InvalidSurface(linkID, player.blockPosition(), isPrimary));
 					return;
 				}
 

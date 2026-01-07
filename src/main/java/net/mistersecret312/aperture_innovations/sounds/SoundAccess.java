@@ -81,14 +81,12 @@ public class SoundAccess
 		GenericPortalSound sound = new GenericPortalSound(PortalUtilities.getPortalLinks().get(linkID), isPrimary,
 				getFizzlePortalSound(linkID, isPrimary), 5, 10, 0.5F);
 		ClientPortalUtilities.setPortalOpeningAnimationProgress(0F, linkID, isPrimary);
-		playPortalAmbient(linkID, isPrimary, true);
 		minecraft.getSoundManager().play(sound);
+		playPortalAmbient(linkID, isPrimary, true);
 	}
 
 	public static void playInvalidSurfaceSound(UUID linkID, BlockPos pos, boolean isPrimary)
 	{
-		if(minecraft.level.dimension() != PortalUtilities.getPortalDimension(minecraft.level, linkID, isPrimary))
-			return;
 		GenericGunSound sound = new GenericGunSound(PortalUtilities.getPortalLinks().get(linkID), pos, isPrimary,
 				getInvalidSurfaceSound(linkID, isPrimary), 5, 10, 0.5F);
 		minecraft.getSoundManager().play(sound);

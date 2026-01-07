@@ -21,6 +21,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DataPackRegistryEvent;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegisterEvent;
 import net.mistersecret312.aperture_innovations.client.overlay.CrosshairOverlay;
 import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
 import net.mistersecret312.aperture_innovations.init.*;

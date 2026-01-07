@@ -23,6 +23,8 @@ public class PortalSound<T extends ClientPortalLink> extends AbstractTickableSou
 
 		this.link = link;
 		this.portalPos = isPrimary ? link.posPrimary() : link.posSecondary();
+		if(portalPos == null)
+			portalPos = minecraft.player.getOnPos();
 		this.relative = true;
 		this.fullDistance = fullDistance;
 		this.maxDistance = maxDistance;

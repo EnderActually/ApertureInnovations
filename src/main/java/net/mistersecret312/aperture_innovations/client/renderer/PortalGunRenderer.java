@@ -3,6 +3,7 @@ package net.mistersecret312.aperture_innovations.client.renderer;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
@@ -116,6 +117,11 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
 	protected @Nullable ResourceLocation getTextureOverrideForBone(GeoBone bone, PortalGunItem animatable,
 																   float partialTick)
 	{
+		if(Minecraft.getInstance().player.getStringUUID().equals("eubabfaj-1efkdsjkfr-fadjfkiarejkfa"))
+		{
+
+		}
+
 		List<String> gunCore = Lists.newArrayList("CoreOuter", "CoreInner", "PortalLight", "Muzzle");
 		if(gunCore.contains(bone.getName()))
 		{

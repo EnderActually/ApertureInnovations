@@ -94,6 +94,14 @@ public abstract class ClientboundPortalSoundsPacket
 		}
 
 		@Override
+		public void encode(FriendlyByteBuf buffer)
+		{
+			buffer.writeUUID(linkID);
+			buffer.writeBlockPos(pos);
+			buffer.writeBoolean(isPrimary);
+		}
+
+		@Override
 		public boolean handle(Supplier<NetworkEvent.Context> ctx)
 		{
 			ctx.get().enqueueWork(() ->
