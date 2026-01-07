@@ -1,28 +1,19 @@
 package net.mistersecret312.aperture_innovations.items;
 
-import net.minecraft.client.Minecraft;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundSource;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
-import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
@@ -35,10 +26,9 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.network.PacketDistributor;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.advancements.ThrownIntoFluidCriterion;
 import net.mistersecret312.aperture_innovations.client.renderer.PortalGunRenderer;
-import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
-import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalSoundsPacket;
 import net.mistersecret312.aperture_innovations.portal.*;
 import org.jetbrains.annotations.Nullable;
@@ -50,7 +40,6 @@ import software.bernie.geckolib.core.animation.AnimationController;
 import software.bernie.geckolib.core.animation.AnimationState;
 import software.bernie.geckolib.core.animation.RawAnimation;
 import software.bernie.geckolib.core.object.PlayState;
-import software.bernie.geckolib.renderer.DyeableGeoArmorRenderer;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.List;
@@ -86,7 +75,8 @@ public class PortalGunItem extends Item implements GeoItem
 	{
 		ClientPortalLink link = PortalUtilities.getPortalLinks().get(getUUID(stack, false));
 		if(link != null) components.add(
-				Component.translatable("aperture_innovations.portal_gun.variant_" + link.variantKey().getPath()));
+				Component.translatable("aperture_innovations.portal_gun.variant_" + link.variantKey().getPath()).withStyle(
+						ChatFormatting.DARK_AQUA));
 
 	}
 
@@ -118,6 +108,24 @@ public class PortalGunItem extends Item implements GeoItem
 				link.updateColors(level, getPrimaryPortalColor(stack), getSecondaryPortalColor(stack));
 			}
 		}
+	}
+
+	@Override
+	public boolean onEntityItemUpdate(ItemStack stack, ItemEntity entity)
+	{
+		if(entity.isInFluidType())
+		{
+			Entity owner = entity.getOwner();
+			if(owner instanceof Player player)
+				ThrownIntoFluidCriterion.INSTANCE.trigger((ServerPlayer) (player), stack, entity.blockPosition());
+		}
+		return super.onEntityItemUpdate(stack, entity);
+	}
+
+	@Override
+	public boolean onDroppedByPlayer(ItemStack item, Player player)
+	{
+		return super.onDroppedByPlayer(item, player);
 	}
 
 	@Override

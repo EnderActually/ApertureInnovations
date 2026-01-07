@@ -57,10 +57,7 @@ public class PortalLink
 	public PortalLink(UUID linkID, ResourceLocation variantKey)
 	{
 		this.linkID = linkID;
-
-		if(variantKey == null)
-			this.variantKey = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "chell");
-		else this.variantKey = variantKey;
+		this.variantKey = variantKey;
 	}
 
 	public PortalLink(UUID linkID, BlockPos posPrimary, BlockPos posSecondary,

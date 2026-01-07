@@ -11,6 +11,39 @@
 
   "item.aperture_innovations.portal_gun": "Aperture Science Handheld Portal Device",
 
+  "aperture_innovations.portal_gun.variant_chell": "Chell Variant",
+  "aperture_innovations.portal_gun.variant_pbody": "P-Body Variant",
+  "aperture_innovations.portal_gun.variant_atlas": "Atlas Variant",
+
   "key.category.aperture_innovations": "Aperture Innovations",
-  "aperture_innovations.portal_gun.reset": "Reset Portal Gun"
+  "aperture_innovations.portal_gun.reset": "Reset Portal Gun",
+
+  "sound.aperture_innovations.portal_ambient": "Portal Ambient",
+  "sound.aperture_innovations.portal_enter": "Portal travel",
+  "sound.aperture_innovations.portal_fizzle": "Portal fizzles",
+  "sound.aperture_innovations.portal_gun_activation": "Portal gun activates",
+  "sound.aperture_innovations.portal_gun_fire_primary": "Primary portal gun fire",
+  "sound.aperture_innovations.portal_gun_fire_secondary": "Secondary portal gun fire",
+  "sound.aperture_innovations.portal_invalid_surface": "Invalid portal surface",
+  "sound.aperture_innovations.portal_open_primary": "Primary portal opened",
+  "sound.aperture_innovations.portal_open_secondary": "Secondary portal opened",
+  "sound.aperture_innovations.portal_gun_reset": "Portal Gun Reset",
+  "sound.aperture_innovations.longfall_boots_land": "Long Fall Boots negate the fall",
+
+  "advancements.aperture_innovations.aperture.root.title": "Aperture Science Innovators",
+  "advancements.aperture_innovations.aperture.root.description": "Obtain the Aperture Science Handheld Portal Device",
+
+  "advancements.aperture_innovations.aperture.long_jump.title": "Long Jump",
+  "advancements.aperture_innovations.aperture.long_jump.description": "Jump 100 blocks with portals without touching the ground",
+
+  "advancements.aperture_innovations.aperture.terminal_velocity.title": "Terminal Velocity",
+  "advancements.aperture_innovations.aperture.terminal_velocity.description": "Fly down 800 blocks with portals without touching the ground",
+
+  "advancements.aperture_innovations.aperture.4000_kelvin.title": "4000 Degrees Kelvin",
+  "advancements.aperture_innovations.aperture.4000_kelvin.description": "Drop your portal gun into lava",
+
+  "advancements.aperture_innovations.aperture.lunacy.title": "Lunacy",
+  "advancements.aperture_innovations.aperture.lunacy.description": "Shoot a portal to the moon, and go through it",
+
+  "stat.aperture_innovations.times_used_portals": "Times portal travelled"
 }

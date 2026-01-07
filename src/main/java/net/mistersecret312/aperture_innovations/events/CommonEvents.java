@@ -3,12 +3,14 @@ package net.mistersecret312.aperture_innovations.events;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.toasts.AdvancementToast;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -26,7 +28,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.world.ForgeChunkManager;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
@@ -35,8 +39,14 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.network.PacketDistributor;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.advancements.PortalTravelCriterion;
+import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
+import net.mistersecret312.aperture_innovations.capabilities.GenericProvider;
+import net.mistersecret312.aperture_innovations.init.CapabilityInit;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
+import net.mistersecret312.aperture_innovations.init.StatisticsInit;
+import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.network.ClientBoundPortalLinkSyncPacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalAmbientSoundPacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalSoundsPacket;
@@ -46,6 +56,7 @@ import net.mistersecret312.aperture_innovations.portal.PortalLink;
 import net.mistersecret312.aperture_innovations.portal.PortalLinkData;
 import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
 import org.joml.Quaternionf;
+import org.joml.Vector3d;
 import org.joml.Vector3f;
 
 import java.util.*;
@@ -198,7 +209,7 @@ public class CommonEvents
 					AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPos, portalDirection, isOnWall, isOnCeiling);
 
 					Vec3 entityCenter = entity.getBoundingBox().getCenter();
-					AABB entityCenterBox = new AABB(entityCenter, entityCenter).inflate(0.25D);
+					AABB entityCenterBox = new AABB(entityCenter, entityCenter).inflate(0.1D, 0.5D, 0.1D);
 
 					if(entityCenterBox.expandTowards(entity.getDeltaMovement().multiply(1, 1, 1)).intersects(teleportBox))
 					{
@@ -306,8 +317,23 @@ public class CommonEvents
 						entity.setDeltaMovement(new Vec3(newSpeed));
 						entity.resetFallDistance();
 						if(entity instanceof ServerPlayer player)
-							NetworkInit.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), new ClientboundTeleportMomentumPacket(new Vec3(newSpeed), otherPortalPos, entity.getYRot()+rotation));
+						{
+							player.awardStat(StatisticsInit.TIMES_USED_PORTALS.get(), 1);
+							NetworkInit.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player),
+									new ClientboundTeleportMomentumPacket(new Vec3(newSpeed), otherPortalPos,
+											entity.getYRot() + rotation));
+						}
+						Vec3 mathOtherPos = otherPortalPos;
+						entity.getCapability(CapabilityInit.APERTURE).ifPresent(cap ->
+							{
+								cap.portal = new Pair<>(uuid, !isPrimary);
 
+								cap.updateDistance();
+								if(entity instanceof ServerPlayer player)
+									PortalTravelCriterion.INSTANCE.trigger(player, dimension.location(), otherDimension.location(),
+											(long) portalPos.distanceToSqr(mathOtherPos), (long) cap.verticalDistance,
+											(long) cap.horizontalDistance, otherMoonshot);
+							});
 					}
 				}
 			}
@@ -324,5 +350,31 @@ public class CommonEvents
 			NetworkInit.INSTANCE.send(PacketDistributor.PLAYER.with(() -> serverPlayer),
 					new ClientBoundPortalLinkSyncPacket(data.portalLinks, new HashMap<>()));
 		}
+	}
+
+	@SubscribeEvent
+	public static void livingTick(LivingEvent.LivingTickEvent event)
+	{
+		event.getEntity().getCapability(CapabilityInit.APERTURE).ifPresent(cap ->
+			{
+				cap.tick(event.getEntity().level(), event.getEntity());
+			});
+	}
+
+	@SubscribeEvent
+	public static void itemToss(ItemTossEvent event)
+	{
+		if(event.getEntity().getItem().getItem() instanceof PortalGunItem)
+		{
+			event.getEntity().setThrower(event.getPlayer().getUUID());
+		}
+	}
+
+	@SubscribeEvent
+	public static void attachCapabilities(AttachCapabilitiesEvent<Entity> event)
+	{
+		if(event.getObject() instanceof Player)
+			event.addCapability(new ResourceLocation(ApertureInnovations.MODID, "aperture"),
+					new GenericProvider<>(CapabilityInit.APERTURE, new ApertureCapability()));
 	}
 }

@@ -1,8 +1,10 @@
 package net.mistersecret312.aperture_innovations.portal;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -10,6 +12,7 @@ import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.storage.DimensionDataStorage;
 import net.minecraftforge.network.PacketDistributor;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.network.ClientBoundPortalLinkSyncPacket;
@@ -17,6 +20,7 @@ import net.mistersecret312.aperture_innovations.network.ClientBoundPortalLinkSyn
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -71,7 +75,15 @@ public class PortalLinkData extends SavedData
 
 	public void addFreshLink(UUID uuid)
 	{
-		this.portalLinks.put(uuid, new PortalLink(uuid, null));
+		Registry<PortalGunVariant> registry = server.registryAccess().registryOrThrow(PortalGunVariant.REGISTRY_KEY);
+
+		List<Map.Entry<ResourceKey<PortalGunVariant>, PortalGunVariant>> variants
+				= registry.entrySet().stream().toList();
+
+		ResourceLocation location = variants.get(server.overworld().getRandom().nextInt(variants.size())).getKey()
+											.location();
+
+		this.portalLinks.put(uuid, new PortalLink(uuid, location));
 		this.setDirty();
 	}
 	

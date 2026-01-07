@@ -3,11 +3,9 @@ package net.mistersecret312.aperture_innovations;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
@@ -55,6 +53,9 @@ public class ApertureInnovations
 		BlockInit.register(modEventBus);
 		ItemTabInit.register(modEventBus);
 		SoundInit.register(modEventBus);
+		StatisticsInit.register(modEventBus);
+
+		AdvancementInit.register();
 
 		modEventBus.addListener((DataPackRegistryEvent.NewRegistry event) ->
 			{
