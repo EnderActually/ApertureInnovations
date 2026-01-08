@@ -131,6 +131,16 @@ public class ServerboundOpenPortalPacket
 						NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(player.blockPosition())),
 								new ClientboundPortalSoundsPacket.ShootPortal(linkID, player.blockPosition(), isPrimary));					}
 				}
+				else
+				{
+					portalGun.stopTriggeredAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
+					portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
+
+					NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(player.blockPosition())),
+							new ClientboundPortalSoundsPacket.ShootPortal(linkID, player.blockPosition(), isPrimary));
+					NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(player.blockPosition())),
+							new ClientboundPortalSoundsPacket.InvalidSurface(linkID, player.blockPosition(), isPrimary));
+				}
 			}
 
 		});
