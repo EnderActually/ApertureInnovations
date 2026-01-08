@@ -6,6 +6,7 @@ import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
@@ -106,6 +107,7 @@ public class PortalGunItem extends Item implements GeoItem
 			if(link != null && isSelected)
 			{
 				link.updateColors(level, getPrimaryPortalColor(stack), getSecondaryPortalColor(stack));
+				link.updateVariant(level, getVariant(stack));
 			}
 		}
 	}
@@ -243,6 +245,14 @@ public class PortalGunItem extends Item implements GeoItem
 		else return -1;
 	}
 
+	public ResourceLocation getVariant(ItemStack stack)
+	{
+		CompoundTag tag = stack.getOrCreateTag();
+		if(tag.contains("variant"))
+			return ResourceLocation.parse(tag.getString("variant"));
+		else return new ResourceLocation(ApertureInnovations.MODID, "chell");
+	}
+
 	public void setPrimaryStripeColor(ItemStack stack, int color)
 	{
 		stack.getOrCreateTag().putInt("primaryStripeColor", color);
@@ -261,6 +271,11 @@ public class PortalGunItem extends Item implements GeoItem
 	public void setSecondaryPortalColor(ItemStack stack, int color)
 	{
 		stack.getOrCreateTag().putInt("secondaryPortalColor", color);
+	}
+
+	public void setVariant(ItemStack stack, ResourceLocation variantKey)
+	{
+		stack.getOrCreateTag().putString("variant", variantKey.toString());
 	}
 
 	public int getLastShotPortal(ItemStack stack)

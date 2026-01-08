@@ -133,10 +133,22 @@ public class PortalLink
 
 	public void updateColors(Level level, int primaryPortalColor, int secondaryPortalColor)
 	{
-		this.primaryPortalColor = primaryPortalColor;
-		this.secondaryPortalColor = secondaryPortalColor;
+		if(this.primaryPortalColor != primaryPortalColor || this.secondaryPortalColor != secondaryPortalColor)
+		{
+			this.primaryPortalColor = primaryPortalColor;
+			this.secondaryPortalColor = secondaryPortalColor;
 
-		PortalLinkData.get(level).setDirty();
+			PortalLinkData.get(level).setDirty();
+		}
+	}
+
+	public void updateVariant(Level level, ResourceLocation variantKey)
+	{
+		if(this.variantKey != variantKey)
+		{
+			this.variantKey = variantKey;
+			PortalLinkData.get(level).setDirty();
+		}
 	}
 
 	public void reset(Level level)

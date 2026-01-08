@@ -24,8 +24,8 @@ public class ClientPortalUtilities
 			return variantColor;
 		else
 		{
-			Color rgbaColor = new Color(gunColor, true);
-			return new ColorUtil.RGBA(rgbaColor.getRed(), rgbaColor.getGreen(), rgbaColor.getBlue(), rgbaColor.getAlpha());
+			Color rgbaColor = new Color(gunColor, false);
+			return new ColorUtil.RGBA(rgbaColor.getRed()/255f, rgbaColor.getGreen()/255f, rgbaColor.getBlue()/255f, 1F);
 		}
 	}
 

@@ -82,14 +82,13 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
 			}
 			else
 			{
-				Color color = new Color(stripeColor, true);
+				Color color = new Color(stripeColor, false);
 				if(color.getRGB() == -1)
 					return true;
 
 				red *= color.getRed()/255f;
 				green *= color.getGreen()/255f;
 				blue *= color.getBlue()/255f;
-				alpha *= color.getAlpha()/255f;
 
 				renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, red, green, blue, alpha);
 				return true;

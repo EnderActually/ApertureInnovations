@@ -55,6 +55,7 @@ public class ApertureInnovations
 		ItemTabInit.register(modEventBus);
 		SoundInit.register(modEventBus);
 		StatisticsInit.register(modEventBus);
+		RecipeInit.register(modEventBus);
 
 		AdvancementInit.register();
 

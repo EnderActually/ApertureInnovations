@@ -11,6 +11,9 @@
 
   "item.aperture_innovations.portal_gun": "Aperture Science Handheld Portal Device",
 
+  "item.aperture_innovations.colorful_gel": "Colorful Gel",
+  "item.aperture_innovations.colorful_gel.color": "Color: %s",
+
   "aperture_innovations.portal_gun.variant_chell": "Chell Variant",
   "aperture_innovations.portal_gun.variant_pbody": "P-Body Variant",
   "aperture_innovations.portal_gun.variant_atlas": "Atlas Variant",

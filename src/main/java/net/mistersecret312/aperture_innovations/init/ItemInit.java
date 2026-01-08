@@ -6,6 +6,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.items.ColorfulGelItem;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 
 public class ItemInit
@@ -15,6 +16,8 @@ public class ItemInit
 
 	public static final RegistryObject<Item> PORTAL_GUN = ITEMS.register("portal_gun",
 			() -> new PortalGunItem(new Item.Properties().stacksTo(1).fireResistant()));
+	public static final RegistryObject<Item> COLORFUL_GEL = ITEMS.register("colorful_gel",
+			() -> new ColorfulGelItem(new Item.Properties().stacksTo(1)));
 
 	public static void register(IEventBus bus)
 	{

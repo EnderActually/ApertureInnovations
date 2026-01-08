@@ -21,6 +21,7 @@ public class ItemTabInit
 						  .title(Component.translatable("tabs.aperture_innovations"))
 						  .displayItems((parameters, output) -> {
 							  output.accept(ItemInit.PORTAL_GUN.get());
+							  output.accept(ItemInit.COLORFUL_GEL.get());
 
 							  output.accept(BlockInit.CONCRETE_SURFACE_BLOCK.get());
 							  output.accept(BlockInit.CONCRETE_SURFACE_TILE_BLOCK.get());
