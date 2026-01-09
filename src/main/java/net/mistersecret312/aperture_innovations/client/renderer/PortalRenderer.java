@@ -1,16 +1,12 @@
 package net.mistersecret312.aperture_innovations.client.renderer;
 
-import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import com.mojang.datafixers.util.Pair;
 import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
@@ -18,21 +14,18 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
-import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.client.ColorUtil;
 import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
-import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortalGunVariant;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalUtilities;
-import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 
-import java.awt.*;
 import java.util.HashMap;
 import java.util.UUID;
+
 
 public class PortalRenderer
 {
@@ -156,102 +149,6 @@ public class PortalRenderer
 				 .endVertex();
 
 		poseStack.popPose();
-	}
-
-	public static void renderPortal(MultiBufferSource buffer, Camera camera, PoseStack poseStack, ClientPortalLink link, boolean isPrimary, float scale) {
-		poseStack.pushPose();
-		MultiBufferSource.BufferSource source = (MultiBufferSource.BufferSource) buffer;
-		Vec3 pos = isPrimary ? link.posPrimary().getCenter() : link.posSecondary().getCenter();
-		Direction direction = isPrimary ? link.directionPrimary() : link.directionSecondary();
-		poseStack.translate(pos.x-camera.getPosition().x,
-				pos.y-camera.getPosition().y+0.5,
-				pos.z-camera.getPosition().z);
-		poseStack.mulPose(direction.getRotation());
-
-		if(isPrimary)
-		{
-			if (link.wallPrimary())
-				poseStack.mulPose(Axis.XP.rotationDegrees(-90));
-			else {
-				poseStack.mulPose(Axis.XP.rotationDegrees(link.ceilingPrimary() ? 0 : 180));
-				poseStack.mulPose(Axis.ZP.rotationDegrees(180));
-				poseStack.translate(0f, 0.5f, -0.5f);
-				if (link.ceilingPrimary())
-					poseStack.translate(0f, 0f, 1f);
-			}
-			poseStack.translate(0.5f, 0f, 0.52f);
-		}
-		else
-		{
-			if (link.wallSecondary())
-				poseStack.mulPose(Axis.XP.rotationDegrees(-90));
-			else {
-				poseStack.mulPose(Axis.XP.rotationDegrees(link.ceilingSecondary() ? 0 : 180));
-				poseStack.mulPose(Axis.ZP.rotationDegrees(180));
-				poseStack.translate(0f, 0.5f, -0.5f);
-				if (link.ceilingSecondary())
-					poseStack.translate(0f, 0f, 1f);
-			}
-			poseStack.translate(0.5f, 0f, 0.52f);
-		}
-
-		poseStack.scale(1f,2f,1f);
-
-		poseStack.translate(-0.5f, 0f, 0f);
-		poseStack.scale(scale, scale, scale);
-
-		Tesselator tesselator = Tesselator.getInstance();
-		BufferBuilder builder = tesselator.getBuilder();
-		Matrix4f matrix = poseStack.last().pose();
-
-		RenderSystem.colorMask(false, false, false, false);
-		RenderSystem.enableDepthTest();
-
-		RenderSystem.setShader(GameRenderer::getPositionTexShader);
-		RenderSystem.setShaderTexture(0, isPrimary ? link.getVariant().primaryPortal.getMaskTexture()
-												 : link.getVariant().secondaryPortal.getMaskTexture());
-
-
-		builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-		builder.vertex(matrix, -0.5f, -0.5f, 0).uv(0f, 0f).endVertex();
-		builder.vertex(matrix,  0.5f, -0.5f, 0).uv(1f, 0f).endVertex();
-		builder.vertex(matrix,  0.5f,  0.5f, 0).uv(1f, 1f).endVertex();
-		builder.vertex(matrix, -0.5f,  0.5f, 0).uv(0f, 1f).endVertex();
-
-		BufferUploader.drawWithShader(builder.end());
-
-		RenderSystem.stencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_KEEP);
-		RenderSystem.colorMask(true, true, true, true);
-
-		RenderSystem.depthFunc(GL11.GL_EQUAL);
-		RenderSystem.depthMask(true);
-
-		if(!PortalViewingRenderer.FRAMEBUFFERS.containsKey(link.linkID()))
-		{
-			PortalViewingRenderer.requestPortalUpdate(link.linkID(), isPrimary);
-		}
-		Pair<RenderTarget, RenderTarget> pair = PortalViewingRenderer.FRAMEBUFFERS.get(link.linkID());
-
-		RenderSystem.setShaderTexture(0, isPrimary ? pair.getSecond().getColorTextureId() : pair.getFirst().getColorTextureId());
-		RenderSystem.setShader(GameRenderer::getPositionTexShader);
-
-		builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-
-		builder.vertex(matrix, -0.5f, -0.5f, 0).uv(0.0f, 0.0f).endVertex();
-		builder.vertex(matrix,  0.5f, -0.5f, 0).uv(1f, 0.0f).endVertex();
-		builder.vertex(matrix,  0.5f,  0.5f, 0).uv(1f, 1.0f).endVertex();
-		builder.vertex(matrix, -0.5f,  0.5f, 0).uv(0.0f, 1.0f).endVertex();
-
-		BufferUploader.drawWithShader(builder.end());
-
-		RenderSystem.disableDepthTest();
-		RenderSystem.depthFunc(GL11.GL_LEQUAL);
-
-		RenderSystem.stencilFunc(GL11.GL_ALWAYS, 0, 0xFF);
-
-		poseStack.popPose();
-
-		source.endBatch();
 	}
 
 	public static void renderPortalFrame(ResourceLocation texture, ColorUtil.RGBA color, MultiBufferSource buffer, PoseStack poseStack) {

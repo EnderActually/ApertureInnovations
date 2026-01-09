@@ -106,10 +106,6 @@ dependencies {
 
     implementation fg.deobf("software.bernie.geckolib:geckolib-forge-${minecraft_version}:${geckolib_version}")
 
-    implementation fg.deobf("curse.maven:ctm-267602:5983309")
-
-    implementation fg.deobf("curse.maven:tickrate-api-969702:7105256")
-
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
     compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.4.1"))

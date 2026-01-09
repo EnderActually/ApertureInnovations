@@ -8,10 +8,7 @@
     "CollisionMixin",
     "LivingEntityMixin"
   ],
-  "client": [
-    "LevelRendererMixin",
-    "MinecraftMixin"
-  ],
+  "client": [],
   "injectors": {
     "defaultRequire": 1
   },
