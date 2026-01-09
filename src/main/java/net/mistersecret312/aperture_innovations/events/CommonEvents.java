@@ -2,6 +2,7 @@ package net.mistersecret312.aperture_innovations.events;
 
 import com.mojang.datafixers.util.Pair;
 import com.mojang.math.Axis;
+import net.minecraft.advancements.critereon.EntityHurtPlayerTrigger;
 import net.minecraft.advancements.critereon.KilledTrigger;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.AdvancementToast;
@@ -35,6 +36,7 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.event.entity.living.LivingUseTotemEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
@@ -339,6 +341,7 @@ public class CommonEvents
 								cap.portal = new Pair<>(uuid, !isPrimary);
 
 								cap.updateDistance();
+								cap.setFrictionlessTime(100*20);
 								if(entity instanceof ServerPlayer player)
 									PortalTravelCriterion.INSTANCE.trigger(player, dimension.location(), otherDimension.location(),
 											(long) portalPos.distanceToSqr(mathOtherPos), (long) cap.verticalDistance,
@@ -367,7 +370,32 @@ public class CommonEvents
 	{
 		LivingEntity living = event.getEntity();
 		Level level = living.level();
-		if(event.getSource().equals(level.damageSources().fall()) && living instanceof ServerPlayer player)
+		if(living instanceof ServerPlayer player)
+		{
+			Pair<UUID, Boolean> closestPortal = PortalUtilities.getClosestPortal(player);
+			UUID linkID = closestPortal.getFirst();
+			boolean isPrimary = closestPortal.getSecond();
+
+			Vec3 portalPos = PortalUtilities.getPortalPos(level, linkID, isPrimary);
+			if(portalPos == null)
+				return;
+
+			boolean onWall = PortalUtilities.isPortalOnWall(level, linkID, isPrimary);
+			boolean onCeiling = PortalUtilities.isPortalOnCeiling(level, linkID, isPrimary);
+
+			long distance = (long) portalPos.distanceTo(player.position());
+			if(distance > 16)
+				return;
+
+			NearPortalDeathCriterion.INSTANCE.trigger(player, distance, !onWall && !onCeiling);
+		}
+	}
+
+	public static void totemDeath(LivingUseTotemEvent event)
+	{
+		LivingEntity living = event.getEntity();
+		Level level = living.level();
+		if(living instanceof ServerPlayer player)
 		{
 			Pair<UUID, Boolean> closestPortal = PortalUtilities.getClosestPortal(player);
 			UUID linkID = closestPortal.getFirst();

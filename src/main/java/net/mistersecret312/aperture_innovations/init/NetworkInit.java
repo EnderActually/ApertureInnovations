@@ -44,12 +44,17 @@ public class NetworkInit
 				.decoder(ClientboundTeleportMomentumPacket::decode)
 				.consumerMainThread(ClientboundTeleportMomentumPacket::handle).add();
 
+		INSTANCE.messageBuilder(ClientboundApertureCapabilityPacket.class, index++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(ClientboundApertureCapabilityPacket::encode)
+				.decoder(ClientboundApertureCapabilityPacket::decode)
+				.consumerMainThread(ClientboundApertureCapabilityPacket::handle).add();
+
+		//Sounds
+
 		INSTANCE.messageBuilder(ClientboundPortalAmbientSoundPacket.class, index++, NetworkDirection.PLAY_TO_CLIENT)
 				.encoder(ClientboundPortalAmbientSoundPacket::encode)
 				.decoder(ClientboundPortalAmbientSoundPacket::decode)
 				.consumerMainThread(ClientboundPortalAmbientSoundPacket::handle).add();
-
-		//Sounds
 
 		INSTANCE.messageBuilder(ClientboundPortalSoundsPacket.FizzlePortal.class, index++, NetworkDirection.PLAY_TO_CLIENT)
 				.encoder(ClientboundPortalSoundsPacket.FizzlePortal::encode)
