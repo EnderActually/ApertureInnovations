@@ -2,6 +2,7 @@ package net.mistersecret312.aperture_innovations.events;
 
 import com.mojang.datafixers.util.Pair;
 import com.mojang.math.Axis;
+import net.minecraft.advancements.critereon.KilledTrigger;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.AdvancementToast;
 import net.minecraft.client.player.LocalPlayer;
@@ -23,6 +24,7 @@ import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.IceBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -31,6 +33,7 @@ import net.minecraftforge.common.world.ForgeChunkManager;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
@@ -39,6 +42,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.network.PacketDistributor;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.advancements.NearPortalDeathCriterion;
 import net.mistersecret312.aperture_innovations.advancements.PortalTravelCriterion;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
 import net.mistersecret312.aperture_innovations.capabilities.GenericProvider;
@@ -193,6 +197,7 @@ public class CommonEvents
 				for(Entity entity : serverLevel.getAllEntities())
 				{
 					Pair<UUID, Boolean> pair = PortalUtilities.getClosestPortal(entity);
+
 					UUID uuid = pair.getFirst();
 					boolean isPrimary = pair.getSecond();
 					if(uuid == null)
@@ -214,7 +219,7 @@ public class CommonEvents
 					AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPos, portalDirection, isOnWall, isOnCeiling);
 
 					Vec3 entityCenter = entity.getBoundingBox().getCenter();
-					AABB entityCenterBox = new AABB(entityCenter, entityCenter).inflate(0.1D, 0.5D, 0.1D);
+					AABB entityCenterBox = new AABB(entityCenter, entityCenter).inflate(0.25D, 0.5D, 0.25D);
 
 					if(entityCenterBox.expandTowards(entity.getDeltaMovement().multiply(1, 1, 1)).intersects(teleportBox))
 					{
@@ -354,6 +359,32 @@ public class CommonEvents
 			PortalLinkData data = PortalLinkData.get(serverPlayer.level());
 			NetworkInit.INSTANCE.send(PacketDistributor.PLAYER.with(() -> serverPlayer),
 					new ClientBoundPortalLinkSyncPacket(data.portalLinks, new HashMap<>()));
+		}
+	}
+
+	@SubscribeEvent
+	public static void playerDied(LivingDeathEvent event)
+	{
+		LivingEntity living = event.getEntity();
+		Level level = living.level();
+		if(event.getSource().equals(level.damageSources().fall()) && living instanceof ServerPlayer player)
+		{
+			Pair<UUID, Boolean> closestPortal = PortalUtilities.getClosestPortal(player);
+			UUID linkID = closestPortal.getFirst();
+			boolean isPrimary = closestPortal.getSecond();
+
+			Vec3 portalPos = PortalUtilities.getPortalPos(level, linkID, isPrimary);
+			if(portalPos == null)
+				return;
+
+			boolean onWall = PortalUtilities.isPortalOnWall(level, linkID, isPrimary);
+			boolean onCeiling = PortalUtilities.isPortalOnCeiling(level, linkID, isPrimary);
+
+			long distance = (long) portalPos.distanceTo(player.position());
+			if(distance > 16)
+				return;
+
+			NearPortalDeathCriterion.INSTANCE.trigger(player, distance, !onWall && !onCeiling);
 		}
 	}
 

@@ -74,9 +74,15 @@ public class ServerboundOpenPortalPacket
 				portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
 
 				if(isPrimary)
+				{
+					portalGun.setLastShotPortal(gunStack, 0);
 					link.setMoonshot(isPrimary, true, level);
+				}
 				else
+				{
+					portalGun.setLastShotPortal(gunStack, 1);
 					link.setMoonshot(isPrimary, true, level);
+				}
 
 				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(player.blockPosition())),
 						new ClientboundPortalSoundsPacket.ShootPortal(linkID, player.blockPosition(), isPrimary));

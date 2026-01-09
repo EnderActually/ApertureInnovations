@@ -46,18 +46,16 @@ public class CrosshairOverlay
 				ColorUtil.RGBA primaryColor = ClientPortalUtilities.getPortalColor(link, true);
 				ColorUtil.RGBA secondaryColor = ClientPortalUtilities.getPortalColor(link, false);
 
-
 				RenderSystem.setShaderColor(primaryColor.red(), primaryColor.green(), primaryColor.blue(),
 						primaryColor.alpha());
 
 				poseStack.pushPose();
-				poseStack.translate(hasPrimary ? -1 : -2, 0, 0);
 
 				ResourceLocation primaryCrosshairTexture = ClientPortalUtilities.getCrosshairTexture(link, true);
-				guiGraphics.blit(primaryCrosshairTexture, (screenWidth - 16) / 2, (screenHeight - 32) / 2,
-						hasPrimary ? 0 : 16, 0,
-						16, 32,
-						32, 32);
+				guiGraphics.blit(primaryCrosshairTexture, (screenWidth - 17) / 2, (screenHeight - 33) / 2,
+						hasPrimary ? 0 : 51, 0,
+						17, 33,
+						68, 33);
 
 				poseStack.popPose();
 
@@ -65,13 +63,12 @@ public class CrosshairOverlay
 						secondaryColor.alpha());
 
 				poseStack.pushPose();
-				poseStack.translate(hasSecondary ? 1 : 0, 0, 0);
 
 				ResourceLocation secondaryCrosshairTexture = ClientPortalUtilities.getCrosshairTexture(link, false);
-				guiGraphics.blit(secondaryCrosshairTexture, (screenWidth - 16) / 2, (screenHeight - 32) / 2,
-						hasSecondary ? 0 : 16, 0,
-						16, 32,
-						32, 32);
+				guiGraphics.blit(secondaryCrosshairTexture, (screenWidth - 17) / 2, (screenHeight - 33) / 2,
+						hasSecondary ? 34 : 17, 0,
+						17, 33,
+						68, 33);
 
 				poseStack.popPose();
 

@@ -20,7 +20,7 @@
     "frame": "challenge",
     "hidden": true
   },
-  "parent": "aperture_innovations:aperture/root",
+  "parent": "aperture_innovations:aperture/so_close_yet_so_far_away",
   "requirements": [
     [
       "long_jump"

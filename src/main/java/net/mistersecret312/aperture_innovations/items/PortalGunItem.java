@@ -29,6 +29,7 @@ import net.minecraftforge.network.PacketDistributor;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.advancements.ThrownIntoFluidCriterion;
 import net.mistersecret312.aperture_innovations.client.renderer.PortalGunRenderer;
+import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalSoundsPacket;
 import net.mistersecret312.aperture_innovations.portal.*;
@@ -70,14 +71,40 @@ public class PortalGunItem extends Item implements GeoItem
 		SingletonGeoAnimatable.registerSyncedAnimatable(this);
 	}
 
+	public static ItemStack createPortalGun(ResourceLocation variantKey)
+	{
+		ItemStack stack = new ItemStack(ItemInit.PORTAL_GUN.get());
+		PortalGunItem item = (PortalGunItem) stack.getItem();
+		item.setVariant(stack, variantKey);
+
+		return stack;
+	}
+
 	@Override
 	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> components,
 								TooltipFlag flag)
 	{
-		ClientPortalLink link = PortalUtilities.getPortalLinks().get(getUUID(stack, false));
-		if(link != null) components.add(
-				Component.translatable("aperture_innovations.portal_gun.variant_" + link.variantKey().getPath()).withStyle(
-						ChatFormatting.DARK_AQUA));
+		components.add(Component.translatable("aperture_innovations.portal_gun.variant_" + getVariant(stack).getPath()).withStyle(
+						ChatFormatting.YELLOW));
+
+		int primaryStripeColor = getPrimaryStripeColor(stack);
+		int secondaryStripeColor = getSecondaryStripeColor(stack);
+
+		int primaryPortalColor = getPrimaryPortalColor(stack);
+		int secondaryPortalColor = getSecondaryPortalColor(stack);
+
+		if(primaryPortalColor != -1)
+			components.add(Component.translatable("item.aperture_innovations.portal_gun.portal_primary_color", Integer.toHexString(primaryPortalColor).toUpperCase()).withStyle(style -> style.withColor(primaryPortalColor)));
+
+		if(secondaryPortalColor != -1)
+			components.add(Component.translatable("item.aperture_innovations.portal_gun.portal_secondary_color", Integer.toHexString(secondaryPortalColor).toUpperCase()).withStyle(style -> style.withColor(secondaryPortalColor)));
+
+
+		if(primaryStripeColor != -1)
+			components.add(Component.translatable("item.aperture_innovations.portal_gun.stripe_primary_color", Integer.toHexString(primaryStripeColor).toUpperCase()).withStyle(style -> style.withColor(primaryStripeColor)));
+
+		if(secondaryStripeColor != -1)
+			components.add(Component.translatable("item.aperture_innovations.portal_gun.stripe_secondary_color", Integer.toHexString(secondaryStripeColor).toUpperCase()).withStyle(style -> style.withColor(secondaryStripeColor)));
 
 	}
 

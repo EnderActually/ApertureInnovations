@@ -100,9 +100,9 @@ public class PortalGunColoringRecipe extends CustomRecipe
 				gunItem.setPrimaryStripeColor(gunItemStack, gel.getColor(gelStack));
 			if(slotID-gunStack == 1)
 				gunItem.setSecondaryStripeColor(gunItemStack, gel.getColor(gelStack));
-			if(slotID-gunStack == 3)
-				gunItem.setPrimaryPortalColor(gunItemStack, gel.getColor(gelStack));
 			if(slotID-gunStack == -3)
+				gunItem.setPrimaryPortalColor(gunItemStack, gel.getColor(gelStack));
+			if(slotID-gunStack == 3)
 				gunItem.setSecondaryPortalColor(gunItemStack, gel.getColor(gelStack));
 		}
 

@@ -1,7 +1,9 @@
 package net.mistersecret312.aperture_innovations.init;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -9,6 +11,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 
 public class ItemTabInit
 {
@@ -20,7 +23,10 @@ public class ItemTabInit
 						  .icon(() -> new ItemStack(ItemInit.PORTAL_GUN.get()))
 						  .title(Component.translatable("tabs.aperture_innovations"))
 						  .displayItems((parameters, output) -> {
-							  output.accept(ItemInit.PORTAL_GUN.get());
+							  output.accept(PortalGunItem.createPortalGun(ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "chell")));
+							  output.accept(PortalGunItem.createPortalGun(ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "atlas")));
+							  output.accept(PortalGunItem.createPortalGun(ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "pbody")));
+
 							  output.accept(ItemInit.COLORFUL_GEL.get());
 
 							  output.accept(BlockInit.CONCRETE_SURFACE_BLOCK.get());
