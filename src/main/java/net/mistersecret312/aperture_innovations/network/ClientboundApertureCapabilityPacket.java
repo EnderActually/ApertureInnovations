@@ -31,13 +31,7 @@ public class ClientboundApertureCapabilityPacket
 	{
 		ctx.get().enqueueWork(() ->
 			{
-				Player player = Minecraft.getInstance().player;
-				if(player == null)
-					return;
-
-				player.getCapability(CapabilityInit.APERTURE).ifPresent(cap -> {
-					cap.frictionlessTime = this.frictionlessTime;
-				});
+				ClientPacketHandler.handlePlayerCapabilityPacket(this.frictionlessTime);
 			});
 		return true;
 	}

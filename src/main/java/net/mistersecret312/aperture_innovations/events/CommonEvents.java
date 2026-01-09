@@ -118,7 +118,7 @@ public class CommonEvents
 										entity.push(pushVector.x, pushVector.y, pushVector.z);
 										if(entity instanceof ServerPlayer player)
 											NetworkInit.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player),
-													new ClientboundTeleportMomentumPacket(entity.getDeltaMovement(), player.position(), entity.getYRot()));
+													new ClientboundTeleportMomentumPacket(entity.getDeltaMovement()));
 
 									}
 								}
@@ -274,8 +274,7 @@ public class CommonEvents
 						{
 							player.awardStat(StatisticsInit.TIMES_USED_PORTALS.get(), 1);
 							NetworkInit.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player),
-									new ClientboundTeleportMomentumPacket(new Vec3(newSpeed), otherPortalPos,
-											entity.getYRot() + rotation));
+									new ClientboundTeleportMomentumPacket(new Vec3(newSpeed)));
 						}
 						Vec3 mathOtherPos = otherPortalPos;
 						entity.getCapability(CapabilityInit.APERTURE).ifPresent(cap ->
