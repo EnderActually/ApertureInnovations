@@ -5,6 +5,7 @@ import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -25,10 +26,15 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.network.PacketDistributor;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.advancements.ThrownIntoFluidCriterion;
+import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
+import net.mistersecret312.aperture_innovations.capabilities.item.ItemEnergyProvider;
 import net.mistersecret312.aperture_innovations.client.renderer.PortalGunRenderer;
+import net.mistersecret312.aperture_innovations.config.PortalGunConfig;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalSoundsPacket;
@@ -44,12 +50,17 @@ import software.bernie.geckolib.core.animation.RawAnimation;
 import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
+import java.awt.*;
+import java.math.RoundingMode;
+import java.text.NumberFormat;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
 public class PortalGunItem extends Item implements GeoItem
 {
+	public static final String ENERGY = "Energy";
+
 	private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
 	protected static class Animations
@@ -81,17 +92,53 @@ public class PortalGunItem extends Item implements GeoItem
 	}
 
 	@Override
+	public boolean isBarVisible(ItemStack stack)
+	{
+		return PortalGunConfig.portal_gun_uses_energy.get() && getEnergy(stack) != getCapacity();
+	}
+
+	@Override
+	public int getBarWidth(ItemStack stack)
+	{
+		return Math.round(13.0F * (float) getEnergy(stack) / getCapacity());
+	}
+
+	@Override
+	public int getBarColor(ItemStack stack)
+	{
+		return new Color(0, 200, 255).getRGB();
+	}
+
+	@Override
 	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> components,
 								TooltipFlag flag)
 	{
 		components.add(Component.translatable("aperture_innovations.portal_gun.variant_" + getVariant(stack).getPath()).withStyle(
 						ChatFormatting.YELLOW));
 
+		int dualityState = getDualityState(stack);
+
 		int primaryStripeColor = getPrimaryStripeColor(stack);
 		int secondaryStripeColor = getSecondaryStripeColor(stack);
 
 		int primaryPortalColor = getPrimaryPortalColor(stack);
 		int secondaryPortalColor = getSecondaryPortalColor(stack);
+
+		if(dualityState == 0)
+				components.add(Component.translatable("item.aperture_innovations.portal_gun.duality_primary").withStyle(ChatFormatting.LIGHT_PURPLE));
+		if(dualityState == 1)
+				components.add(Component.translatable("item.aperture_innovations.portal_gun.duality_secondary").withStyle(ChatFormatting.LIGHT_PURPLE));
+
+		if(getPair(stack) != null && dualityState != 2)
+			components.add(Component.translatable("item.aperture_innovations.portal_gun.paired").withStyle(ChatFormatting.DARK_PURPLE));
+
+		if(PortalGunConfig.portal_gun_uses_energy.get())
+		{
+			components.add(Component.translatable("item.aperture_innovations.portal_gun.energy").append(ApertureEnergy.energyToString(getEnergy(stack), getCapacity())).withStyle(ChatFormatting.DARK_RED));
+		}
+
+		if(primaryPortalColor != -1 || primaryStripeColor != -1 || secondaryPortalColor != -1 || secondaryStripeColor != -1)
+			components.add(Component.literal(""));
 
 		if(primaryPortalColor != -1)
 			components.add(Component.translatable("item.aperture_innovations.portal_gun.portal_primary_color", Integer.toHexString(primaryPortalColor).toUpperCase()).withStyle(style -> style.withColor(primaryPortalColor)));
@@ -131,7 +178,23 @@ public class PortalGunItem extends Item implements GeoItem
 		else
 		{
 			PortalLink link = PortalUtilities.getPortalLinks(level).get(getUUID(stack, false));
-			if(link != null && isSelected)
+			if(link != null && link.isOpen() && PortalGunConfig.portal_gun_uses_energy.get())
+			{
+				stack.getCapability(ForgeCapabilities.ENERGY).ifPresent(cap -> {
+					if(cap instanceof ApertureEnergy energy)
+					{
+						long toExtract = PortalGunConfig.portal_gun_passive_consumption.get();
+						long extracted = energy.extractLongEnergy(toExtract, false);
+						if(extracted < toExtract)
+						{
+							player.displayClientMessage(Component.translatable("item.aperture_innovations.portal_gun.not_enough_energy"), true);
+							link.reset(level);
+						}
+					}
+				});
+			}
+
+			if(link != null && isSelected && (getPair(stack) == null || getDualityState(stack) == 2) )
 			{
 				link.updateColors(level, getPrimaryPortalColor(stack), getSecondaryPortalColor(stack));
 				link.updateVariant(level, getVariant(stack));
@@ -169,6 +232,51 @@ public class PortalGunItem extends Item implements GeoItem
 		return true;
 	}
 
+	public static long getEnergy(ItemStack stack)
+	{
+		CompoundTag tag = stack.getOrCreateTag();
+
+		if(tag.contains(ENERGY, Tag.TAG_LONG))
+			return tag.getLong(ENERGY);
+
+		return 0;
+	}
+
+	public long getCapacity()
+	{
+		return PortalGunConfig.portal_gun_max_energy_stored.get();
+	}
+
+	public long getTransfer()
+	{
+		return PortalGunConfig.portal_gun_uses_energy.get() ? 10000L : 0L;
+	}
+
+	@Override
+	public final ICapabilityProvider initCapabilities(ItemStack stack, CompoundTag tag)
+	{
+		return new ItemEnergyProvider(stack)
+		{
+			@Override
+			public long capacity()
+			{
+				return getCapacity();
+			}
+
+			@Override
+			public long maxReceive()
+			{
+				return getTransfer();
+			}
+
+			@Override
+			public long maxExtract()
+			{
+				return getTransfer();
+			}
+		};
+	}
+
 	public static BlockHitResult rayTrace(Level level, Player player, double range) {
 		float xRot = player.getXRot();
 		float yRot = player.getYRot();
@@ -201,7 +309,7 @@ public class PortalGunItem extends Item implements GeoItem
 
 	public boolean isLookingAtMoon(Player player, Level level)
 	{
-		HitResult hit = player.pick(256D, 0.0F, false);
+		HitResult hit = player.pick(PortalGunConfig.portal_gun_shoot_range.get(), 0.0F, false);
 
 		if (hit.getType() != HitResult.Type.MISS)
 			return false;
@@ -223,6 +331,13 @@ public class PortalGunItem extends Item implements GeoItem
 	public UUID getUUID(ItemStack stack, boolean generateIfEmpty)
 	{
 		CompoundTag tag = stack.getOrCreateTag();
+		int dualityState = getDualityState(stack);
+		if(dualityState != 2)
+		{
+			if(tag.contains("pair"))
+				return tag.getUUID("pair");
+		}
+
 		if(tag.contains("link"))
 			return tag.getUUID("link");
 		else if(generateIfEmpty)
@@ -239,6 +354,34 @@ public class PortalGunItem extends Item implements GeoItem
 	{
 		stack.getOrCreateTag().putUUID("link", uuid);
 	}
+
+	public UUID getPair(ItemStack stack)
+	{
+		CompoundTag tag = stack.getTag();
+		if(tag != null && tag.contains("pair"))
+			return tag.getUUID("pair");
+		else return null;
+	}
+
+	public void setPair(ItemStack stack, UUID pairID)
+	{
+		if(pairID == null)
+		{
+			stack.getOrCreateTag().remove("pair");
+			return;
+		}
+
+		stack.getOrCreateTag().putUUID("pair", pairID);
+	}
+
+	public int getDualityState(ItemStack stack)
+	{
+		CompoundTag tag = stack.getOrCreateTag();
+		if(tag.contains("duality"))
+			return tag.getInt("duality");
+		else return 2;
+	}
+
 
 	public int getPrimaryStripeColor(ItemStack stack)
 	{
@@ -278,6 +421,11 @@ public class PortalGunItem extends Item implements GeoItem
 		if(tag.contains("variant"))
 			return ResourceLocation.parse(tag.getString("variant"));
 		else return new ResourceLocation(ApertureInnovations.MODID, "chell");
+	}
+
+	public void setDualityState(ItemStack stack, int state)
+	{
+		stack.getOrCreateTag().putInt("duality", state);
 	}
 
 	public void setPrimaryStripeColor(ItemStack stack, int color)

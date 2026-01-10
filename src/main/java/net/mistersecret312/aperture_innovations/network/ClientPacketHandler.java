@@ -13,7 +13,6 @@ public class ClientPacketHandler
 		if(player != null)
 		{
 			player.setDeltaMovement(speed);
-			//player.moveTo(position.x, position.y, position.z, yRot, player.getXRot());
 		}
 	}
 

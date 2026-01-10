@@ -26,6 +26,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
+import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.network.ServerboundOpenPortalPacket;
 import net.mistersecret312.aperture_innovations.network.ServerboundResetPortalLinkPacket;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
@@ -184,12 +185,23 @@ public class ClientEvents
 		if (!hasPortalGun)
 			return;
 
-		if(event.getButton() == 0 && event.getAction() == 1)
-			NetworkInit.INSTANCE.sendToServer(new ServerboundOpenPortalPacket(true));
-		else if(event.getButton() == 1 && event.getAction() == 1)
-			NetworkInit.INSTANCE.sendToServer(new ServerboundOpenPortalPacket(false));
+		ItemStack gunItemStack = main.is(ItemInit.PORTAL_GUN.get()) ? main : off;
+		PortalGunItem gunItem = (PortalGunItem) gunItemStack.getItem();
 
-		event.setCanceled(true);
+		int dualityState = gunItem.getDualityState(gunItemStack);
+
+		if(!player.isShiftKeyDown() && event.getButton() == 0 &&
+				   event.getAction() == 1 && (dualityState == 2 || dualityState == 0))
+		{
+			NetworkInit.INSTANCE.sendToServer(new ServerboundOpenPortalPacket(true));
+			event.setCanceled(true);
+		}
+		else if(!player.isShiftKeyDown() && event.getButton() == 1 &&
+						event.getAction() == 1 && (dualityState == 2 || dualityState == 1))
+		{
+			NetworkInit.INSTANCE.sendToServer(new ServerboundOpenPortalPacket(false));
+			event.setCanceled(true);
+		}
 	}
 
 	@SubscribeEvent

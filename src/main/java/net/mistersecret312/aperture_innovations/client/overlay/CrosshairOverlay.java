@@ -3,6 +3,7 @@ package net.mistersecret312.aperture_innovations.client.overlay;
 import ca.weblite.objc.Client;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.ResourceLocation;
@@ -37,6 +38,8 @@ public class CrosshairOverlay
 			ItemStack gunStack = main.is(ItemInit.PORTAL_GUN.get()) ? main : off;
 			PortalGunItem portalGun = (PortalGunItem) gunStack.getItem();
 
+			int dualityState = portalGun.getDualityState(gunStack);
+
 			ClientPortalLink link = LINKS.get(portalGun.getUUID(gunStack, false));
 			if(link != null)
 			{
@@ -46,34 +49,60 @@ public class CrosshairOverlay
 				ColorUtil.RGBA primaryColor = ClientPortalUtilities.getPortalColor(link, true);
 				ColorUtil.RGBA secondaryColor = ClientPortalUtilities.getPortalColor(link, false);
 
-				RenderSystem.setShaderColor(primaryColor.red(), primaryColor.green(), primaryColor.blue(),
-						primaryColor.alpha());
+				ResourceLocation primaryCrosshairTexture = ClientPortalUtilities.getCrosshairTexture(link, true);
+				ResourceLocation secondaryCrosshairTexture = ClientPortalUtilities.getCrosshairTexture(link, false);
+
+				int uOffsetPrimary = hasPrimary ? 0 : 51;
+				int uOffsetSecondary = hasSecondary ? 34 : 17;
+
+				poseStack.pushPose();
+				int x = (screenWidth - 17) / 2;
+				int y = (screenHeight - 33) / 2;
+				poseStack.translate(x, y, 0);
 
 				poseStack.pushPose();
 
-				ResourceLocation primaryCrosshairTexture = ClientPortalUtilities.getCrosshairTexture(link, true);
-				guiGraphics.blit(primaryCrosshairTexture, (screenWidth - 17) / 2, (screenHeight - 33) / 2,
-						hasPrimary ? 0 : 51, 0,
+				if(dualityState == 1)
+				{
+					primaryCrosshairTexture = secondaryCrosshairTexture;
+					primaryColor = secondaryColor;
+					poseStack.translate(17, 33, 0);
+					poseStack.mulPose(Axis.ZP.rotationDegrees(180));
+					uOffsetPrimary = uOffsetSecondary;
+				}
+				RenderSystem.setShaderColor(primaryColor.red(), primaryColor.green(), primaryColor.blue(),
+						primaryColor.alpha());
+
+				guiGraphics.blit(primaryCrosshairTexture, 0, 0,
+						uOffsetPrimary, 0,
 						17, 33,
 						68, 33);
 
 				poseStack.popPose();
+
+				poseStack.pushPose();
+				if(dualityState == 0)
+				{
+					secondaryCrosshairTexture = primaryCrosshairTexture;
+					secondaryColor = primaryColor;
+					poseStack.translate(17, 33, 0);
+					poseStack.mulPose(Axis.ZP.rotationDegrees(180));
+					uOffsetSecondary = uOffsetPrimary;
+				}
 
 				RenderSystem.setShaderColor(secondaryColor.red(), secondaryColor.green(), secondaryColor.blue(),
 						secondaryColor.alpha());
 
-				poseStack.pushPose();
-
-				ResourceLocation secondaryCrosshairTexture = ClientPortalUtilities.getCrosshairTexture(link, false);
-				guiGraphics.blit(secondaryCrosshairTexture, (screenWidth - 17) / 2, (screenHeight - 33) / 2,
-						hasSecondary ? 34 : 17, 0,
+				guiGraphics.blit(secondaryCrosshairTexture, 0, 0,
+						uOffsetSecondary, 0,
 						17, 33,
 						68, 33);
 
 				poseStack.popPose();
 
+				poseStack.popPose();
+
 				RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
-				return;
 			}
 
 		});

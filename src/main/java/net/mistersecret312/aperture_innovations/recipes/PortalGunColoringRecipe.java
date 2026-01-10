@@ -1,6 +1,7 @@
 package net.mistersecret312.aperture_innovations.recipes;
 
 import com.google.common.collect.Lists;
+import net.minecraft.core.NonNullList;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.CraftingContainer;
@@ -19,6 +20,7 @@ import oshi.util.tuples.Pair;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 public class PortalGunColoringRecipe extends CustomRecipe
 {
@@ -32,14 +34,18 @@ public class PortalGunColoringRecipe extends CustomRecipe
 	public boolean matches(CraftingContainer container, Level level)
 	{
 		ItemStack itemstack = ItemStack.EMPTY;
+		ItemStack itemStack2 = ItemStack.EMPTY;
 		List<ItemStack> list = Lists.newArrayList();
 
 		for(int i = 0; i < container.getContainerSize(); ++i) {
 			ItemStack itemstack1 = container.getItem(i);
 			if (!itemstack1.isEmpty()) {
 				if (itemstack1.getItem() instanceof PortalGunItem) {
-					if (!itemstack.isEmpty()) {
-						return false;
+					if (!itemstack.isEmpty())
+					{
+						if(!itemStack2.isEmpty())
+							return false;
+						itemStack2 = itemstack1;
 					}
 
 					itemstack = itemstack1;
@@ -60,7 +66,8 @@ public class PortalGunColoringRecipe extends CustomRecipe
 	public ItemStack assemble(CraftingContainer container, RegistryAccess registryAccess)
 	{
 		List<Pair<Integer, ItemStack>> list = Lists.newArrayList();
-		ItemStack itemstack = ItemStack.EMPTY;
+		ItemStack gunItemStack = ItemStack.EMPTY;
+		ItemStack secondGunStack = ItemStack.EMPTY;
 		int gunStack = -1;
 
 		for(int i = 0; i < container.getContainerSize(); ++i) {
@@ -69,25 +76,25 @@ public class PortalGunColoringRecipe extends CustomRecipe
 				Item item = itemstack1.getItem();
 				if (item instanceof PortalGunItem)
 				{
-					if (!itemstack.isEmpty())
+					if (!gunItemStack.isEmpty())
 					{
-						return ItemStack.EMPTY;
+						if(!secondGunStack.isEmpty())
+							return ItemStack.EMPTY;
+						secondGunStack = itemstack1.copy();
+						continue;
 					}
 
-					itemstack = itemstack1.copy();
+					gunItemStack = itemstack1.copy();
 					gunStack = i;
 				} else {
 					if (!(item instanceof ColorfulGelItem))
-					{
 						return ItemStack.EMPTY;
-					}
 
 					list.add(new Pair<>(i, itemstack1));
 				}
 			}
 		}
 
-		ItemStack gunItemStack = container.getItem(gunStack).copy();
 		PortalGunItem gunItem = (PortalGunItem) gunItemStack.getItem();
 
 		for(int i = 0; i < list.size(); i++)
@@ -106,7 +113,47 @@ public class PortalGunColoringRecipe extends CustomRecipe
 				gunItem.setSecondaryPortalColor(gunItemStack, gel.getColor(gelStack));
 		}
 
-		return !itemstack.isEmpty() && !list.isEmpty() ? gunItemStack : ItemStack.EMPTY;
+		if(list.isEmpty())
+		{
+			int dualityState = gunItem.getDualityState(gunItemStack);
+			dualityState++;
+			dualityState %= 3;
+
+			if(gunItem.getPair(gunItemStack) == null && secondGunStack.isEmpty())
+				gunItem.setDualityState(gunItemStack, dualityState);
+
+			gunItem.setPair(gunItemStack, null);
+		}
+
+		return gunItemStack;
+	}
+
+	@Override
+	public NonNullList<ItemStack> getRemainingItems(CraftingContainer pContainer)
+	{
+		NonNullList<ItemStack> nonnulllist = NonNullList.withSize(pContainer.getContainerSize(), ItemStack.EMPTY);
+		ItemStack portalGunStack = ItemStack.EMPTY;
+
+		for(int i = 0; i < nonnulllist.size(); ++i) {
+			ItemStack item = pContainer.getItem(i);
+			if(item.getItem() instanceof PortalGunItem gun)
+			{
+				if(portalGunStack.isEmpty())
+				{
+					portalGunStack = item;
+					continue;
+				}
+				UUID pairID = gun.getUUID(portalGunStack, true);
+				gun.setPair(item, pairID);
+				nonnulllist.set(i, item.copy());
+				continue;
+			}
+			if (item.hasCraftingRemainingItem()) {
+				nonnulllist.set(i, item.getCraftingRemainingItem());
+			}
+		}
+
+		return nonnulllist;
 	}
 
 	@Override

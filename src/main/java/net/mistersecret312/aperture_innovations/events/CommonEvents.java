@@ -8,9 +8,11 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
@@ -92,8 +94,9 @@ public class CommonEvents
 						AABB centerBox = new AABB(boxCenter, boxCenter).inflate(0.25D);
 						if(level.getBlockStates(centerBox).anyMatch(
 						state -> {
-							BlockPos statePos = portalBlockPos.relative(portalDirection.getOpposite());
-							boolean isSturdy = state.isFaceSturdy(level, statePos, portalDirection);
+							Direction checkDirection = isOnWall ? portalDirection : isOnCeiling ? Direction.DOWN : Direction.UP;
+							BlockPos statePos = portalBlockPos.relative(checkDirection.getOpposite());
+							boolean isSturdy = state.isFaceSturdy(level, statePos, checkDirection);
 							return state.is(Blocks.AIR) || !isSturdy;
 						}))
 						{

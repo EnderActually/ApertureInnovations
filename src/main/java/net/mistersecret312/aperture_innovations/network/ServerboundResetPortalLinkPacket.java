@@ -44,6 +44,8 @@ public class ServerboundResetPortalLinkPacket
 				ItemStack gunStack = main.is(ItemInit.PORTAL_GUN.get()) ? main : off;
 				PortalGunItem portalGun = (PortalGunItem) gunStack.getItem();
 
+				int dualityState = portalGun.getDualityState(gunStack);
+
 				UUID linkID = portalGun.getUUID(gunStack, true);
 
 				PortalLinkData linkData = PortalLinkData.get(level);
@@ -57,7 +59,12 @@ public class ServerboundResetPortalLinkPacket
 						   && (link.posSecondary == null) && !link.moonshotSecondary)
 					return;
 
-				link.reset(level);
+				if(dualityState == 2)
+					link.reset(level);
+				if(dualityState == 1)
+					link.resetSecondary(level);
+				if(dualityState == 0)
+					link.resetPrimary(level);
 
 				portalGun.setLastShotPortal(gunStack, -1);
 				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(player.blockPosition())),
