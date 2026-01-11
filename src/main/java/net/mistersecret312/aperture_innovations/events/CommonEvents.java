@@ -20,6 +20,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
+import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingUseTotemEvent;
@@ -35,6 +36,7 @@ import net.mistersecret312.aperture_innovations.capabilities.GenericProvider;
 import net.mistersecret312.aperture_innovations.init.CapabilityInit;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.init.StatisticsInit;
+import net.mistersecret312.aperture_innovations.items.LongFallBootsItem;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.network.ClientBoundPortalLinkSyncPacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalAmbientSoundPacket;
@@ -310,6 +312,21 @@ public class CommonEvents
 	}
 
 	@SubscribeEvent
+	public static void playerDamage(LivingDamageEvent event)
+	{
+		LivingEntity living = event.getEntity();
+		for(ItemStack stack : living.getArmorSlots())
+		{
+			if(event.getSource().equals(living.damageSources().fall())
+					   && stack.getItem() instanceof LongFallBootsItem)
+			{
+				event.setCanceled(true);
+				return;
+			}
+		}
+	}
+
+	@SubscribeEvent
 	public static void playerDied(LivingDeathEvent event)
 	{
 		LivingEntity living = event.getEntity();
@@ -335,6 +352,7 @@ public class CommonEvents
 		}
 	}
 
+	@SubscribeEvent
 	public static void totemDeath(LivingUseTotemEvent event)
 	{
 		LivingEntity living = event.getEntity();
