@@ -245,9 +245,8 @@ public class PortalUtilities
 		boolean isPrimary = false;
 		double closestDistance = Double.MAX_VALUE;
 
-		if(level.isClientSide())
+		if(level.isClientSide() && entity != null)
 		{
-
 			for(Map.Entry<UUID, ClientPortalLink> entry : getPortalLinks().entrySet())
 			{
 				for(int i = 0; i < 2; i++)

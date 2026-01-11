@@ -1,19 +1,25 @@
 package net.mistersecret312.aperture_innovations.network;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.energy.EnergyStorage;
+import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.PacketDistributor;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
+import net.mistersecret312.aperture_innovations.config.PortalGunConfig;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
-import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.portal.PortalLink;
 import net.mistersecret312.aperture_innovations.portal.PortalLinkData;
@@ -22,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.bernie.geckolib.animatable.GeoItem;
 
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -58,6 +65,10 @@ public class ServerboundOpenPortalPacket
 			ItemStack gunStack = main.is(ItemInit.PORTAL_GUN.get()) ? main : off;
 			PortalGunItem portalGun = (PortalGunItem) gunStack.getItem();
 
+			if(PortalGunConfig.portal_gun_consume_on_shot.get() && PortalGunConfig.portal_gun_uses_energy.get())
+				if(!consumeEnergy(gunStack, player))
+					return;
+
 			boolean moonshot = portalGun.isLookingAtMoon(player, level);
 			if(moonshot)
 			{
@@ -74,22 +85,30 @@ public class ServerboundOpenPortalPacket
 				portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
 
 				if(isPrimary)
+				{
+					portalGun.setLastShotPortal(gunStack, 0);
 					link.setMoonshot(isPrimary, true, level);
+				}
 				else
+				{
+					portalGun.setLastShotPortal(gunStack, 1);
 					link.setMoonshot(isPrimary, true, level);
+				}
 
 				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(player.blockPosition())),
 						new ClientboundPortalSoundsPacket.ShootPortal(linkID, player.blockPosition(), isPrimary));
 				return;
 			}
 
-			BlockHitResult result = PortalGunItem.rayTrace(player.level(), player, 256);
+			BlockHitResult result = PortalGunItem.rayTrace(player.level(), player, PortalGunConfig.portal_gun_shoot_range.get());
 			if(!result.getType().equals(HitResult.Type.MISS))
 			{
 				UUID linkID = portalGun.getUUID(gunStack, false);
 
-				if(linkID != null && !level.getBlockState(result.getBlockPos()).is(ApertureInnovations.SHOOT_THROUGH) && (level.getBlockState(result.getBlockPos()).is(ApertureInnovations.IMPORTALABLE)
-				|| !level.getFluidState(result.getBlockPos()).isEmpty()))
+				if(linkID != null && !level.getBlockState(result.getBlockPos()).is(ApertureInnovations.SHOOT_THROUGH) &&
+						   (level.getBlockState(result.getBlockPos()).is(ApertureInnovations.IMPORTALABLE)
+				|| !level.getFluidState(result.getBlockPos()).isEmpty() ||
+									(PortalGunConfig.use_portalable_tag.get() && !level.getBlockState(result.getBlockPos()).is(ApertureInnovations.PORTALABLE))))
 				{
 					portalGun.stopTriggeredAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
 					portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
@@ -114,6 +133,10 @@ public class ServerboundOpenPortalPacket
 				{
 					portalGun.stopTriggeredAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
 					portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
+
+					if(!PortalGunConfig.portal_gun_consume_on_shot.get() && PortalGunConfig.portal_gun_uses_energy.get())
+						if(!consumeEnergy(gunStack, player))
+							return;
 
 					if(isPrimary)
 					{
@@ -145,5 +168,29 @@ public class ServerboundOpenPortalPacket
 
 		});
 		return true;
+	}
+
+	public boolean consumeEnergy(ItemStack stack, Player player)
+	{
+		Optional<IEnergyStorage> optionalCapability = stack.getCapability(ForgeCapabilities.ENERGY).resolve();
+		if(optionalCapability.isPresent())
+		{
+			IEnergyStorage storage = optionalCapability.get();
+			if(storage instanceof ApertureEnergy energy)
+			{
+				long requiredEnergy = PortalGunConfig.portal_gun_shoot_consumption.get();
+				if(energy.getTrueEnergyStored() >= requiredEnergy)
+				{
+					energy.extractLongEnergy(requiredEnergy, false);
+					return true;
+				}
+				else
+				{
+					player.displayClientMessage(Component.translatable("item.aperture_innovations.portal_gun.not_enough_energy").withStyle(ChatFormatting.DARK_RED), true);
+					return false;
+				}
+			}
+		}
+		return false;
 	}
 }

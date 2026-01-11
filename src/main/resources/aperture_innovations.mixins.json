@@ -5,12 +5,10 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "aperture_innovations.refmap.json",
   "mixins": [
-    "CollisionMixin"
+    "CollisionMixin",
+    "LivingEntityMixin"
   ],
-  "client": [
-    "LevelRendererMixin",
-    "MinecraftMixin"
-  ],
+  "client": [],
   "injectors": {
     "defaultRequire": 1
   },

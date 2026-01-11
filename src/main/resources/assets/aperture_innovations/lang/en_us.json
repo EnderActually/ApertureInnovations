@@ -10,6 +10,17 @@
   "block.aperture_innovations.metal_surface_2x2_block": "Metal Surface 2x2 Block",
 
   "item.aperture_innovations.portal_gun": "Aperture Science Handheld Portal Device",
+  "item.aperture_innovations.portal_gun.duality_primary": "Single Portal - Primary",
+  "item.aperture_innovations.portal_gun.duality_secondary": "Single Portal - Secondary",
+  "item.aperture_innovations.portal_gun.paired": "Paired",
+  "item.aperture_innovations.portal_gun.energy": "Energy: ",
+
+  "item.aperture_innovations.portal_gun.stripe_primary_color": "Primary Stripe Color: %s",
+  "item.aperture_innovations.portal_gun.stripe_secondary_color": "Secondary Stripe Color: %s",
+  "item.aperture_innovations.portal_gun.portal_primary_color": "Primary Portal Color: %s",
+  "item.aperture_innovations.portal_gun.portal_secondary_color": "Secondary Portal Color: %s",
+
+  "item.aperture_innovations.portal_gun.not_enough_energy": "Not enough energy!",
 
   "item.aperture_innovations.colorful_gel": "Colorful Gel",
   "item.aperture_innovations.colorful_gel.color": "Color: %s",
@@ -44,6 +55,12 @@
 
   "advancements.aperture_innovations.aperture.4000_kelvin.title": "4000 Degrees Kelvin",
   "advancements.aperture_innovations.aperture.4000_kelvin.description": "Drop your portal gun into lava",
+
+  "advancements.aperture_innovations.aperture.waterproof_not_foolproof.title": "Waterproof, Not Foolproof",
+  "advancements.aperture_innovations.aperture.waterproof_not_foolproof.description": "Drop your portal gun into water",
+
+  "advancements.aperture_innovations.aperture.so_close_yet_so_far_away.title": "So Close Yet So Far Away",
+  "advancements.aperture_innovations.aperture.so_close_yet_so_far_away.description": "Die by missing the portal on the floor",
 
   "advancements.aperture_innovations.aperture.lunacy.title": "Lunacy",
   "advancements.aperture_innovations.aperture.lunacy.description": "Shoot a portal to the moon, and go through it",

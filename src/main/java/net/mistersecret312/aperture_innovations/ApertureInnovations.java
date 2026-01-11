@@ -15,7 +15,9 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.Lazy;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -42,6 +44,8 @@ public class ApertureInnovations
 			ForgeRegistries.BLOCKS.getRegistryKey(), new ResourceLocation(MODID, "shoot_through"));
 	public static final TagKey<Block> IMPORTALABLE = TagKey.create(
 			ForgeRegistries.BLOCKS.getRegistryKey(), new ResourceLocation(MODID, "importalable"));
+	public static final TagKey<Block> PORTALABLE = TagKey.create(
+			ForgeRegistries.BLOCKS.getRegistryKey(), new ResourceLocation(MODID, "portalable"));
 
 	public ApertureInnovations()
 	{
@@ -64,6 +68,7 @@ public class ApertureInnovations
 				event.dataPackRegistry(PortalGunVariant.REGISTRY_KEY, PortalGunVariant.CODEC, PortalGunVariant.CODEC);
 			});
 
+		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.COMMON_CONFIG, "aperture_innovations-common.toml");
 		NetworkInit.register();
 	}
 

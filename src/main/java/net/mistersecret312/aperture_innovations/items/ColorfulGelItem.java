@@ -19,7 +19,9 @@ public class ColorfulGelItem extends Item
 	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> components,
 								TooltipFlag flag)
 	{
-		components.add(Component.translatable("item.aperture_innovations.colorful_gel.color", Integer.toHexString(getColor(stack)).toUpperCase()).withStyle(style -> style.withColor(getColor(stack))));
+		int gelColor = getColor(stack);
+		if(gelColor != -1)
+			components.add(Component.translatable("item.aperture_innovations.colorful_gel.color", Integer.toHexString(gelColor).toUpperCase()).withStyle(style -> style.withColor(gelColor)));
 	}
 
 	public void setColor(ItemStack stack, int color)

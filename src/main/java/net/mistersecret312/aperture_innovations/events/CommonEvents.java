@@ -2,61 +2,48 @@ package net.mistersecret312.aperture_innovations.events;
 
 import com.mojang.datafixers.util.Pair;
 import com.mojang.math.Axis;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.toasts.AdvancementToast;
-import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.Arrow;
-import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.world.ForgeChunkManager;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.event.entity.living.LivingUseTotemEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.network.PacketDistributor;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.advancements.NearPortalDeathCriterion;
 import net.mistersecret312.aperture_innovations.advancements.PortalTravelCriterion;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
 import net.mistersecret312.aperture_innovations.capabilities.GenericProvider;
 import net.mistersecret312.aperture_innovations.init.CapabilityInit;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
-import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.init.StatisticsInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.network.ClientBoundPortalLinkSyncPacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalAmbientSoundPacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalSoundsPacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundTeleportMomentumPacket;
-import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import net.mistersecret312.aperture_innovations.portal.PortalLink;
 import net.mistersecret312.aperture_innovations.portal.PortalLinkData;
 import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
 import org.joml.Quaternionf;
-import org.joml.Vector3d;
 import org.joml.Vector3f;
 
 import java.util.*;
@@ -67,43 +54,6 @@ public class CommonEvents
 	@SubscribeEvent
 	public static void levelTick(TickEvent.LevelTickEvent event)
 	{
-		if(event.side.isClient() && event.phase.equals(TickEvent.Phase.END))
-		{
-			LocalPlayer player = Minecraft.getInstance().player;
-			if(player == null)
-				return;
-
-			Pair<UUID, Boolean> pair = PortalUtilities.getClosestPortal(player);
-			UUID uuid = pair.getFirst();
-			boolean isPrimary = pair.getSecond();
-			if(uuid == null)
-				return;
-
-			Vec3 portalPos = PortalUtilities.getPortalPos(event.level, uuid, isPrimary);
-			Direction portalDirection = PortalUtilities.getPortalDirection(event.level, uuid, isPrimary);
-			boolean isOnWall = PortalUtilities.isPortalOnWall(event.level, uuid, isPrimary);
-			boolean isOnCeiling = PortalUtilities.isPortalOnCeiling(event.level, uuid, isPrimary);
-
-			AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPos, portalDirection, isOnWall, isOnCeiling);
-
-			Vec3 boxCenter = teleportBox.getCenter();
-			if(isOnWall)
-			{
-				boxCenter = boxCenter.relative(portalDirection.getOpposite(), 0.5D);
-			}
-			AABB centerBox = new AABB(boxCenter, boxCenter).inflate(0.25D);
-
-//			centerBox = PortalUtilities.getPortalBoundingBox(portalPos, portalDirection, isOnWall, isOnCeiling);
-//			if(event.level.getBlockStates(centerBox).anyMatch(BlockBehaviour.BlockStateBase::isAir))
-//			{
-//				event.level.addParticle(ParticleTypes.BUBBLE_POP, boxCenter.x, boxCenter.y, boxCenter.z, 0,0, 0);
-//			}
-//
-//			event.level.addParticle(ParticleTypes.DRAGON_BREATH, centerBox.minX, centerBox.minY, centerBox.minZ, 0, 0, 0);
-//
-//			event.level.addParticle(ParticleTypes.DRAGON_BREATH, centerBox.maxX, centerBox.maxY, centerBox.maxZ, 0, 0, 0);
-		}
-
 		if(event.side.isServer() && event.phase.equals(TickEvent.Phase.END))
 		{
 			Level level = event.level;
@@ -144,8 +94,9 @@ public class CommonEvents
 						AABB centerBox = new AABB(boxCenter, boxCenter).inflate(0.25D);
 						if(level.getBlockStates(centerBox).anyMatch(
 						state -> {
-							BlockPos statePos = portalBlockPos.relative(portalDirection.getOpposite());
-							boolean isSturdy = state.isFaceSturdy(level, statePos, portalDirection);
+							Direction checkDirection = isOnWall ? portalDirection : isOnCeiling ? Direction.DOWN : Direction.UP;
+							BlockPos statePos = portalBlockPos.relative(checkDirection.getOpposite());
+							boolean isSturdy = state.isFaceSturdy(level, statePos, checkDirection);
 							return state.is(Blocks.AIR) || !isSturdy;
 						}))
 						{
@@ -170,7 +121,7 @@ public class CommonEvents
 										entity.push(pushVector.x, pushVector.y, pushVector.z);
 										if(entity instanceof ServerPlayer player)
 											NetworkInit.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player),
-													new ClientboundTeleportMomentumPacket(entity.getDeltaMovement(), player.position(), entity.getYRot()));
+													new ClientboundTeleportMomentumPacket(entity.getDeltaMovement()));
 
 									}
 								}
@@ -193,6 +144,7 @@ public class CommonEvents
 				for(Entity entity : serverLevel.getAllEntities())
 				{
 					Pair<UUID, Boolean> pair = PortalUtilities.getClosestPortal(entity);
+
 					UUID uuid = pair.getFirst();
 					boolean isPrimary = pair.getSecond();
 					if(uuid == null)
@@ -214,7 +166,7 @@ public class CommonEvents
 					AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPos, portalDirection, isOnWall, isOnCeiling);
 
 					Vec3 entityCenter = entity.getBoundingBox().getCenter();
-					AABB entityCenterBox = new AABB(entityCenter, entityCenter).inflate(0.1D, 0.5D, 0.1D);
+					AABB entityCenterBox = new AABB(entityCenter, entityCenter).inflate(0.25D, 0.5D, 0.25D);
 
 					if(entityCenterBox.expandTowards(entity.getDeltaMovement().multiply(1, 1, 1)).intersects(teleportBox))
 					{
@@ -325,8 +277,7 @@ public class CommonEvents
 						{
 							player.awardStat(StatisticsInit.TIMES_USED_PORTALS.get(), 1);
 							NetworkInit.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player),
-									new ClientboundTeleportMomentumPacket(new Vec3(newSpeed), otherPortalPos,
-											entity.getYRot() + rotation));
+									new ClientboundTeleportMomentumPacket(new Vec3(newSpeed)));
 						}
 						Vec3 mathOtherPos = otherPortalPos;
 						entity.getCapability(CapabilityInit.APERTURE).ifPresent(cap ->
@@ -334,6 +285,7 @@ public class CommonEvents
 								cap.portal = new Pair<>(uuid, !isPrimary);
 
 								cap.updateDistance();
+								cap.setFrictionlessTime(100*20);
 								if(entity instanceof ServerPlayer player)
 									PortalTravelCriterion.INSTANCE.trigger(player, dimension.location(), otherDimension.location(),
 											(long) portalPos.distanceToSqr(mathOtherPos), (long) cap.verticalDistance,
@@ -354,6 +306,57 @@ public class CommonEvents
 			PortalLinkData data = PortalLinkData.get(serverPlayer.level());
 			NetworkInit.INSTANCE.send(PacketDistributor.PLAYER.with(() -> serverPlayer),
 					new ClientBoundPortalLinkSyncPacket(data.portalLinks, new HashMap<>()));
+		}
+	}
+
+	@SubscribeEvent
+	public static void playerDied(LivingDeathEvent event)
+	{
+		LivingEntity living = event.getEntity();
+		Level level = living.level();
+		if(living instanceof ServerPlayer player)
+		{
+			Pair<UUID, Boolean> closestPortal = PortalUtilities.getClosestPortal(player);
+			UUID linkID = closestPortal.getFirst();
+			boolean isPrimary = closestPortal.getSecond();
+
+			Vec3 portalPos = PortalUtilities.getPortalPos(level, linkID, isPrimary);
+			if(portalPos == null)
+				return;
+
+			boolean onWall = PortalUtilities.isPortalOnWall(level, linkID, isPrimary);
+			boolean onCeiling = PortalUtilities.isPortalOnCeiling(level, linkID, isPrimary);
+
+			long distance = (long) portalPos.distanceTo(player.position());
+			if(distance > 16)
+				return;
+
+			NearPortalDeathCriterion.INSTANCE.trigger(player, distance, !onWall && !onCeiling);
+		}
+	}
+
+	public static void totemDeath(LivingUseTotemEvent event)
+	{
+		LivingEntity living = event.getEntity();
+		Level level = living.level();
+		if(living instanceof ServerPlayer player)
+		{
+			Pair<UUID, Boolean> closestPortal = PortalUtilities.getClosestPortal(player);
+			UUID linkID = closestPortal.getFirst();
+			boolean isPrimary = closestPortal.getSecond();
+
+			Vec3 portalPos = PortalUtilities.getPortalPos(level, linkID, isPrimary);
+			if(portalPos == null)
+				return;
+
+			boolean onWall = PortalUtilities.isPortalOnWall(level, linkID, isPrimary);
+			boolean onCeiling = PortalUtilities.isPortalOnCeiling(level, linkID, isPrimary);
+
+			long distance = (long) portalPos.distanceTo(player.position());
+			if(distance > 16)
+				return;
+
+			NearPortalDeathCriterion.INSTANCE.trigger(player, distance, !onWall && !onCeiling);
 		}
 	}
 

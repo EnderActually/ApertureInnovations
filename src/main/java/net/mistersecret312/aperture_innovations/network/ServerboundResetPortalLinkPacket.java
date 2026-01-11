@@ -3,23 +3,16 @@ package net.mistersecret312.aperture_innovations.network;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.PacketDistributor;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
-import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.portal.PortalLink;
 import net.mistersecret312.aperture_innovations.portal.PortalLinkData;
-import net.mistersecret312.aperture_innovations.portal.PortalPlacement;
 import software.bernie.geckolib.animatable.GeoItem;
-import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -51,6 +44,8 @@ public class ServerboundResetPortalLinkPacket
 				ItemStack gunStack = main.is(ItemInit.PORTAL_GUN.get()) ? main : off;
 				PortalGunItem portalGun = (PortalGunItem) gunStack.getItem();
 
+				int dualityState = portalGun.getDualityState(gunStack);
+
 				UUID linkID = portalGun.getUUID(gunStack, true);
 
 				PortalLinkData linkData = PortalLinkData.get(level);
@@ -64,7 +59,12 @@ public class ServerboundResetPortalLinkPacket
 						   && (link.posSecondary == null) && !link.moonshotSecondary)
 					return;
 
-				link.reset(level);
+				if(dualityState == 2)
+					link.reset(level);
+				if(dualityState == 1)
+					link.resetSecondary(level);
+				if(dualityState == 0)
+					link.resetPrimary(level);
 
 				portalGun.setLastShotPortal(gunStack, -1);
 				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(player.blockPosition())),

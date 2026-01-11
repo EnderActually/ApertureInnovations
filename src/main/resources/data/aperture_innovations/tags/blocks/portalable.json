@@ -1,0 +1,16 @@
+{
+  "values":
+  [
+    "aperture_innovations:concrete_surface_block",
+    "aperture_innovations:concrete_surface_tile_block",
+    "aperture_innovations:concrete_surface_1x2_block",
+    "minecraft:diorite",
+    "minecraft:white_terracotta",
+    "minecraft:white_concrete",
+    "minecraft:quartz_block",
+    "minecraft:quartz_bricks",
+    "minecraft:smooth_quartz",
+    "minecraft:iron_block",
+    "minecraft:calcite"
+  ]
+}
