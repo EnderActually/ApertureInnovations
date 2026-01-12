@@ -75,13 +75,13 @@ public class ResourcePackReloadListener
 			try
 			{
 				JsonObject json = GsonHelper.convertToJsonObject(element, GUN_VARIANT);
-				ClientPortalGunVariant stargateVariant = ClientPortalGunVariant.CODEC.parse(JsonOps.INSTANCE, json).getOrThrow(false, msg -> new DecoderException("Failed to parse Stargate Variant "+ msg));
+				ClientPortalGunVariant stargateVariant = ClientPortalGunVariant.CODEC.parse(JsonOps.INSTANCE, json).getOrThrow(false, msg -> new DecoderException("Failed to parse Portal Gun Variant "+ msg));
 
 				ClientPortalGunVariants.addPortalGunVariant(location, stargateVariant);
 			}
 			catch(RuntimeException e)
 			{
-				ApertureInnovations.LOGGER.error("Could not load Classic Stargate Variant: " + location.toString());
+				ApertureInnovations.LOGGER.error("Could not load Portal Gun Variant: " + location.toString());
 				ApertureInnovations.LOGGER.error(e.getMessage());
 			}
 		}
