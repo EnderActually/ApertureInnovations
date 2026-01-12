@@ -1,0 +1,57 @@
+package net.mistersecret312.aperture_innovations.client;
+
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.RenderStateShard;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.resources.ResourceLocation;
+
+public class PortalRenderTypes extends RenderType
+{
+	public static final RenderStateShard.ShaderStateShard POSITION_TEX_COLOR_SHADER = new RenderStateShard.ShaderStateShard(
+			GameRenderer::getPositionTexColorShader);
+
+	public PortalRenderTypes(String pName, VertexFormat pFormat, VertexFormat.Mode pMode, int pBufferSize,
+							 boolean pAffectsCrumbling, boolean pSortOnUpload, Runnable pSetupState,
+							 Runnable pClearState)
+	{
+		super(pName, pFormat, pMode, pBufferSize, pAffectsCrumbling, pSortOnUpload, pSetupState, pClearState);
+	}
+
+	public static RenderType portal(ResourceLocation texture)
+	{
+		return create("portal", DefaultVertexFormat.POSITION_TEX_COLOR,
+				VertexFormat.Mode.QUADS, 256, true, true,
+				CompositeState.builder()
+										 .setShaderState(POSITION_TEX_COLOR_SHADER)
+										 .setTextureState(new TextureStateShard(texture, false, false))
+										 .setWriteMaskState(RenderStateShard.DEPTH_WRITE)
+										 .createCompositeState(true)
+		);
+	}
+
+	public static RenderType portalFrame(ResourceLocation location)
+	{
+		return create("portal_frame", DefaultVertexFormat.POSITION_TEX_COLOR,
+				VertexFormat.Mode.QUADS, 256, true, true,
+				CompositeState.builder()
+										 .setShaderState(POSITION_TEX_COLOR_SHADER)
+										 .setTextureState(new TextureStateShard(location, false, false))
+										 .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
+										 .createCompositeState(true)
+		);
+	}
+
+	public static RenderType portalVortex(ResourceLocation location)
+	{
+		return create("portal_vortex", DefaultVertexFormat.POSITION_TEX_COLOR,
+				VertexFormat.Mode.QUADS, 256, true, true,
+				CompositeState.builder()
+										 .setShaderState(POSITION_TEX_COLOR_SHADER)
+										 .setTextureState(new TextureStateShard(location, false, false))
+										 .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
+										 .createCompositeState(true)
+		);
+	}
+}

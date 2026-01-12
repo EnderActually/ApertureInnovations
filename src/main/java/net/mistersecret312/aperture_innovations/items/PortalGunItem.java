@@ -1,0 +1,483 @@
+package net.mistersecret312.aperture_innovations.items;
+
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.CrossbowItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Portal;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.advancements.ThrownIntoFluidCriterion;
+import net.mistersecret312.aperture_innovations.client.renderer.PortalGunRenderer;
+import net.mistersecret312.aperture_innovations.config.PortalGunConfig;
+import net.mistersecret312.aperture_innovations.init.AdvancementInit;
+import net.mistersecret312.aperture_innovations.init.DataComponentInit;
+import net.mistersecret312.aperture_innovations.init.ItemInit;
+import net.mistersecret312.aperture_innovations.network.ClientboundPortalSoundsPacket;
+import net.mistersecret312.aperture_innovations.portal.PortalLink;
+import net.mistersecret312.aperture_innovations.portal.PortalLinkData;
+import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.capabilities.ICapabilityProvider;
+import net.neoforged.neoforge.energy.IEnergyStorage;
+import net.neoforged.neoforge.network.PacketDistributor;
+import org.jetbrains.annotations.Nullable;
+import software.bernie.geckolib.animatable.GeoItem;
+import software.bernie.geckolib.animatable.SingletonGeoAnimatable;
+import software.bernie.geckolib.animatable.client.GeoRenderProvider;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.*;
+import software.bernie.geckolib.util.GeckoLibUtil;
+
+import java.awt.Color;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Consumer;
+
+public class PortalGunItem extends Item implements GeoItem
+{
+	public static final String ENERGY = "Energy";
+
+	private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+
+	protected static class Animations
+	{
+		protected static final String MAIN_CONTROLLER = "main";
+
+		protected static final RawAnimation SHOOT = RawAnimation.begin().thenPlay("shoot");
+		protected static final RawAnimation RESET = RawAnimation.begin().thenPlay("reset");
+		protected static final RawAnimation HOLD = RawAnimation.begin().thenLoop("hold");
+
+
+		private Animations() {}
+	}
+
+	public PortalGunItem(Properties pProperties)
+	{
+		super(pProperties);
+
+		SingletonGeoAnimatable.registerSyncedAnimatable(this);
+	}
+
+	public static ItemStack createPortalGun(ResourceLocation variantKey)
+	{
+		ItemStack stack = new ItemStack(ItemInit.PORTAL_GUN.get());
+		PortalGunItem item = (PortalGunItem) stack.getItem();
+		item.setVariant(stack, variantKey);
+
+		return stack;
+	}
+
+	@Override
+	public boolean isBarVisible(ItemStack stack)
+	{
+		return PortalGunConfig.portal_gun_uses_energy.get() && getEnergy(stack) != getCapacity();
+	}
+
+	@Override
+	public int getBarWidth(ItemStack stack)
+	{
+		return Math.round(13.0F * (float) getEnergy(stack) / getCapacity());
+	}
+
+	@Override
+	public int getBarColor(ItemStack stack)
+	{
+		return new Color(0, 200, 255).getRGB();
+	}
+
+	@Override
+	public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> components,
+								TooltipFlag flag)
+	{
+		components.add(Component.translatable("aperture_innovations.portal_gun.variant_" + getVariant(stack).getPath()).withStyle(
+						ChatFormatting.YELLOW));
+
+		int dualityState = getDualityState(stack);
+
+		int primaryStripeColor = getPrimaryStripeColor(stack);
+		int secondaryStripeColor = getSecondaryStripeColor(stack);
+
+		int primaryPortalColor = getPrimaryPortalColor(stack);
+		int secondaryPortalColor = getSecondaryPortalColor(stack);
+
+		if(dualityState == 0)
+				components.add(Component.translatable("item.aperture_innovations.portal_gun.duality_primary").withStyle(ChatFormatting.LIGHT_PURPLE));
+		if(dualityState == 1)
+				components.add(Component.translatable("item.aperture_innovations.portal_gun.duality_secondary").withStyle(ChatFormatting.LIGHT_PURPLE));
+
+		if(getPair(stack) != null && dualityState != 2)
+			components.add(Component.translatable("item.aperture_innovations.portal_gun.paired").withStyle(ChatFormatting.DARK_PURPLE));
+
+		if(PortalGunConfig.portal_gun_uses_energy.get())
+		{
+			components.add(Component.translatable("item.aperture_innovations.portal_gun.energy").append(energyToString(getEnergy(stack)) + "/" + energyToString(getCapacity())).withStyle(ChatFormatting.DARK_RED));
+		}
+
+		if(primaryPortalColor != -1 || primaryStripeColor != -1 || secondaryPortalColor != -1 || secondaryStripeColor != -1)
+			components.add(Component.literal(""));
+
+		if(primaryPortalColor != -1)
+			components.add(Component.translatable("item.aperture_innovations.portal_gun.portal_primary_color", Integer.toHexString(primaryPortalColor).toUpperCase()).withStyle(style -> style.withColor(primaryPortalColor)));
+
+		if(secondaryPortalColor != -1)
+			components.add(Component.translatable("item.aperture_innovations.portal_gun.portal_secondary_color", Integer.toHexString(secondaryPortalColor).toUpperCase()).withStyle(style -> style.withColor(secondaryPortalColor)));
+
+
+		if(primaryStripeColor != -1)
+			components.add(Component.translatable("item.aperture_innovations.portal_gun.stripe_primary_color", Integer.toHexString(primaryStripeColor).toUpperCase()).withStyle(style -> style.withColor(primaryStripeColor)));
+
+		if(secondaryStripeColor != -1)
+			components.add(Component.translatable("item.aperture_innovations.portal_gun.stripe_secondary_color", Integer.toHexString(secondaryStripeColor).toUpperCase()).withStyle(style -> style.withColor(secondaryStripeColor)));
+
+	}
+
+	@Override
+	public void inventoryTick(ItemStack stack, Level level, Entity entity, int slot, boolean isSelected)
+	{
+
+		if(level.isClientSide() || !(entity instanceof Player player))
+			return;
+
+		if(!isInitialized(stack)) {
+			setInitialized(stack, true);
+			PortalLinkData data = PortalLinkData.get(level);
+
+			UUID linkID = getUUID(stack, true);
+
+			PortalLink link = data.getLink(linkID);
+			if (link == null) {
+				data.addFreshLink(linkID);
+
+				PacketDistributor.sendToPlayersTrackingChunk((ServerLevel) level, new ChunkPos(player.blockPosition()),
+						new ClientboundPortalSoundsPacket.GunActivate(linkID, player.blockPosition()));
+			}
+		}
+		else
+		{
+			PortalLink link = PortalUtilities.getPortalLinks(level).get(getUUID(stack, false));
+			if(link != null && link.isOpen() && PortalGunConfig.portal_gun_uses_energy.get())
+			{
+				@Nullable IEnergyStorage energy = stack.getCapability(Capabilities.EnergyStorage.ITEM);
+				if(energy != null)
+				{
+					int toExtract = PortalGunConfig.portal_gun_passive_consumption.get();
+					int extracted = energy.extractEnergy(toExtract, false);
+					if(extracted < toExtract)
+					{
+						player.displayClientMessage(Component.translatable("item.aperture_innovations.portal_gun.not_enough_energy"), true);
+						link.reset(level);
+					}
+				}
+			}
+
+			if(link != null && isSelected && (getPair(stack) == null || getDualityState(stack) == 2) )
+			{
+				link.updateColors(level, getPrimaryPortalColor(stack), getSecondaryPortalColor(stack));
+				link.updateVariant(level, getVariant(stack));
+			}
+		}
+	}
+
+	@Override
+	public boolean onEntityItemUpdate(ItemStack stack, ItemEntity entity)
+	{
+		if(entity.isInFluidType())
+		{
+			Entity owner = entity.getOwner();
+			if(owner instanceof Player player)
+				AdvancementInit.THROWN_INTO_FLUID.get().trigger((ServerPlayer) (player), stack, entity.blockPosition());
+		}
+		return super.onEntityItemUpdate(stack, entity);
+	}
+
+	@Override
+	public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged)
+	{
+		return slotChanged;
+	}
+
+	@Override
+	public boolean onEntitySwing(ItemStack stack, LivingEntity entity, InteractionHand hand)
+	{
+		return getDualityState(stack) != 2;
+	}
+
+	public static int getEnergy(ItemStack stack)
+	{
+		@Nullable IEnergyStorage energy = stack.getCapability(Capabilities.EnergyStorage.ITEM);
+		if(energy != null)
+		{
+			return energy.getEnergyStored();
+		}
+
+		return 0;
+	}
+
+	public int getCapacity()
+	{
+		return PortalGunConfig.portal_gun_max_energy_stored.get();
+	}
+
+	public static BlockHitResult rayTrace(Level level, Player player, double range) {
+		float xRot = player.getXRot();
+		float yRot = player.getYRot();
+		Vec3 eyePos = player.getEyePosition();
+
+		float f2 = Mth.cos(-yRot * ((float)Math.PI / 180F) - (float)Math.PI);
+		float f3 = Mth.sin(-yRot * ((float)Math.PI / 180F) - (float)Math.PI);
+		float f4 = -Mth.cos(-xRot * ((float)Math.PI / 180F));
+		float f5 = Mth.sin(-xRot * ((float)Math.PI / 180F));
+		float f6 = f3 * f4;
+		float f7 = f2 * f4;
+
+		Vec3 lookVec = new Vec3(f6, f5, f7);
+		Vec3 endPos = eyePos.add(lookVec.scale(range));
+
+		ClipContext context = new ClipContext(eyePos, endPos, ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY, player)
+		{
+			@Override
+			public VoxelShape getBlockShape(BlockState state, BlockGetter level, BlockPos pos)
+			{
+				if(state.is(ApertureInnovations.SHOOT_THROUGH))
+					return Shapes.empty();
+
+				return super.getBlockShape(state, level, pos);
+			}
+		};
+
+		return level.clip(context);
+	}
+
+	public boolean isLookingAtMoon(Player player, Level level)
+	{
+		HitResult hit = player.pick(PortalGunConfig.portal_gun_shoot_range.get(), 0.0F, false);
+
+		if (hit.getType() != HitResult.Type.MISS)
+			return false;
+
+		float timeAngle = level.getSunAngle(0.0F);
+
+		double moonX = Math.sin(timeAngle);
+		double moonY = -Math.cos(timeAngle);
+
+		Vec3 moonVector = new Vec3(moonX, moonY, 0);
+
+		Vec3 lookVector = player.getLookAngle();
+
+		double dot = lookVector.dot(moonVector);
+
+		return dot > 0.995;
+	}
+
+	public UUID getUUID(ItemStack stack, boolean generateIfEmpty)
+	{
+		int dualityState = getDualityState(stack);
+		if(dualityState != 2)
+			return getPair(stack);
+
+		String linkString = stack.get(DataComponentInit.LINK_ID);
+		if(linkString == null && generateIfEmpty)
+		{
+			UUID linkID = UUID.randomUUID();
+			setUUID(stack, linkID);
+			return linkID;
+		}
+
+		if(linkString != null)
+			return UUID.fromString(linkString);
+
+
+		return null;
+	}
+
+	public void setUUID(ItemStack stack, UUID uuid)
+	{
+		stack.set(DataComponentInit.LINK_ID, uuid.toString());
+	}
+
+	public UUID getPair(ItemStack stack)
+	{
+		String pairString = stack.get(DataComponentInit.PAIR_ID);
+		if(pairString == null)
+			return null;
+		return UUID.fromString(pairString);
+	}
+
+	public void setPair(ItemStack stack, UUID pairID)
+	{
+		if(pairID == null)
+		{
+			stack.remove(DataComponentInit.PAIR_ID);
+			return;
+		}
+
+		stack.set(DataComponentInit.PAIR_ID, pairID.toString());
+	}
+
+	public int getDualityState(ItemStack stack)
+	{
+		return stack.getOrDefault(DataComponentInit.DUALITY_STATE, 2);
+	}
+
+
+	public int getPrimaryStripeColor(ItemStack stack)
+	{
+		return stack.getOrDefault(DataComponentInit.PRIMARY_STRIPE_COLOR, -1);
+	}
+
+	public int getSecondaryStripeColor(ItemStack stack)
+	{
+		return stack.getOrDefault(DataComponentInit.SECONDARY_STRIPE_COLOR, -1);
+	}
+
+	public int getPrimaryPortalColor(ItemStack stack)
+	{
+		return stack.getOrDefault(DataComponentInit.PRIMARY_PORTAL_COLOR, -1);
+	}
+
+	public int getSecondaryPortalColor(ItemStack stack)
+	{
+		return stack.getOrDefault(DataComponentInit.SECONDARY_PORTAL_COLOR, -1);
+	}
+
+	public ResourceLocation getVariant(ItemStack stack)
+	{
+		return stack.getOrDefault(DataComponentInit.PORTAL_GUN_VARIANT, ResourceLocation.fromNamespaceAndPath(
+				ApertureInnovations.MODID, "chell"));
+	}
+
+	public void setDualityState(ItemStack stack, int state)
+	{
+		stack.set(DataComponentInit.DUALITY_STATE, state);
+	}
+
+	public void setPrimaryStripeColor(ItemStack stack, int color)
+	{
+		stack.set(DataComponentInit.PRIMARY_STRIPE_COLOR, color);
+	}
+
+	public void setSecondaryStripeColor(ItemStack stack, int color)
+	{
+		stack.set(DataComponentInit.SECONDARY_STRIPE_COLOR, color);
+	}
+
+	public void setPrimaryPortalColor(ItemStack stack, int color)
+	{
+		stack.set(DataComponentInit.PRIMARY_PORTAL_COLOR, color);
+	}
+
+	public void setSecondaryPortalColor(ItemStack stack, int color)
+	{
+		stack.set(DataComponentInit.SECONDARY_PORTAL_COLOR, color);
+	}
+
+	public void setVariant(ItemStack stack, ResourceLocation variantKey)
+	{
+		stack.set(DataComponentInit.PORTAL_GUN_VARIANT, variantKey);
+	}
+
+	public int getLastShotPortal(ItemStack stack)
+	{
+		return stack.getOrDefault(DataComponentInit.LAST_PORTAL, -1);
+	}
+
+	public void setLastShotPortal(ItemStack stack, int portal)
+	{
+		stack.set(DataComponentInit.LAST_PORTAL, portal);
+	}
+
+	public void setInitialized(ItemStack stack, boolean value)
+	{
+		stack.set(DataComponentInit.INITIALIZED, value);
+	}
+
+	public boolean isInitialized(ItemStack stack)
+	{
+		return stack.getOrDefault(DataComponentInit.INITIALIZED, false);
+	}
+
+	private <T extends PortalGunItem> PlayState handleAnimationState(AnimationState state) {
+		return PlayState.STOP;
+	}
+
+	@Override
+	public void registerControllers(AnimatableManager.ControllerRegistrar controllers)
+	{
+		AnimationController<PortalGunItem> controller = new AnimationController<>(this,
+				Animations.MAIN_CONTROLLER, 0, this::handleAnimationState);
+		controller.triggerableAnim("shoot", Animations.SHOOT);
+		controller.triggerableAnim("reset", Animations.RESET);
+		controller.triggerableAnim("hold", Animations.HOLD);
+		controllers.add(controller);
+	}
+
+	@Override
+	public void createGeoRenderer(Consumer<GeoRenderProvider> consumer) {
+		consumer.accept(new GeoRenderProvider() {
+			private PortalGunRenderer renderer;
+
+			@Override
+			public BlockEntityWithoutLevelRenderer getGeoItemRenderer() {
+				if (this.renderer == null)
+					this.renderer = new PortalGunRenderer();
+
+				return this.renderer;
+			}
+		});
+	}
+
+	@Override
+	public AnimatableInstanceCache getAnimatableInstanceCache()
+	{
+		return this.cache;
+	}
+
+	public static final char[] PREFIXES = {'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y', 'R', 'Q'};
+
+	public static String energyToString(int energy)
+	{
+		if(energy < 0)
+			return "NaN";
+
+		if(energy < 1000)
+			return energy + " FE";
+
+		double total = energy;
+		int prefix = -1;
+		for(; total >= 1000 && prefix < PREFIXES.length; prefix++)
+		{
+			total /= 1000;
+		}
+
+		total *= 100;
+		total = Math.floor(total);
+		total /= 100;
+
+		return total + " " + PREFIXES[prefix] + "FE";
+	}
+}

@@ -1,0 +1,97 @@
+package net.mistersecret312.aperture_innovations.init;
+
+import net.mistersecret312.aperture_innovations.network.*;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
+
+public class NetworkInit
+{
+	@SubscribeEvent
+	public static void registerPackets(final RegisterPayloadHandlersEvent event)
+	{
+		final PayloadRegistrar registrar = event.registrar("1");
+
+		//Server
+
+		registrar.playToServer(
+				ServerboundOpenPortalPacket.TYPE,
+				ServerboundOpenPortalPacket.STREAM_CODEC,
+				ServerboundOpenPortalPacket::handle
+		);
+
+		registrar.playToServer(
+				ServerboundResetPortalLinkPacket.TYPE,
+				ServerboundResetPortalLinkPacket.STREAM_CODEC,
+				ServerboundResetPortalLinkPacket::handle
+		);
+
+		//Client
+
+		registrar.playToClient(
+				ClientBoundPortalSyncPacket.TYPE,
+				ClientBoundPortalSyncPacket.STREAM_CODEC,
+				ClientBoundPortalSyncPacket::handle
+		);
+
+		registrar.playToClient(
+				ClientboundTeleportMomentumPacket.TYPE,
+				ClientboundTeleportMomentumPacket.STREAM_CODEC,
+				ClientboundTeleportMomentumPacket::handle
+		);
+
+		registrar.playToClient(
+				ClientboundApertureCapabilityPacket.TYPE,
+				ClientboundApertureCapabilityPacket.STREAM_CODEC,
+				ClientboundApertureCapabilityPacket::handle);
+
+		registrar.playToClient(
+				ClientboundPortalAmbientSoundPacket.TYPE,
+				ClientboundPortalAmbientSoundPacket.STREAM_CODEC,
+				ClientboundPortalAmbientSoundPacket::handle
+		);
+
+		registrar.playToClient(
+				ClientboundPortalSoundsPacket.GunActivate.TYPE,
+				ClientboundPortalSoundsPacket.GunActivate.STREAM_CODEC,
+				ClientboundPortalSoundsPacket.GunActivate::handle
+		);
+
+		registrar.playToClient(
+				ClientboundPortalSoundsPacket.EnterPortal.TYPE,
+				ClientboundPortalSoundsPacket.EnterPortal.STREAM_CODEC,
+				ClientboundPortalSoundsPacket.EnterPortal::handle
+		);
+
+		registrar.playToClient(
+				ClientboundPortalSoundsPacket.FizzlePortal.TYPE,
+				ClientboundPortalSoundsPacket.FizzlePortal.STREAM_CODEC,
+				ClientboundPortalSoundsPacket.FizzlePortal::handle
+		);
+
+		registrar.playToClient(
+				ClientboundPortalSoundsPacket.OpenPortal.TYPE,
+				ClientboundPortalSoundsPacket.OpenPortal.STREAM_CODEC,
+				ClientboundPortalSoundsPacket.OpenPortal::handle
+		);
+
+		registrar.playToClient(
+				ClientboundPortalSoundsPacket.ShootPortal.TYPE,
+				ClientboundPortalSoundsPacket.ShootPortal.STREAM_CODEC,
+				ClientboundPortalSoundsPacket.ShootPortal::handle
+		);
+
+		registrar.playToClient(
+				ClientboundPortalSoundsPacket.InvalidSurface.TYPE,
+				ClientboundPortalSoundsPacket.InvalidSurface.STREAM_CODEC,
+				ClientboundPortalSoundsPacket.InvalidSurface::handle
+		);
+
+		registrar.playToClient(
+				ClientboundPortalSoundsPacket.ResetPortal.TYPE,
+				ClientboundPortalSoundsPacket.ResetPortal.STREAM_CODEC,
+				ClientboundPortalSoundsPacket.ResetPortal::handle
+		);
+
+	}
+}
