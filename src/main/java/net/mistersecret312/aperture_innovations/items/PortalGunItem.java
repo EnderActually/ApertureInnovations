@@ -297,7 +297,7 @@ public class PortalGunItem extends Item implements GeoItem
 	public UUID getUUID(ItemStack stack, boolean generateIfEmpty)
 	{
 		int dualityState = getDualityState(stack);
-		if(dualityState != 2)
+		if(dualityState != 2 && getPair(stack) != null)
 			return getPair(stack);
 
 		String linkString = stack.get(DataComponentInit.LINK_ID);

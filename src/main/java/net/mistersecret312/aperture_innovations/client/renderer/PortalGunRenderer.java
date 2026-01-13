@@ -109,7 +109,7 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
 				float blue = (originalColor.getBlue() * color.getBlue())/255F;
 				float alpha = (originalColor.getAlpha() * color.getAlpha())/255F;
 
-				Color resultColor = new Color(red, green, blue, alpha);
+				Color resultColor = new Color(red/255F, green/255F, blue/255F, alpha/255F);
 
 				renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, resultColor.getRGB());				return true;
 			}

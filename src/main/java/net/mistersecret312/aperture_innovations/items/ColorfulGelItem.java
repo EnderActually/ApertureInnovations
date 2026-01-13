@@ -25,11 +25,9 @@ public class ColorfulGelItem extends Item
 								TooltipFlag flag)
 	{
 		int gelColor = getColor(stack);
-		if(gelColor != -1)
-			components.add(Component.translatable("item.aperture_innovations.colorful_gel.color", Integer.toHexString(gelColor).toUpperCase()).withStyle(style -> style.withColor(gelColor)));
+		if(gelColor != -1) components.add(Component.translatable("item.aperture_innovations.colorful_gel.color",
+				Integer.toHexString(gelColor).toUpperCase()).withStyle(style -> style.withColor(gelColor)));
 	}
-
-
 
 	public void setColor(ItemStack stack, int color)
 	{
@@ -41,6 +39,9 @@ public class ColorfulGelItem extends Item
 		DyedItemColor color = stack.get(DataComponents.DYED_COLOR);
 		if(color == null)
 			return -1;
+		if(color.showInTooltip())
+			stack.set(DataComponents.DYED_COLOR, new DyedItemColor(color.rgb(), false));
+
 		return color.rgb();
 	}
 }
