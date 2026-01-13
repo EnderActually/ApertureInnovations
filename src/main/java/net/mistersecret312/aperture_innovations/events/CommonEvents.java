@@ -20,10 +20,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
-import net.minecraftforge.event.entity.living.LivingDamageEvent;
-import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.event.entity.living.LivingEvent;
-import net.minecraftforge.event.entity.living.LivingUseTotemEvent;
+import net.minecraftforge.event.entity.living.*;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -312,13 +309,12 @@ public class CommonEvents
 	}
 
 	@SubscribeEvent
-	public static void playerDamage(LivingDamageEvent event)
+	public static void playerDamage(LivingFallEvent event)
 	{
 		LivingEntity living = event.getEntity();
 		for(ItemStack stack : living.getArmorSlots())
 		{
-			if(event.getSource().equals(living.damageSources().fall())
-					   && stack.getItem() instanceof LongFallBootsItem)
+			if(stack.getItem() instanceof LongFallBootsItem)
 			{
 				event.setCanceled(true);
 				return;

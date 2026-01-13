@@ -414,7 +414,7 @@ public class PortalGunItem extends Item implements GeoItem
 		CompoundTag tag = stack.getOrCreateTag();
 		if(tag.contains("variant"))
 			return ResourceLocation.parse(tag.getString("variant"));
-		else return new ResourceLocation(ApertureInnovations.MODID, "chell");
+		else return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "chell");
 	}
 
 	public void setDualityState(ItemStack stack, int state)
