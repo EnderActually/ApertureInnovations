@@ -83,6 +83,7 @@ public class ApertureInnovations
 		AttachmentTypeInit.register(modEventBus);
 		DataComponentInit.register(modEventBus);
 
+		// todo - you will need to seperate your client and server code or servers will crash btw
 		modEventBus.addListener(Layers::registerLayers);
 		modEventBus.addListener(NetworkInit::registerPackets);
 		modEventBus.addListener(ApertureInnovations::registerCapabilities);

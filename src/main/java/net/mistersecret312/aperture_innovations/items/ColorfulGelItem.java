@@ -41,6 +41,9 @@ public class ColorfulGelItem extends Item
 		DyedItemColor color = stack.get(DataComponents.DYED_COLOR);
 		if(color == null)
 			return -1;
+		if (color.showInTooltip()) {
+			stack.set(DataComponents.DYED_COLOR, new DyedItemColor(color.rgb(), false));
+		}
 		return color.rgb();
 	}
 }
