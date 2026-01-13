@@ -34,6 +34,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.*;
 import net.neoforged.neoforge.network.PacketDistributor;
+import org.joml.Matrix4f;
 
 import java.util.Map;
 import java.util.UUID;
@@ -48,6 +49,7 @@ public class ClientEvents
 		MultiBufferSource.BufferSource buffer = Minecraft.getInstance().renderBuffers().bufferSource();
 		Camera camera = event.getCamera();
 		PoseStack poseStack = event.getPoseStack();
+		Matrix4f matrix4f = event.getModelViewMatrix();
 
 		if(event.getStage() == RenderLevelStageEvent.Stage.AFTER_SKY)
 		{
@@ -75,10 +77,11 @@ public class ClientEvents
 					{
 						if(level.isLoaded(portalPos))
 						{
-							renderPortalNonSee(buffer, poseStack, camera, link, i == 0, scale);
+							renderPortalNonSee(buffer, event.getProjectionMatrix(), poseStack, camera, link, i == 0, scale);
 						}
 					}
 					poseStack.popPose();
+					buffer.endBatch();
 				}
 				poseStack.popPose();
 			});
@@ -106,14 +109,10 @@ public class ClientEvents
 					ResourceKey<Level> dimension = i == 0 ? link.dimensionPrimary() : link.dimensionSecondary();
 					if(Minecraft.getInstance().level.dimension() != dimension) continue;
 
-					poseStack.pushPose();
-
 					float scale = ClientPortalUtilities.getPortalOpeningAnimationProgress(link.linkID(), i == 0);
 
 					BlockPos portalPos = i == 0 ? link.posPrimary() : link.posSecondary();
 					BlockPos otherPortalPos = i == 0 ? link.posSecondary() : link.posPrimary();
-
-					poseStack.popPose();
 
 					if(portalPos != null && Minecraft.getInstance().level.isLoaded(
 							portalPos) && event.getLevelRenderer().getFrustum()
@@ -243,13 +242,16 @@ public class ClientEvents
 				if (event.getRenderer().getModel() instanceof HumanoidModel<?> model) {
 					model.leftLeg.yScale = 0.625F;
 					model.rightLeg.yScale = 0.625F;
+
+					model.leftArm.yRot = (float) Math.toRadians(45);
+					model.leftArm.yScale = 2F;
 				}
 			}
 		}
 	}
 
 	@SubscribeEvent
-	public static void onRenderLivingPre(RenderLivingEvent.Post<?, ?> event) {
+	public static void onRenderLivingPost(RenderLivingEvent.Post<?, ?> event) {
 		if (event.getEntity() instanceof Player player) {
 			ItemStack boots = player.getItemBySlot(EquipmentSlot.FEET);
 			if (!(boots.getItem() instanceof LongFallBootsItem)) {

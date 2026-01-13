@@ -29,6 +29,8 @@ public class ColorfulGelItem extends Item
 			components.add(Component.translatable("item.aperture_innovations.colorful_gel.color", Integer.toHexString(gelColor).toUpperCase()).withStyle(style -> style.withColor(gelColor)));
 	}
 
+
+
 	public void setColor(ItemStack stack, int color)
 	{
 		stack.set(DataComponents.DYED_COLOR, new DyedItemColor(color, false));

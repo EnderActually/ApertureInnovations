@@ -192,7 +192,7 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
 
 		buffer = checkAndRefreshBuffer(isReRender, buffer, bufferSource, renderTypeOverride);
 
-		super.renderChildBones(poseStack, animatable, bone, renderTypeOverride, bufferSource, buffer, isReRender, partialTick, packedLight, packedOverlay, colour);
+		super.renderChildBones(poseStack, animatable, bone, renderType, bufferSource, buffer, isReRender, partialTick, packedLight, packedOverlay, colour);
 
 		poseStack.popPose();
 	}

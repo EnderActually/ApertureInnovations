@@ -134,7 +134,7 @@ public class ApertureInnovations
 		@SubscribeEvent
 		public static void registerItemColors(RegisterColorHandlersEvent.Item event)
 		{
-			ColorfulGelItem gelItem = (ColorfulGelItem) ItemInit.COLORFUL_GEL.get();
+			ColorfulGelItem gelItem = ItemInit.COLORFUL_GEL.get();
 			event.register(((stack, color) -> color != 1 ? -1 : gelItem.getColor(stack)), ItemInit.COLORFUL_GEL.get());
 		}
 

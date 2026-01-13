@@ -21,6 +21,7 @@ import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalUtilities;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.lwjgl.opengl.GL11;
 
 import java.util.HashMap;
@@ -85,15 +86,15 @@ public class PortalRenderer
 		}
 	}
 
-	public static void renderPortalNonSee(MultiBufferSource buffer, PoseStack poseStack, Camera camera, ClientPortalLink link, boolean isPrimary, float scale)
+	public static void renderPortalNonSee(MultiBufferSource buffer, Matrix4f modelViewMatrix, PoseStack poseStack, Camera camera, ClientPortalLink link, boolean isPrimary, float scale)
 	{
 		poseStack.pushPose();
 		Vec3 pos = isPrimary ? link.posPrimary().getCenter() : link.posSecondary().getCenter();
 		Direction direction = isPrimary ? link.directionPrimary() : link.directionSecondary();
 
-
-		poseStack.translate(pos.x - camera.getPosition().x, pos.y - camera.getPosition().y + 0.5,
-				pos.z - camera.getPosition().z);
+		poseStack.mulPose(camera.rotation().invert(new Quaternionf()));
+		poseStack.translate((float) (pos.x-camera.getPosition().x), (float) (pos.y-camera.getPosition().y+0.5),
+				(float) (pos.z-camera.getPosition().z));
 		poseStack.mulPose(direction.getRotation());
 
 		if(isPrimary)
