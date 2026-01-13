@@ -31,7 +31,7 @@ public class ApertureCapability implements INBTSerializable<CompoundTag>
 	public static final EntityCapability<ApertureCapability, Void> APERTURE_CAPABILITY = EntityCapability.createVoid(
 		ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "aperture"), ApertureCapability.class);
 
-	public Vector3d distanceVec;
+	public Vector3d distanceVec = new Vector3d();
 	public Pair<UUID, Boolean> portal;
 
 	public double horizontalDistance = 0;
@@ -97,6 +97,7 @@ public class ApertureCapability implements INBTSerializable<CompoundTag>
 		distanceTag.putDouble("z", distanceVec.z);
 
 		tag.put("distance", distanceTag);
+
 		tag.putDouble("horizontal", horizontalDistance);
 		tag.putDouble("vertical", verticalDistance);
 
