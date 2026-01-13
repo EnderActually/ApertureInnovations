@@ -215,12 +215,6 @@ public class PortalGunItem extends Item implements GeoItem
 	}
 
 	@Override
-	public boolean onDroppedByPlayer(ItemStack item, Player player)
-	{
-		return super.onDroppedByPlayer(item, player);
-	}
-
-	@Override
 	public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged)
 	{
 		return slotChanged;
@@ -229,7 +223,7 @@ public class PortalGunItem extends Item implements GeoItem
 	@Override
 	public boolean onEntitySwing(ItemStack stack, LivingEntity entity)
 	{
-		return true;
+		return getDualityState(stack) != 2;
 	}
 
 	public static long getEnergy(ItemStack stack)

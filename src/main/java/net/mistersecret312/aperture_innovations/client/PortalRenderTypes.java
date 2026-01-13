@@ -40,19 +40,6 @@ public class PortalRenderTypes extends RenderType
 		);
 	}
 
-	public static RenderType portalHighlight(ResourceLocation location)
-	{
-		return create("portal_highlight", DefaultVertexFormat.POSITION_TEX,
-				VertexFormat.Mode.QUADS, 256, true, true,
-				RenderType.CompositeState.builder()
-										 .setShaderState(RenderStateShard.POSITION_TEX_SHADER)
-										 .setTextureState(new RenderStateShard.TextureStateShard(location, false, false))
-						.setDepthTestState(RenderStateShard.GREATER_DEPTH_TEST)
-						.setWriteMaskState(RenderStateShard.COLOR_WRITE)
-										 .createCompositeState(true)
-		);
-	}
-
 	public static RenderType portalVortex(ResourceLocation location)
 	{
 		return create("portal_vortex", DefaultVertexFormat.POSITION_COLOR_TEX,

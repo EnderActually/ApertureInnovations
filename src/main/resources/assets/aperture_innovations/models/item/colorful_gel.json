@@ -5,7 +5,7 @@
 	},
 	"overrides":
 	[
-		{ "predicate": { "aperture_innovations:active": 0.0 }, "model": "aperture_innovations:item/colorful_gel_empty"},
-		{ "predicate": { "aperture_innovations:active": 1.0 }, "model": "aperture_innovations:item/colorful_gel_colored"}
+		{ "predicate": { "aperture_innovations:colored": 0 }, "model": "aperture_innovations:item/colorful_gel_empty"},
+		{ "predicate": { "aperture_innovations:colored": 1 }, "model": "aperture_innovations:item/colorful_gel_colored"}
 	]
 }

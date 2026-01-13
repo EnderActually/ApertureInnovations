@@ -116,11 +116,6 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
 	protected @Nullable ResourceLocation getTextureOverrideForBone(GeoBone bone, PortalGunItem animatable,
 																   float partialTick)
 	{
-		if(Minecraft.getInstance().player.getStringUUID().equals("eubabfaj-1efkdsjkfr-fadjfkiarejkfa"))
-		{
-
-		}
-
 		List<String> gunCore = Lists.newArrayList("CoreOuter", "CoreInner", "PortalLight", "Muzzle");
 		if(gunCore.contains(bone.getName()))
 		{

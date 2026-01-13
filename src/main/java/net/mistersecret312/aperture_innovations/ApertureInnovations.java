@@ -3,10 +3,13 @@ package net.mistersecret312.aperture_innovations;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
+import net.minecraftforge.client.event.RegisterColorHandlersEvent;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.settings.KeyConflictContext;
@@ -24,13 +27,17 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DataPackRegistryEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegisterEvent;
+import net.mistersecret312.aperture_innovations.client.Layers;
 import net.mistersecret312.aperture_innovations.client.overlay.CrosshairOverlay;
+import net.mistersecret312.aperture_innovations.client.resourcepack.ResourcePackReloadListener;
 import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
 import net.mistersecret312.aperture_innovations.init.*;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.init.ItemTabInit;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
+import net.mistersecret312.aperture_innovations.items.ColorfulGelItem;
+import net.mistersecret312.aperture_innovations.items.ColorfulGelItemProperty;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 
@@ -63,6 +70,8 @@ public class ApertureInnovations
 
 		AdvancementInit.register();
 
+		modEventBus.addListener(Layers::registerLayers);
+
 		modEventBus.addListener((DataPackRegistryEvent.NewRegistry event) ->
 			{
 				event.dataPackRegistry(PortalGunVariant.REGISTRY_KEY, PortalGunVariant.CODEC, PortalGunVariant.CODEC);
@@ -88,7 +97,23 @@ public class ApertureInnovations
 		@SubscribeEvent
 		public static void onClientSetup(FMLClientSetupEvent event)
 		{
+			event.enqueueWork(()
+			-> {
+					ItemProperties.register(ItemInit.COLORFUL_GEL.get(), new ResourceLocation(MODID, "colored"), new ColorfulGelItemProperty());
+				});
+		}
 
+		@SubscribeEvent
+		public static void registerClientReload(RegisterClientReloadListenersEvent event)
+		{
+			ResourcePackReloadListener.ReloadListener.registerReloadListener(event);
+		}
+
+		@SubscribeEvent
+		public static void registerItemColors(RegisterColorHandlersEvent.Item event)
+		{
+			ColorfulGelItem gelItem = (ColorfulGelItem) ItemInit.COLORFUL_GEL.get();
+			event.register(((stack, color) -> color != 1 ? -1 : gelItem.getColor(stack)), ItemInit.COLORFUL_GEL.get());
 		}
 
 		@SubscribeEvent
