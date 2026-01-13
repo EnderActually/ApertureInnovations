@@ -10,6 +10,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
+import net.minecraft.util.FastColor;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
@@ -135,7 +136,7 @@ public class ApertureInnovations
 		public static void registerItemColors(RegisterColorHandlersEvent.Item event)
 		{
 			ColorfulGelItem gelItem = ItemInit.COLORFUL_GEL.get();
-			event.register(((stack, color) -> color != 1 ? -1 : gelItem.getColor(stack)), ItemInit.COLORFUL_GEL.get());
+			event.register(((stack, color) -> color != 1 ? -1 : FastColor.ARGB32.opaque(gelItem.getColor(stack))), ItemInit.COLORFUL_GEL.get());
 		}
 
 		@SubscribeEvent
