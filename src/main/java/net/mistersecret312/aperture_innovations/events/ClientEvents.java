@@ -243,8 +243,8 @@ public class ClientEvents
 					model.leftLeg.yScale = 0.625F;
 					model.rightLeg.yScale = 0.625F;
 
-					model.leftArm.yRot = (float) Math.toRadians(45);
-					model.leftArm.yScale = 2F;
+					//model.leftArm.yRot = (float) Math.toRadians(45);
+					//model.leftArm.yScale = 2F;
 				}
 			}
 		}

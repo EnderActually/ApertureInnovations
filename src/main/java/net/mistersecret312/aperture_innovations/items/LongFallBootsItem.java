@@ -18,4 +18,11 @@ public class LongFallBootsItem extends ArmorItem
 	{
 		return true;
 	}
+
+	public static boolean isWorn(LivingEntity entity)
+	{
+		ItemStack boots = entity.getItemBySlot(net.minecraft.world.entity.EquipmentSlot.FEET);
+		return boots.getItem() instanceof LongFallBootsItem;
+	}
 }
+
