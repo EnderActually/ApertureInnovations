@@ -19,6 +19,8 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
+import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
+import net.mistersecret312.aperture_innovations.config.LongFallBootsConfig;
 import net.mistersecret312.aperture_innovations.init.AdvancementInit;
 import net.mistersecret312.aperture_innovations.init.AttachmentTypeInit;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
@@ -31,6 +33,8 @@ import net.mistersecret312.aperture_innovations.portal.PortalLinkData;
 import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.energy.IEnergyStorage;
 import net.neoforged.neoforge.event.entity.EntityInvulnerabilityCheckEvent;
 import net.neoforged.neoforge.event.entity.ProjectileImpactEvent;
 import net.neoforged.neoforge.event.entity.item.ItemTossEvent;
@@ -42,6 +46,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
@@ -304,13 +309,24 @@ public class CommonEvents
 				if((event.getSource().equals(entity.damageSources().fall()) || event.getSource().equals(entity.damageSources().flyIntoWall()))
 						   && stack.getItem() instanceof LongFallBootsItem)
 				{
-					event.setInvulnerable(true);
 					if(!living.level().isClientSide())
 					{
-						ServerLevel level = (ServerLevel) living.level();
-						level.playSound(null, living.blockPosition(), SoundInit.LONG_FALL_BOOTS_LAND.get(),
-								SoundSource.PLAYERS, 0.15F, 1F);
+						@Nullable IEnergyStorage cap = stack.getCapability(Capabilities.EnergyStorage.ITEM);
+						if(cap != null && cap instanceof ApertureEnergy energy)
+						{
+							if(LongFallBootsConfig.long_fall_boots_use_energy.get())
+							{
+								long toExtract = LongFallBootsConfig.fall_energy_consumption.get();
+								long extracted = energy.extractLongEnergy(toExtract, false);
+								if(extracted < toExtract)
+									return;
+							}
+						}
 					}
+					ServerLevel level = (ServerLevel) living.level();
+					level.playSound(null, living.blockPosition(), SoundInit.LONG_FALL_BOOTS_LAND.get(),
+							SoundSource.PLAYERS, 0.15F, 1F);
+					event.setInvulnerable(true);
 					return;
 				}
 			}

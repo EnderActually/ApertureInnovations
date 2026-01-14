@@ -26,11 +26,13 @@ import net.mistersecret312.aperture_innovations.client.overlay.CrosshairOverlay;
 import net.mistersecret312.aperture_innovations.client.renderer.LongFallBootsRenderProperties;
 import net.mistersecret312.aperture_innovations.client.renderer.PortalGunRenderProperties;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ResourcePackReloadListener;
+import net.mistersecret312.aperture_innovations.config.LongFallBootsConfig;
 import net.mistersecret312.aperture_innovations.config.PortalGunConfig;
 import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
 import net.mistersecret312.aperture_innovations.init.*;
 import net.mistersecret312.aperture_innovations.items.ColorfulGelItem;
 import net.mistersecret312.aperture_innovations.items.ColorfulGelItemProperty;
+import net.mistersecret312.aperture_innovations.items.LongFallBootsItem;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -103,6 +105,8 @@ public class ApertureInnovations
 	public static void registerCapabilities(RegisterCapabilitiesEvent event)
 	{
 		event.registerItem(Capabilities.EnergyStorage.ITEM, (stack, context) -> new PortalGunItem.Energy(stack), ItemInit.PORTAL_GUN);
+
+		event.registerItem(Capabilities.EnergyStorage.ITEM, (stack, context) -> new LongFallBootsItem.Energy(stack), ItemInit.LONG_FALL_BOOTS);
 	}
 
 	@EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
