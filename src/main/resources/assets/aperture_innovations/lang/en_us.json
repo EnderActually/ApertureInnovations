@@ -26,6 +26,7 @@
   "item.aperture_innovations.colorful_gel.color": "Color: %s",
 
   "item.aperture_innovations.long_fall_boots": "Long Fall Boots",
+  "item.aperture_innovations.long_fall_boots.energy": "Energy: ",
 
   "aperture_innovations.portal_gun.variant_chell": "Chell Variant",
   "aperture_innovations.portal_gun.variant_pbody": "P-Body Variant",

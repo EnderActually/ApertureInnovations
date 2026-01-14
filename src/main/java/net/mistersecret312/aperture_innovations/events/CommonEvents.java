@@ -335,6 +335,27 @@ public class CommonEvents
 	}
 
 	@SubscribeEvent
+	public static void playerFallDamage(LivingFallEvent event)
+	{
+		LivingEntity living = event.getEntity();
+		for(ItemStack stack : living.getArmorSlots())
+		{
+			if(stack.getItem() instanceof LongFallBootsItem)
+			{
+				if(!living.level().isClientSide())
+				{
+					ServerLevel level = (ServerLevel) living.level();
+
+					level.playSound(null, living.blockPosition(), SoundInit.LONG_FALL_BOOTS_LAND.get(),
+							SoundSource.PLAYERS, 0.15F, 1F);
+				}
+				event.setCanceled(true);
+				return;
+			}
+		}
+	}
+
+	@SubscribeEvent
 	public static void playerDied(LivingDeathEvent event)
 	{
 		LivingEntity living = event.getEntity();

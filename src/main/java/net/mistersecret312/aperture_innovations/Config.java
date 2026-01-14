@@ -3,6 +3,7 @@ package net.mistersecret312.aperture_innovations;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.io.WritingMode;
 import net.minecraftforge.common.ForgeConfigSpec;
+import net.mistersecret312.aperture_innovations.config.LongFallBootsConfig;
 import net.mistersecret312.aperture_innovations.config.PortalGunConfig;
 
 import java.io.File;
@@ -14,9 +15,14 @@ public class Config
 
 	static
 	{
-		COMMON_BUILDER.push("Portal Gun Config");
+		COMMON_BUILDER.push("portal_gun");
 		PortalGunConfig.init(COMMON_BUILDER);
 		COMMON_BUILDER.pop();
+
+		COMMON_BUILDER.push("long_fall_boots");
+		LongFallBootsConfig.init(COMMON_BUILDER);
+		COMMON_BUILDER.pop();
+
 		COMMON_CONFIG = COMMON_BUILDER.build();
 	}
 
