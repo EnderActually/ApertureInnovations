@@ -110,6 +110,10 @@ public class ServerboundOpenPortalPacket
 				|| !level.getFluidState(result.getBlockPos()).isEmpty() ||
 									(PortalGunConfig.use_portalable_tag.get() && !level.getBlockState(result.getBlockPos()).is(ApertureInnovations.PORTALABLE))))
 				{
+					if(!PortalGunConfig.portal_gun_consume_on_shot.get() && PortalGunConfig.portal_gun_uses_energy.get())
+						if(!consumeEnergy(gunStack, player))
+							return;
+
 					portalGun.stopTriggeredAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
 					portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
 

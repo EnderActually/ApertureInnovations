@@ -252,27 +252,4 @@ public class ClientEvents
 		}
 	}
 
-	@SubscribeEvent
-	public static void onRenderLivingPre(RenderLivingEvent.Pre<?, ?> event) {
-		if (event.getEntity() instanceof Player player) {
-			ItemStack boots = player.getItemBySlot(EquipmentSlot.FEET);
-			if (boots.getItem() instanceof LongFallBootsItem) {
-				if (event.getRenderer().getModel() instanceof HumanoidModel<?> model) {
-
-				}
-			}
-		}
-	}
-
-	@SubscribeEvent
-	public static void onRenderLivingPre(RenderLivingEvent.Post<?, ?> event) {
-		if (event.getEntity() instanceof Player player) {
-			ItemStack boots = player.getItemBySlot(EquipmentSlot.FEET);
-			if (!(boots.getItem() instanceof LongFallBootsItem)) {
-				if (event.getRenderer().getModel() instanceof HumanoidModel<?> model) {
-				}
-			}
-		}
-	}
-
 }

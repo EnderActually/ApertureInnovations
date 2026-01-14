@@ -10,6 +10,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -311,14 +312,16 @@ public class CommonEvents
 	}
 
 	@SubscribeEvent
-	public static void playerFall(LivingFallEvent event)
+	public static void playerFall(LivingHurtEvent event)
 	{
 		LivingEntity living = event.getEntity();
+		DamageSource source = event.getSource();
 		for(ItemStack stack : living.getArmorSlots())
 		{
-			if(stack.getItem() instanceof LongFallBootsItem)
+			if((source.equals(living.damageSources().fall()) || source.equals(living.damageSources().flyIntoWall()))
+					&& stack.getItem() instanceof LongFallBootsItem)
 			{
-				if(event.getDistance() > 5F && !living.level().isClientSide())
+				if(!living.level().isClientSide())
 				{
 					ServerLevel level = (ServerLevel) living.level();
 
