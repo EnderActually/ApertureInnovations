@@ -1,5 +1,6 @@
 package net.mistersecret312.aperture_innovations.init;
 
+import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -25,6 +26,8 @@ public class SoundInit
     public static DeferredHolder<SoundEvent, SoundEvent> PORTAL_GUN_FIRE_PRIMARY = registerSoundEvent("portal_gun_fire_primary");
     public static DeferredHolder<SoundEvent, SoundEvent> PORTAL_GUN_FIRE_SECONDARY = registerSoundEvent("portal_gun_fire_secondary");
     public static DeferredHolder<SoundEvent, SoundEvent> PORTAL_GUN_RESET = registerSoundEvent("portal_gun_reset");
+
+    public static DeferredHolder<SoundEvent, SoundEvent> LONG_FALL_BOOTS_LAND = registerSoundEvent("long_fall_boots_land");
 
     private static DeferredHolder<SoundEvent, SoundEvent> registerSoundEvent(String sound)
     {

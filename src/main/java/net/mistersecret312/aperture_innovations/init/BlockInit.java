@@ -20,20 +20,18 @@ public class BlockInit
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(ApertureInnovations.MODID);
 
     public static final DeferredBlock<Block> METAL_SURFACE_BLOCK = registerBlock("metal_surface_block",
-            () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.COPPER_BLOCK).requiresCorrectToolForDrops().mapColor(MapColor.COLOR_GRAY)));
+            () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.COPPER_BLOCK).mapColor(MapColor.COLOR_GRAY)));
     public static final DeferredBlock<Block> METAL_SURFACE_TILE_BLOCK = registerBlock("metal_surface_tile_block",
-            () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.COPPER_BLOCK).requiresCorrectToolForDrops().mapColor(MapColor.COLOR_GRAY)));
+            () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.COPPER_BLOCK).mapColor(MapColor.COLOR_GRAY)));
     public static final DeferredBlock<Block> METAL_SURFACE_1x2_BLOCK = registerBlock("metal_surface_1x2_block",
-            () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.COPPER_BLOCK).requiresCorrectToolForDrops().mapColor(MapColor.COLOR_GRAY)));
-    public static final DeferredBlock<Block> METAL_SURFACE_2x2_BLOCK = registerBlock("metal_surface_2x2_block",
-            () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.COPPER_BLOCK).requiresCorrectToolForDrops().mapColor(MapColor.COLOR_GRAY)));
+            () -> new VerticalOneByTwoBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.COPPER_BLOCK).mapColor(MapColor.COLOR_GRAY)));
 
     public static final DeferredBlock<Block> CONCRETE_SURFACE_BLOCK = registerBlock("concrete_surface_block",
-            () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CONCRETE).requiresCorrectToolForDrops().mapColor(MapColor.TERRACOTTA_WHITE)));
+            () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CONCRETE).mapColor(MapColor.TERRACOTTA_WHITE)));
     public static final DeferredBlock<Block> CONCRETE_SURFACE_TILE_BLOCK = registerBlock("concrete_surface_tile_block",
-            () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CONCRETE).requiresCorrectToolForDrops().mapColor(MapColor.TERRACOTTA_WHITE)));
+            () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CONCRETE).mapColor(MapColor.TERRACOTTA_WHITE)));
     public static final DeferredBlock<Block> CONCRETE_SURFACE_1x2_BLOCK = registerBlock("concrete_surface_1x2_block",
-            () -> new VerticalOneByTwoBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CONCRETE).requiresCorrectToolForDrops().mapColor(MapColor.TERRACOTTA_WHITE)));
+            () -> new VerticalOneByTwoBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CONCRETE).mapColor(MapColor.TERRACOTTA_WHITE)));
 
     private static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block)
     {

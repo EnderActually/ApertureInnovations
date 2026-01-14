@@ -10,14 +10,14 @@
           ]
         },
         "fluid": {
-          "fluid": "minecraft:water"
+          "fluids": "minecraft:water"
         }
       }
     }
   },
   "display": {
     "icon": {
-      "item": "aperture_innovations:portal_gun"
+      "id": "aperture_innovations:portal_gun"
     },
     "title": {
       "translate": "advancements.aperture_innovations.aperture.waterproof_not_foolproof.title"

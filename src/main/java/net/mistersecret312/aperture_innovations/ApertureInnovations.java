@@ -47,6 +47,8 @@ import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
+import net.neoforged.neoforge.client.gui.ConfigurationScreen;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.client.settings.KeyConflictContext;
 import net.neoforged.neoforge.client.settings.KeyModifier;
 import net.neoforged.neoforge.common.NeoForge;
@@ -83,7 +85,6 @@ public class ApertureInnovations
 		AttachmentTypeInit.register(modEventBus);
 		DataComponentInit.register(modEventBus);
 
-		// todo - you will need to seperate your client and server code or servers will crash btw
 		modEventBus.addListener(Layers::registerLayers);
 		modEventBus.addListener(NetworkInit::registerPackets);
 		modEventBus.addListener(ApertureInnovations::registerCapabilities);
@@ -94,6 +95,7 @@ public class ApertureInnovations
 			});
 
 		modContainer.registerConfig(ModConfig.Type.COMMON, Config.COMMON_CONFIG, "aperture_innovations-common.toml");
+		modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
 	}
 
 	public static void registerCapabilities(RegisterCapabilitiesEvent event)
@@ -102,7 +104,6 @@ public class ApertureInnovations
 				PortalGunConfig.portal_gun_max_energy_stored.get()), ItemInit.PORTAL_GUN);
 	}
 
-	// You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
 	@EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 	public static class ClientModEvents
 	{

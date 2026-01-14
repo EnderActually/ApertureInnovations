@@ -14,7 +14,7 @@ import net.mistersecret312.aperture_innovations.items.LongFallBootsItem;
 public class ShortenedLegsLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
 
     private static final float LEG_V_PIVOT = 20f / 64f;
-    private static final float LEG_CUT_RATIO = 0.5f;
+    private static final float LEG_CUT_RATIO = 0.833f;
 
     public ShortenedLegsLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> renderer) {
         super(renderer);

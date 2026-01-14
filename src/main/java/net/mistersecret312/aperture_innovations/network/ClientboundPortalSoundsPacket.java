@@ -58,7 +58,7 @@ public abstract class ClientboundPortalSoundsPacket
 		{
 			ctx.enqueueWork(() ->
 				{
-					SoundAccess.getEnterPortalSound(packet.linkID, packet.isPrimary);
+					SoundAccess.playEnterPortalSound(packet.linkID, packet.isPrimary);
 				});
 		}
 

@@ -7,6 +7,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -20,6 +21,7 @@ import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
 import net.mistersecret312.aperture_innovations.init.AdvancementInit;
 import net.mistersecret312.aperture_innovations.init.AttachmentTypeInit;
+import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.init.StatisticsInit;
 import net.mistersecret312.aperture_innovations.items.LongFallBootsItem;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
@@ -32,6 +34,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.item.ItemTossEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.living.LivingFallEvent;
 import net.neoforged.neoforge.event.entity.living.LivingUseTotemEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
@@ -289,15 +292,20 @@ public class CommonEvents
 	}
 
 	@SubscribeEvent
-	public static void playerDamage(LivingDamageEvent.Pre event)
+	public static void playerFall(LivingFallEvent event)
 	{
 		LivingEntity living = event.getEntity();
 		for(ItemStack stack : living.getArmorSlots())
 		{
-			if(event.getSource().equals(living.damageSources().fall())
-					   && stack.getItem() instanceof LongFallBootsItem)
+			if(stack.getItem() instanceof LongFallBootsItem)
 			{
-				event.setNewDamage(0);
+				event.setCanceled(true);
+				if(!living.level().isClientSide() && event.getDistance() > 5F)
+				{
+					ServerLevel level = (ServerLevel) living.level();
+					level.playSound(null, living.blockPosition(), SoundInit.LONG_FALL_BOOTS_LAND.get(), SoundSource.PLAYERS,
+							0.15F, 1F);
+				}
 				return;
 			}
 		}

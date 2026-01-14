@@ -4,10 +4,10 @@
       "model": "aperture_innovations:block/concrete_surface_block"
     },
     "state=upper": {
-      "model": "aperture_innovations:block/concrete_surface_1x2_vertical_upper_block"
+      "model": "aperture_innovations:block/concrete_surface_1x2_upper_block"
     },
     "state=lower": {
-      "model": "aperture_innovations:block/concrete_surface_1x2_vertical_lower_block"
+      "model": "aperture_innovations:block/concrete_surface_1x2_lower_block"
     }
   }
 }

@@ -240,8 +240,8 @@ public class ClientEvents
 			ItemStack boots = player.getItemBySlot(EquipmentSlot.FEET);
 			if (boots.getItem() instanceof LongFallBootsItem) {
 				if (event.getRenderer().getModel() instanceof HumanoidModel<?> model) {
-					model.leftLeg.yScale = 0.625F;
-					model.rightLeg.yScale = 0.625F;
+					model.leftLeg.yScale = 1F;
+					model.rightLeg.yScale = 1F;
 
 					//model.leftArm.yRot = (float) Math.toRadians(45);
 					//model.leftArm.yScale = 2F;

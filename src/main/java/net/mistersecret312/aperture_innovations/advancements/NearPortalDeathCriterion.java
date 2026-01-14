@@ -35,7 +35,7 @@ public class NearPortalDeathCriterion extends SimpleCriterionTrigger<NearPortalD
 						NearPortalDeathTriggerInstance::player),
 				Codec.DOUBLE.optionalFieldOf("distance").forGetter(
 						NearPortalDeathTriggerInstance::distance),
-				Codec.BOOL.optionalFieldOf("fluid").forGetter(
+				Codec.BOOL.optionalFieldOf("isFloor").forGetter(
 						NearPortalDeathTriggerInstance::isFloor)
 		).apply(instance, NearPortalDeathTriggerInstance::new));
 

@@ -6,6 +6,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortalGunVariant;
+import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalUtilities;
 import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
@@ -54,7 +55,7 @@ public class SoundAccess
 		if(minecraft.level.dimension() != PortalUtilities.getPortalDimension(minecraft.level, linkID, isPrimary))
 			return;
 		GenericPortalSound sound = new GenericPortalSound(PortalUtilities.getPortalLinks().get(linkID), isPrimary,
-				getPortalOpenSound(linkID, isPrimary), 5, 10, 0.5F);
+				getPortalOpenSound(linkID, isPrimary), 5, 10, 0.35F);
 		ClientPortalUtilities.setPortalOpeningAnimationProgress(0F, linkID, isPrimary);
 		//playPortalAmbient(linkID, isPrimary, false);
 		minecraft.getSoundManager().play(sound);
@@ -74,7 +75,7 @@ public class SoundAccess
 		if(minecraft.level.dimension() != PortalUtilities.getPortalDimension(minecraft.level, linkID, isPrimary))
 			return;
 		GenericPortalSound sound = new GenericPortalSound(PortalUtilities.getPortalLinks().get(linkID), isPrimary,
-				getFizzlePortalSound(linkID, isPrimary), 5, 10, 0.5F);
+				getFizzlePortalSound(linkID, isPrimary), 5, 10, 0.35F);
 		ClientPortalUtilities.setPortalOpeningAnimationProgress(0F, linkID, isPrimary);
 		minecraft.getSoundManager().play(sound);
 		playPortalAmbient(linkID, isPrimary, true);
@@ -83,28 +84,28 @@ public class SoundAccess
 	public static void playInvalidSurfaceSound(UUID linkID, BlockPos pos, boolean isPrimary)
 	{
 		GenericGunSound sound = new GenericGunSound(PortalUtilities.getPortalLinks().get(linkID), pos, isPrimary,
-				getInvalidSurfaceSound(linkID, isPrimary), 5, 10, 0.5F);
+				getInvalidSurfaceSound(linkID, isPrimary), 5, 10, 0.35F);
 		minecraft.getSoundManager().play(sound);
 	}
 
 	public static void playGunActivateSound(UUID linkID, BlockPos pos, boolean isPrimary)
 	{
 		GenericGunSound sound = new GenericGunSound(PortalUtilities.getPortalLinks().get(linkID), pos, isPrimary,
-				getGunActivateSound(linkID), 5, 10, 0.5F);
+				getGunActivateSound(linkID), 5, 10, 0.35F);
 		minecraft.getSoundManager().play(sound);
 	}
 
 	public static void playShootPortalSound(UUID linkID, BlockPos pos, boolean isPrimary)
 	{
 		GenericGunSound sound = new GenericGunSound(PortalUtilities.getPortalLinks().get(linkID), pos, isPrimary,
-				getShotPortalSound(linkID, isPrimary), 5, 10, 0.5F);
+				getShotPortalSound(linkID, isPrimary), 5, 10, 0.35F);
 		minecraft.getSoundManager().play(sound);
 	}
 
 	public static void playResetPortalSound(UUID linkID, BlockPos pos, boolean isPrimary)
 	{
 		GenericGunSound sound = new GenericGunSound(PortalUtilities.getPortalLinks().get(linkID), pos, isPrimary,
-				getGunResetSound(linkID), 5, 10, 0.5F);
+				getGunResetSound(linkID), 5, 10, 0.35F);
 		minecraft.getSoundManager().play(sound);
 	}
 

@@ -64,10 +64,9 @@ public class PortalGunColoringRecipe extends CustomRecipe
 	@Override
 	public ItemStack assemble(CraftingInput container, HolderLookup.Provider registryAccess)
 	{
-		List<Pair<Pair<Integer, Integer>, ItemStack>> list = Lists.newArrayList();
+		List<ItemStack> list = Lists.newArrayList();
 		ItemStack gunItemStack = ItemStack.EMPTY;
 		ItemStack secondGunStack = ItemStack.EMPTY;
-		int gunStack = -1;
 
 		for(int i = 0; i < container.width(); i++)
 		{
@@ -87,12 +86,11 @@ public class PortalGunColoringRecipe extends CustomRecipe
 						}
 
 						gunItemStack = itemstack1.copy();
-						gunStack = i+j;
 					} else {
 						if (!(item instanceof ColorfulGelItem))
 							return ItemStack.EMPTY;
 
-						list.add(new Pair<>(new Pair<>(i, j), itemstack1));
+						list.add(itemstack1);
 					}
 				}
 			}
@@ -102,44 +100,16 @@ public class PortalGunColoringRecipe extends CustomRecipe
 
 		for(int i = 0; i < list.size(); i++)
 		{
-			int slotColumn = list.get(i).getA().getA();
-			int slotRow = list.get(i).getA().getB();
-
-			int slotID = slotColumn + slotRow;
-			ItemStack gelStack = list.get(i).getB();
+			ItemStack gelStack = list.get(i);
 			ColorfulGelItem gel = (ColorfulGelItem) gelStack.getItem();
-
-			int slotDiff = slotID-gunStack;
-			if(container.width() == 1)
-			{
-				if(slotDiff == -1)
-					gunItem.setPrimaryPortalColor(gunItemStack, gel.getColor(gelStack));
-				if(slotDiff == 1)
-					gunItem.setSecondaryPortalColor(gunItemStack, gel.getColor(gelStack));
-			}
-			if(container.width() == 2)
-			{
-				if(slotDiff == -1)
-					gunItem.setPrimaryStripeColor(gunItemStack, gel.getColor(gelStack));
-				if(slotDiff == 1)
-					gunItem.setSecondaryStripeColor(gunItemStack, gel.getColor(gelStack));
-				if(slotDiff == -2)
-					gunItem.setPrimaryPortalColor(gunItemStack, gel.getColor(gelStack));
-				if(slotDiff == 2)
-					gunItem.setSecondaryPortalColor(gunItemStack, gel.getColor(gelStack));
-			}
-
-			if(container.width() == 3)
-			{
-				if(slotDiff == -1)
-					gunItem.setPrimaryStripeColor(gunItemStack, gel.getColor(gelStack));
-				if(slotDiff == 1)
-					gunItem.setSecondaryStripeColor(gunItemStack, gel.getColor(gelStack));
-				if(slotDiff == -3)
-					gunItem.setPrimaryPortalColor(gunItemStack, gel.getColor(gelStack));
-				if(slotDiff == 3)
-					gunItem.setSecondaryPortalColor(gunItemStack, gel.getColor(gelStack));
-			}
+			if(i == 0)
+				gunItem.setPrimaryPortalColor(gunItemStack, gel.getColor(gelStack));
+			if(i == 1)
+				gunItem.setSecondaryPortalColor(gunItemStack, gel.getColor(gelStack));
+			if(i == 2)
+				gunItem.setPrimaryStripeColor(gunItemStack, gel.getColor(gelStack));
+			if(i == 3)
+				gunItem.setSecondaryStripeColor(gunItemStack, gel.getColor(gelStack));
 		}
 
 		if(list.isEmpty())
