@@ -69,17 +69,25 @@
 
   "stat.aperture_innovations.times_used_portals": "Times travelled by Portal",
 
-  "aperture_innovations.configuration.portal_gun": "Portal Gun Config",
+  "aperture_innovations.configuration.portal_gun": "Portal Gun",
   "aperture_innovations.configuration.portalable_tag": "Use Portalable Tag",
   "aperture_innovations.configuration.portal_gun_shoot_range": "Shoot Range",
   "aperture_innovations.configuration.portal_gun_uses_energy": "Uses FE/Energy",
   "aperture_innovations.configuration.portal_gun_max_energy_stored": "Maximum Energy Stored",
   "aperture_innovations.configuration.portal_gun_consume_on_shot": "Consume Energy on Shot",
   "aperture_innovations.configuration.portal_gun_shoot_consumption": "Shooting energy Consumption",
-  "aperture_innovations.configuration.portal_gun_passive_consumption": "Idle consumption while open"
+  "aperture_innovations.configuration.portal_gun_passive_consumption": "Idle consumption while open",
 
-
-
-
-
+  "aperture_innovations.configuration.portal_gun.button": "Portal Gun",
+  "aperture_innovations.configuration.portalable_tag.tooltip": "If true, portals can be placed only on blocks in the Portalable block tag",
+  "aperture_innovations.configuration.portal_gun_passive_consumption.tooltip": "The amount of energy the Portal Gun uses when two portals are open",
+  "aperture_innovations.configuration.portal_gun_shoot_consumption.tooltip": "The amount of energy the Portal Gun uses when shooting/opening the portal",
+  "aperture_innovations.configuration.title": "Aperture Innovations",
+  "aperture_innovations.configuration.portal_gun.tooltip": "Configurations of the Portal Gun/Aperture Science Handheld Portal Device",
+  "aperture_innovations.configuration.portal_gun_max_energy_stored.tooltip": "The maximum amount of energy the Portal Gun can store in itself",
+  "aperture_innovations.configuration.section.aperture.innovations.common.toml.title": "Common Aperture Innovations Config",
+  "aperture_innovations.configuration.portal_gun_uses_energy.tooltip": "If true, the Portal Gun will require energy to create and upkeep portals",
+  "aperture_innovations.configuration.section.aperture.innovations.common.toml": "Common Aperture Innovations Config",
+  "aperture_innovations.configuration.portal_gun_consume_on_shot.tooltip": "If true, the Portal Gun will consume energy when shooting the portal, not when it actually opens",
+  "aperture_innovations.configuration.portal_gun_shoot_range.tooltip": "How far the Portal Gun can shoot and open a portal"
 }

@@ -40,14 +40,14 @@ public class SoundAccess
 				ambientSound = new PortalSoundWrapper.PortalAmbient(link, isPrimary);
 				ClientPortalUtilities.setAmbientSound(ambientSound, uuid, isPrimary);
 			}
-		}
 
-		if(stop)
-			ambientSound.stopSound();
-		else if(!ambientSound.isPlaying())
-		{
-			ambientSound.playSound();
-		};
+			if(stop)
+				ambientSound.stopSound();
+			else if(!ambientSound.isPlaying())
+			{
+				ambientSound.playSound();
+			}
+		}
 	}
 
 	public static void playOpenPortalSound(UUID linkID, boolean isPrimary)

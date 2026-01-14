@@ -16,8 +16,8 @@ public class DataComponentInit
 	public static final DeferredRegister<DataComponentType<?>> DATA_COMPONENTS = DeferredRegister.createDataComponents(
 			Registries.DATA_COMPONENT_TYPE, ApertureInnovations.MODID);
 
-	public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> ENERGY = register("energy", builder -> builder.persistent(
-			Codec.INT));
+	public static final DeferredHolder<DataComponentType<?>, DataComponentType<Long>> ENERGY = register("energy", builder -> builder.persistent(
+			Codec.LONG));
 
 	public static final DeferredHolder<DataComponentType<?>, DataComponentType<String>> LINK_ID = register("link_id", builder -> builder.persistent(
 			Codec.STRING));

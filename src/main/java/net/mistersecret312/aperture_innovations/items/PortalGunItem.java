@@ -32,6 +32,7 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.advancements.ThrownIntoFluidCriterion;
+import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
 import net.mistersecret312.aperture_innovations.client.renderer.PortalGunRenderer;
 import net.mistersecret312.aperture_innovations.config.PortalGunConfig;
 import net.mistersecret312.aperture_innovations.init.AdvancementInit;
@@ -44,7 +45,15 @@ import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.ICapabilityProvider;
 import net.neoforged.neoforge.energy.IEnergyStorage;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.fluids.capability.IFluidHandlerItem;
 import net.neoforged.neoforge.network.PacketDistributor;
+import net.povstalec.sgjourney.common.capabilities.SGJourneyEnergy;
+import net.povstalec.sgjourney.common.config.CommonTechConfig;
+import net.povstalec.sgjourney.common.init.FluidInit;
+import net.povstalec.sgjourney.common.items.FluidItem;
+import net.povstalec.sgjourney.common.items.PowerCellItem;
 import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.GeoItem;
 import software.bernie.geckolib.animatable.SingletonGeoAnimatable;
@@ -135,7 +144,7 @@ public class PortalGunItem extends Item implements GeoItem
 
 		if(PortalGunConfig.portal_gun_uses_energy.get())
 		{
-			components.add(Component.translatable("item.aperture_innovations.portal_gun.energy").append(energyToString(getEnergy(stack)) + "/" + energyToString(getCapacity())).withStyle(ChatFormatting.DARK_RED));
+			components.add(Component.translatable("item.aperture_innovations.portal_gun.energy").append(ApertureEnergy.energyToString(getEnergy(stack), getCapacity())).withStyle(ChatFormatting.DARK_RED));
 		}
 
 		if(primaryPortalColor != -1 || primaryStripeColor != -1 || secondaryPortalColor != -1 || secondaryStripeColor != -1)
@@ -182,14 +191,14 @@ public class PortalGunItem extends Item implements GeoItem
 			PortalLink link = PortalUtilities.getPortalLinks(level).get(getUUID(stack, false));
 			if(link != null && link.isOpen() && PortalGunConfig.portal_gun_uses_energy.get())
 			{
-				@Nullable IEnergyStorage energy = stack.getCapability(Capabilities.EnergyStorage.ITEM);
-				if(energy != null)
+				@Nullable IEnergyStorage cap = stack.getCapability(Capabilities.EnergyStorage.ITEM);
+				if(cap != null && cap instanceof ApertureEnergy energy)
 				{
-					int toExtract = PortalGunConfig.portal_gun_passive_consumption.get();
-					int extracted = energy.extractEnergy(toExtract, false);
+					long toExtract = PortalGunConfig.portal_gun_passive_consumption.get();
+					long extracted = energy.extractLongEnergy(toExtract, false);
 					if(extracted < toExtract)
 					{
-						player.displayClientMessage(Component.translatable("item.aperture_innovations.portal_gun.not_enough_energy"), true);
+						player.displayClientMessage(Component.translatable("item.aperture_innovations.portal_gun.not_enough_energy").withStyle(ChatFormatting.DARK_RED), true);
 						link.reset(level);
 					}
 				}
@@ -238,9 +247,14 @@ public class PortalGunItem extends Item implements GeoItem
 		return 0;
 	}
 
-	public int getCapacity()
+	public long getCapacity()
 	{
 		return PortalGunConfig.portal_gun_max_energy_stored.get();
+	}
+
+	public long getTransfer()
+	{
+		return PortalGunConfig.portal_gun_uses_energy.get() ? 10000L : 0L;
 	}
 
 	public static BlockHitResult rayTrace(Level level, Player player, double range) {
@@ -457,27 +471,63 @@ public class PortalGunItem extends Item implements GeoItem
 		return this.cache;
 	}
 
-	public static final char[] PREFIXES = {'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y', 'R', 'Q'};
-
-	public static String energyToString(int energy)
+	public static class Energy extends ApertureEnergy.Item
 	{
-		if(energy < 0)
-			return "NaN";
-
-		if(energy < 1000)
-			return energy + " FE";
-
-		double total = energy;
-		int prefix = -1;
-		for(; total >= 1000 && prefix < PREFIXES.length; prefix++)
+		public Energy(ItemStack stack)
 		{
-			total /= 1000;
+			super(stack, PortalGunConfig.portal_gun_max_energy_stored.get(),
+					10000L, 10000L);
 		}
 
-		total *= 100;
-		total = Math.floor(total);
-		total /= 100;
+		@Override
+		public long receiveLongEnergy(long maxReceive, boolean simulate)
+		{
+			return super.receiveLongEnergy(maxReceive, simulate);
+		}
 
-		return total + " " + PREFIXES[prefix] + "FE";
+		@Override
+		public long extractLongEnergy(long maxExtract, boolean simulate)
+		{
+			return super.extractLongEnergy(maxExtract, simulate);
+		}
+
+		@Override
+		public long maxReceive()
+		{
+			if(stack.getItem() instanceof PortalGunItem portalGun)
+				return portalGun.getTransfer();
+
+			return 0;
+		}
+
+		@Override
+		public long maxExtract()
+		{
+			if(stack.getItem() instanceof PortalGunItem portalGun)
+				return portalGun.getTransfer();
+
+			return 0;
+		}
+
+		@Override
+		public long loadEnergy(ItemStack stack)
+		{
+			return stack.getOrDefault(DataComponentInit.ENERGY, PortalGunConfig.portal_gun_max_energy_stored.get());
+		}
+
+		@Override
+		public long getTrueMaxEnergyStored()
+		{
+			if(stack.getItem() instanceof PortalGunItem portalGunItem)
+				return portalGunItem.getCapacity();
+
+			return 0;
+		}
+
+		@Override
+		public void onEnergyChanged(long difference, boolean simulate)
+		{
+			stack.set(DataComponentInit.ENERGY, this.energy);
+		}
 	}
 }

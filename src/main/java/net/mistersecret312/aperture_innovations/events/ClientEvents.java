@@ -234,33 +234,4 @@ public class ClientEvents
 			PacketDistributor.sendToServer(new ServerboundResetPortalLinkPacket());
 	}
 
-	@SubscribeEvent
-	public static void onRenderLivingPre(RenderLivingEvent.Pre<?, ?> event) {
-		if (event.getEntity() instanceof Player player) {
-			ItemStack boots = player.getItemBySlot(EquipmentSlot.FEET);
-			if (boots.getItem() instanceof LongFallBootsItem) {
-				if (event.getRenderer().getModel() instanceof HumanoidModel<?> model) {
-					model.leftLeg.yScale = 1F;
-					model.rightLeg.yScale = 1F;
-
-					//model.leftArm.yRot = (float) Math.toRadians(45);
-					//model.leftArm.yScale = 2F;
-				}
-			}
-		}
-	}
-
-	@SubscribeEvent
-	public static void onRenderLivingPost(RenderLivingEvent.Post<?, ?> event) {
-		if (event.getEntity() instanceof Player player) {
-			ItemStack boots = player.getItemBySlot(EquipmentSlot.FEET);
-			if (!(boots.getItem() instanceof LongFallBootsItem)) {
-				if (event.getRenderer().getModel() instanceof HumanoidModel<?> model) {
-					model.leftLeg.yScale = 1F;
-					model.rightLeg.yScale = 1F;
-				}
-			}
-		}
-	}
-
 }

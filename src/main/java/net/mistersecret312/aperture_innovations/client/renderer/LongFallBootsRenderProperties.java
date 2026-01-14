@@ -22,4 +22,6 @@ public class LongFallBootsRenderProperties implements IClientItemExtensions
 	{
 		return LongFallBootsModel.INSTANCE;
 	}
+
+
 }

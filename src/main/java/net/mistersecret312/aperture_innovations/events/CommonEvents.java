@@ -31,6 +31,8 @@ import net.mistersecret312.aperture_innovations.portal.PortalLinkData;
 import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.EntityInvulnerabilityCheckEvent;
+import net.neoforged.neoforge.event.entity.ProjectileImpactEvent;
 import net.neoforged.neoforge.event.entity.item.ItemTossEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
@@ -292,21 +294,25 @@ public class CommonEvents
 	}
 
 	@SubscribeEvent
-	public static void playerFall(LivingFallEvent event)
+	public static void playerFall(EntityInvulnerabilityCheckEvent event)
 	{
-		LivingEntity living = event.getEntity();
-		for(ItemStack stack : living.getArmorSlots())
+		Entity entity = event.getEntity();
+		if(entity instanceof LivingEntity living)
 		{
-			if(stack.getItem() instanceof LongFallBootsItem)
+			for(ItemStack stack : living.getArmorSlots())
 			{
-				event.setCanceled(true);
-				if(!living.level().isClientSide() && event.getDistance() > 5F)
+				if((event.getSource().equals(entity.damageSources().fall()) || event.getSource().equals(entity.damageSources().flyIntoWall()))
+						   && stack.getItem() instanceof LongFallBootsItem)
 				{
-					ServerLevel level = (ServerLevel) living.level();
-					level.playSound(null, living.blockPosition(), SoundInit.LONG_FALL_BOOTS_LAND.get(), SoundSource.PLAYERS,
-							0.15F, 1F);
+					event.setInvulnerable(true);
+					if(!living.level().isClientSide())
+					{
+						ServerLevel level = (ServerLevel) living.level();
+						level.playSound(null, living.blockPosition(), SoundInit.LONG_FALL_BOOTS_LAND.get(),
+								SoundSource.PLAYERS, 0.15F, 1F);
+					}
+					return;
 				}
-				return;
 			}
 		}
 	}

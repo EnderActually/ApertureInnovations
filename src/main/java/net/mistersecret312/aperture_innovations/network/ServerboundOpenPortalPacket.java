@@ -16,6 +16,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
 import net.mistersecret312.aperture_innovations.config.PortalGunConfig;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
@@ -71,6 +72,10 @@ public record ServerboundOpenPortalPacket(boolean isPrimary) implements CustomPa
 			boolean moonshot = portalGun.isLookingAtMoon(player, level);
 			if(moonshot)
 			{
+				if(!PortalGunConfig.portal_gun_consume_on_shot.get() && PortalGunConfig.portal_gun_uses_energy.get())
+					if(!consumeEnergy(gunStack, player))
+						return;
+
 				UUID linkID = portalGun.getUUID(gunStack, true);
 
 				PortalLinkData linkData = PortalLinkData.get(level);
@@ -109,6 +114,10 @@ public record ServerboundOpenPortalPacket(boolean isPrimary) implements CustomPa
 				|| !level.getFluidState(result.getBlockPos()).isEmpty() ||
 									(PortalGunConfig.use_portalable_tag.get() && !level.getBlockState(result.getBlockPos()).is(ApertureInnovations.PORTALABLE))))
 				{
+					if(!PortalGunConfig.portal_gun_consume_on_shot.get() && PortalGunConfig.portal_gun_uses_energy.get())
+						if(!consumeEnergy(gunStack, player))
+							return;
+
 					portalGun.stopTriggeredAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
 					portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
 
@@ -176,12 +185,12 @@ public record ServerboundOpenPortalPacket(boolean isPrimary) implements CustomPa
 	public static boolean consumeEnergy(ItemStack stack, Player player)
 	{
 		@Nullable IEnergyStorage capability = stack.getCapability(Capabilities.EnergyStorage.ITEM);
-		if(capability != null)
+		if(capability != null && capability instanceof ApertureEnergy energy)
 		{
-			int requiredEnergy = PortalGunConfig.portal_gun_shoot_consumption.get();
-			if(capability.getEnergyStored() > requiredEnergy)
+			long requiredEnergy = PortalGunConfig.portal_gun_shoot_consumption.get();
+			if(energy.getTrueEnergyStored() > requiredEnergy)
 			{
-				capability.extractEnergy(requiredEnergy, false);
+				energy.extractLongEnergy(requiredEnergy, false);
 				return true;
 			}
 			else
@@ -189,7 +198,6 @@ public record ServerboundOpenPortalPacket(boolean isPrimary) implements CustomPa
 				player.displayClientMessage(Component.translatable("item.aperture_innovations.portal_gun.not_enough_energy").withStyle(ChatFormatting.DARK_RED), true);
 				return false;
 			}
-
 		}
 		return false;
 	}

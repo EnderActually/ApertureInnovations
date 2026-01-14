@@ -20,6 +20,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
+import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
 import net.mistersecret312.aperture_innovations.client.Layers;
 import net.mistersecret312.aperture_innovations.client.overlay.CrosshairOverlay;
 import net.mistersecret312.aperture_innovations.client.renderer.LongFallBootsRenderProperties;
@@ -30,6 +31,7 @@ import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
 import net.mistersecret312.aperture_innovations.init.*;
 import net.mistersecret312.aperture_innovations.items.ColorfulGelItem;
 import net.mistersecret312.aperture_innovations.items.ColorfulGelItemProperty;
+import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -100,8 +102,7 @@ public class ApertureInnovations
 
 	public static void registerCapabilities(RegisterCapabilitiesEvent event)
 	{
-		event.registerItem(Capabilities.EnergyStorage.ITEM, (stack, context) -> new EnergyStorage(
-				PortalGunConfig.portal_gun_max_energy_stored.get()), ItemInit.PORTAL_GUN);
+		event.registerItem(Capabilities.EnergyStorage.ITEM, (stack, context) -> new PortalGunItem.Energy(stack), ItemInit.PORTAL_GUN);
 	}
 
 	@EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)

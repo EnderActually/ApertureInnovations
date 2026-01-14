@@ -9,9 +9,9 @@ public class PortalGunConfig
 	public static ModConfigSpec.IntValue portal_gun_shoot_range;
 
 	public static ModConfigSpec.BooleanValue portal_gun_uses_energy;
-	public static ModConfigSpec.IntValue portal_gun_max_energy_stored;
-	public static ModConfigSpec.IntValue portal_gun_shoot_consumption;
-	public static ModConfigSpec.IntValue portal_gun_passive_consumption;
+	public static ModConfigSpec.LongValue portal_gun_max_energy_stored;
+	public static ModConfigSpec.LongValue portal_gun_shoot_consumption;
+	public static ModConfigSpec.LongValue portal_gun_passive_consumption;
 	public static ModConfigSpec.BooleanValue portal_gun_consume_on_shot;
 
 	public static void init(ModConfigSpec.Builder server)
@@ -30,7 +30,7 @@ public class PortalGunConfig
 
 		portal_gun_max_energy_stored = server
 			.comment("The maximum amount of energy the Portal Gun can store in itself")
-			.defineInRange("portal_gun_max_energy_stored", 1000000, 0, Integer.MAX_VALUE);
+			.defineInRange("portal_gun_max_energy_stored", 1000000L, 0L, Long.MAX_VALUE);
 
 		portal_gun_consume_on_shot = server
 			.comment("If true, the Portal Gun will consume energy when shooting the portal, not when it actually opens")
@@ -38,10 +38,10 @@ public class PortalGunConfig
 
 		portal_gun_shoot_consumption = server
 			.comment("The amount of energy the Portal Gun uses when shooting/opening the portal")
-			.defineInRange("portal_gun_shoot_consumption", 2500, 0, Integer.MAX_VALUE);
+			.defineInRange("portal_gun_shoot_consumption", 2500L, 0L, Long.MAX_VALUE);
 
 		portal_gun_passive_consumption = server
 			.comment("The amount of energy the Portal Gun uses when two portals are open")
-			.defineInRange("portal_gun_passive_consumption", 10, 0, Integer.MAX_VALUE);
+			.defineInRange("portal_gun_passive_consumption", 10L, 0L, Long.MAX_VALUE);
 	}
 }
