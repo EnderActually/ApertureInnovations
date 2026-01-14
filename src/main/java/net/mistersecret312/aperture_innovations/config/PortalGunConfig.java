@@ -25,7 +25,7 @@ public class PortalGunConfig
 
 		portal_gun_uses_energy = server
 			.comment("If true, the Portal Gun will require energy to create and upkeep portals")
-			.define("portal_gun_uses_energy", false);
+			.define("portal_gun_uses_energy", true);
 
 		portal_gun_max_energy_stored = server
 			.comment("The maximum amount of energy the Portal Gun can store in itself")

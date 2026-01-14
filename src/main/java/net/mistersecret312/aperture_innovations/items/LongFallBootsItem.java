@@ -82,18 +82,19 @@ public class LongFallBootsItem extends ArmorItem
 
 		if(tag.contains(ENERGY, Tag.TAG_LONG))
 			return tag.getLong(ENERGY);
+		else tag.putLong(ENERGY, getCapacity());
 
 		return 0;
 	}
 
-	public long getCapacity()
+	public static long getCapacity()
 	{
 		return LongFallBootsConfig.long_fall_boots_max_energy_stored.get();
 	}
 
-	public long getTransfer()
+	public static long getTransfer()
 	{
-		return LongFallBootsConfig.long_fall_boots_use_energy.get() ? 1000L : 0L;
+		return 1000L;
 	}
 
 	@Override

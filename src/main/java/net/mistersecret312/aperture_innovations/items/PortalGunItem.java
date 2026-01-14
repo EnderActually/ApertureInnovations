@@ -232,16 +232,16 @@ public class PortalGunItem extends Item implements GeoItem
 
 		if(tag.contains(ENERGY, Tag.TAG_LONG))
 			return tag.getLong(ENERGY);
-
+		else tag.putLong(ENERGY, getCapacity());
 		return 0;
 	}
 
-	public long getCapacity()
+	public static long getCapacity()
 	{
 		return PortalGunConfig.portal_gun_max_energy_stored.get();
 	}
 
-	public long getTransfer()
+	public static long getTransfer()
 	{
 		return PortalGunConfig.portal_gun_uses_energy.get() ? 10000L : 0L;
 	}

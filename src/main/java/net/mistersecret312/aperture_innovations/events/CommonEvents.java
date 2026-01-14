@@ -2,8 +2,10 @@ package net.mistersecret312.aperture_innovations.events;
 
 import com.mojang.datafixers.util.Pair;
 import com.mojang.math.Axis;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -19,6 +21,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
@@ -31,7 +35,10 @@ import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.advancements.NearPortalDeathCriterion;
 import net.mistersecret312.aperture_innovations.advancements.PortalTravelCriterion;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
+import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
 import net.mistersecret312.aperture_innovations.capabilities.GenericProvider;
+import net.mistersecret312.aperture_innovations.config.LongFallBootsConfig;
+import net.mistersecret312.aperture_innovations.config.PortalGunConfig;
 import net.mistersecret312.aperture_innovations.init.CapabilityInit;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
@@ -342,8 +349,12 @@ public class CommonEvents
 		{
 			if(stack.getItem() instanceof LongFallBootsItem)
 			{
-				if(!living.level().isClientSide())
+
+				if(!living.level().isClientSide() && event.getDistance() > 5f)
 				{
+					if(LongFallBootsConfig.long_fall_boots_use_energy.get() && !consumeEnergy(stack))
+						return;
+
 					ServerLevel level = (ServerLevel) living.level();
 
 					level.playSound(null, living.blockPosition(), SoundInit.LONG_FALL_BOOTS_LAND.get(),
@@ -353,6 +364,26 @@ public class CommonEvents
 				return;
 			}
 		}
+	}
+
+	public static boolean consumeEnergy(ItemStack stack)
+	{
+		Optional<IEnergyStorage> optionalCapability = stack.getCapability(ForgeCapabilities.ENERGY).resolve();
+		if(optionalCapability.isPresent())
+		{
+			IEnergyStorage storage = optionalCapability.get();
+			if(storage instanceof ApertureEnergy energy)
+			{
+				long requiredEnergy = LongFallBootsConfig.fall_energy_consumption.get();
+				if(energy.getTrueEnergyStored() >= requiredEnergy)
+				{
+					energy.extractLongEnergy(requiredEnergy, false);
+					return true;
+				}
+				else return false;
+			}
+		}
+		return false;
 	}
 
 	@SubscribeEvent
