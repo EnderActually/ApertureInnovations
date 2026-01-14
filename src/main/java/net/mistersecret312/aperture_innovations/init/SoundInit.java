@@ -24,6 +24,8 @@ public class SoundInit
     public static RegistryObject<SoundEvent> PORTAL_GUN_FIRE_SECONDARY = registerSoundEvent("portal_gun_fire_secondary");
     public static RegistryObject<SoundEvent> PORTAL_GUN_RESET = registerSoundEvent("portal_gun_reset");
 
+    public static RegistryObject<SoundEvent> LONG_FALL_BOOTS_LAND = registerSoundEvent("long_fall_boots_land");
+
     private static RegistryObject<SoundEvent> registerSoundEvent(String sound)
     {
         return SOUNDS.register(sound, () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(ApertureInnovations.MODID, sound)));

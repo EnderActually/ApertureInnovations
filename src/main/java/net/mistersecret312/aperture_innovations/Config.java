@@ -14,12 +14,8 @@ public class Config
 
 	static
 	{
-		COMMON_BUILDER.push("Aperture Innovations Common Config");
-
 		COMMON_BUILDER.push("Portal Gun Config");
 		PortalGunConfig.init(COMMON_BUILDER);
-		COMMON_BUILDER.pop();
-
 		COMMON_BUILDER.pop();
 		COMMON_CONFIG = COMMON_BUILDER.build();
 	}

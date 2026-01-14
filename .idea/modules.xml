@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/aperture-innovations.main.iml" filepath="$PROJECT_DIR$/.idea/modules/aperture-innovations.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/aperture-innovations.test.iml" filepath="$PROJECT_DIR$/.idea/modules/aperture-innovations.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/net.mistersecret312.aperture-innovations.test.iml" filepath="$PROJECT_DIR$/.idea/modules/net.mistersecret312.aperture-innovations.test.iml" />
     </modules>
   </component>
 </project>

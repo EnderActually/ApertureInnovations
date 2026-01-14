@@ -13,10 +13,10 @@
       "item": "aperture_innovations:portal_gun"
     },
     "title": {
-      "translate": "advancements.aperture_innovations.aperture.so_close_yet_so_far_away.title"
+      "translate": "advancements.aperture_innovations.aperture.reproducible_human_error_problem.title"
     },
     "description": {
-      "translate": "advancements.aperture_innovations.aperture.so_close_yet_so_far_away.description"
+      "translate": "advancements.aperture_innovations.aperture.reproducible_human_error_problem.description"
     },
     "frame": "challenge",
     "hidden": true

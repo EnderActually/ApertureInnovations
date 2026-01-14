@@ -8,6 +8,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -32,6 +33,7 @@ import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
 import net.mistersecret312.aperture_innovations.capabilities.GenericProvider;
 import net.mistersecret312.aperture_innovations.init.CapabilityInit;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
+import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.init.StatisticsInit;
 import net.mistersecret312.aperture_innovations.items.LongFallBootsItem;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
@@ -309,13 +311,20 @@ public class CommonEvents
 	}
 
 	@SubscribeEvent
-	public static void playerDamage(LivingFallEvent event)
+	public static void playerFall(LivingFallEvent event)
 	{
 		LivingEntity living = event.getEntity();
 		for(ItemStack stack : living.getArmorSlots())
 		{
 			if(stack.getItem() instanceof LongFallBootsItem)
 			{
+				if(event.getDistance() > 5F && !living.level().isClientSide())
+				{
+					ServerLevel level = (ServerLevel) living.level();
+
+					level.playSound(null, living.blockPosition(), SoundInit.LONG_FALL_BOOTS_LAND.get(),
+							SoundSource.PLAYERS, 0.15F, 1F);
+				}
 				event.setCanceled(true);
 				return;
 			}

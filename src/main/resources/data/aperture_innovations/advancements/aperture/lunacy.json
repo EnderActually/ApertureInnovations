@@ -20,7 +20,7 @@
     "frame": "challenge",
     "hidden": true
   },
-  "parent": "aperture_innovations:aperture/so_close_yet_so_far_away",
+  "parent": "aperture_innovations:aperture/reproducible_human_error_problem",
   "requirements": [
     [
       "long_jump"

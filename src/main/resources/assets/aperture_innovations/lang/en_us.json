@@ -44,7 +44,7 @@
   "sound.aperture_innovations.portal_open_primary": "Primary portal opened",
   "sound.aperture_innovations.portal_open_secondary": "Secondary portal opened",
   "sound.aperture_innovations.portal_gun_reset": "Portal Gun Reset",
-  "sound.aperture_innovations.longfall_boots_land": "Long Fall Boots negate the fall",
+  "sound.aperture_innovations.long_fall_boots_land": "Long Fall Boots negate the fall",
 
   "advancements.aperture_innovations.aperture.root.title": "Aperture Science Innovators",
   "advancements.aperture_innovations.aperture.root.description": "Obtain the Aperture Science Handheld Portal Device",
@@ -61,11 +61,11 @@
   "advancements.aperture_innovations.aperture.waterproof_not_foolproof.title": "Waterproof, Not Foolproof",
   "advancements.aperture_innovations.aperture.waterproof_not_foolproof.description": "Drop your portal gun into water",
 
-  "advancements.aperture_innovations.aperture.so_close_yet_so_far_away.title": "So Close Yet So Far Away",
-  "advancements.aperture_innovations.aperture.so_close_yet_so_far_away.description": "Die by missing the portal on the floor",
+  "advancements.aperture_innovations.aperture.reproducible_human_error_problem.title": "Reproducible Human Error Problem",
+  "advancements.aperture_innovations.aperture.reproducible_human_error_problem.description": "Die by missing the portal on the floor",
 
   "advancements.aperture_innovations.aperture.lunacy.title": "Lunacy",
   "advancements.aperture_innovations.aperture.lunacy.description": "Shoot a portal to the moon, and go through it",
 
-  "stat.aperture_innovations.times_used_portals": "Times portal travelled"
+  "stat.aperture_innovations.times_used_portals": "Times travelled by Portal"
 }

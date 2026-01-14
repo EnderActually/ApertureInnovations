@@ -65,7 +65,7 @@ public class PortalGunColoringRecipe extends CustomRecipe
 	@Override
 	public ItemStack assemble(CraftingContainer container, RegistryAccess registryAccess)
 	{
-		List<Pair<Integer, ItemStack>> list = Lists.newArrayList();
+		List<ItemStack> list = Lists.newArrayList();
 		ItemStack gunItemStack = ItemStack.EMPTY;
 		ItemStack secondGunStack = ItemStack.EMPTY;
 		int gunStack = -1;
@@ -90,7 +90,7 @@ public class PortalGunColoringRecipe extends CustomRecipe
 					if (!(item instanceof ColorfulGelItem))
 						return ItemStack.EMPTY;
 
-					list.add(new Pair<>(i, itemstack1));
+					list.add(itemstack1);
 				}
 			}
 		}
@@ -99,17 +99,16 @@ public class PortalGunColoringRecipe extends CustomRecipe
 
 		for(int i = 0; i < list.size(); i++)
 		{
-			int slotID = list.get(i).getA();
-			ItemStack gelStack = list.get(i).getB();
+			ItemStack gelStack = list.get(i);
 			ColorfulGelItem gel = (ColorfulGelItem) gelStack.getItem();
 
-			if(slotID-gunStack == -1)
+			if(i == 0)
 				gunItem.setPrimaryStripeColor(gunItemStack, gel.getColor(gelStack));
-			if(slotID-gunStack == 1)
+			if(i == 1)
 				gunItem.setSecondaryStripeColor(gunItemStack, gel.getColor(gelStack));
-			if(slotID-gunStack == -3)
+			if(i == 2)
 				gunItem.setPrimaryPortalColor(gunItemStack, gel.getColor(gelStack));
-			if(slotID-gunStack == 3)
+			if(i == 3)
 				gunItem.setSecondaryPortalColor(gunItemStack, gel.getColor(gelStack));
 		}
 
