@@ -20,7 +20,7 @@ public class ItemInit
 	public static final RegistryObject<Item> PORTAL_GUN = ITEMS.register("portal_gun",
 			() -> new PortalGunItem(new Item.Properties().stacksTo(1).fireResistant()));
 	public static final RegistryObject<Item> COLORFUL_GEL = ITEMS.register("colorful_gel",
-			() -> new ColorfulGelItem(new Item.Properties().stacksTo(1)));
+			() -> new ColorfulGelItem(new Item.Properties().stacksTo(64)));
 
 	public static final RegistryObject<Item> LONG_FALL_BOOTS = ITEMS.register("long_fall_boots",
 			() -> new LongFallBootsItem(ArmorMaterials.NETHERITE, ArmorItem.Type.BOOTS, new Item.Properties().stacksTo(1).fireResistant()));

@@ -1,5 +1,6 @@
 package net.mistersecret312.aperture_innovations.items;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
@@ -19,9 +20,17 @@ public class ColorfulGelItem extends Item
 	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> components,
 								TooltipFlag flag)
 	{
+		components.add(Component.translatable("item.aperture_innovations.colorful_gel.tooltip").withStyle(ChatFormatting.DARK_PURPLE));
+
 		int gelColor = getColor(stack);
 		if(gelColor != -1)
 			components.add(Component.translatable("item.aperture_innovations.colorful_gel.color", Integer.toHexString(gelColor).toUpperCase()).withStyle(style -> style.withColor(gelColor)));
+	}
+
+	@Override
+	public int getMaxStackSize(ItemStack stack)
+	{
+		return getColor(stack) != -1 ? 16 : 64;
 	}
 
 	public void setColor(ItemStack stack, int color)

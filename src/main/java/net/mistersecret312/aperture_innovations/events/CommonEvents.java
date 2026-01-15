@@ -251,6 +251,13 @@ public class CommonEvents
 								new ClientboundPortalSoundsPacket.EnterPortal(uuid, isPrimary));
 
 						Quaternionf rotationQ = new Quaternionf(Axis.YP.rotationDegrees(rotation-180));
+						if(isOnWall && otherWall)
+						{
+							if(rotation == 0)
+								rotationQ = new Quaternionf();
+							if(rotation == 180)
+								rotationQ = new Quaternionf(Axis.YP.rotationDegrees(180));
+						}
 
 						Vector3f newSpeed = oldSpeed.rotate(rotationQ);
 						if(!isOnWall && !otherWall)

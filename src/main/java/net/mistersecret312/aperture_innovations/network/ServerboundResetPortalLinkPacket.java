@@ -50,6 +50,12 @@ public class ServerboundResetPortalLinkPacket
 
 				PortalLinkData linkData = PortalLinkData.get(level);
 				PortalLink link = linkData.getLink(gunStack);
+				PortalLink pairLink = null;
+
+				UUID pairID = portalGun.getPair(gunStack);
+				if(pairID != null)
+					pairLink = linkData.getLink(pairID);
+
 				if(link == null)
 				{
 					linkData.addFreshLink(linkID);
@@ -58,6 +64,14 @@ public class ServerboundResetPortalLinkPacket
 				if((link.posPrimary == null && !link.moonshotPrimary)
 						   && (link.posSecondary == null) && !link.moonshotSecondary)
 					return;
+
+				if(pairLink != null && dualityState != 2)
+				{
+					if(dualityState == 1 && (pairLink.posSecondary == null && !pairLink.moonshotSecondary))
+						return;
+					if(dualityState == 0 && (pairLink.posPrimary == null && !pairLink.moonshotPrimary))
+						return;
+				}
 
 				if(dualityState == 2)
 					link.reset(level);
