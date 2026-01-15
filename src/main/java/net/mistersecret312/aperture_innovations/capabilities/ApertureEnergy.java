@@ -19,7 +19,7 @@ public abstract class ApertureEnergy implements IEnergyStorage, INBTSerializable
 
 	public ApertureEnergy(long capacity, long maxReceive, long maxExtract)
 	{
-		this.energy = capacity;
+		this.energy = 0;
 		this.capacity = capacity;
 		this.maxReceive = maxReceive;
 		this.maxExtract = maxExtract;
@@ -43,11 +43,6 @@ public abstract class ApertureEnergy implements IEnergyStorage, INBTSerializable
 		if(energyReceived != 0)
 			onEnergyChanged(energyReceived, simulate);
 		return energyReceived;
-	}
-
-	public long receiveZeroPointEnergy(long maxReceive, boolean simulate)
-	{
-		return receiveLongEnergy(maxReceive, simulate);
 	}
 
 	@Override

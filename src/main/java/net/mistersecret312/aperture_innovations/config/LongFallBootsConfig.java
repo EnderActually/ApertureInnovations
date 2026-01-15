@@ -12,7 +12,7 @@ public class LongFallBootsConfig
 	{
 		long_fall_boots_use_energy = server
 			.comment("If true, the Long Fall Boots will require energy to dampen fall/impact damage")
-			.define("long_fall_boots_use_energy", true);
+			.define("long_fall_boots_use_energy", false);
 
 		long_fall_boots_max_energy_stored = server
 			.comment("The maximum amount of energy the Long Fall Boots can store in itself")

@@ -92,11 +92,6 @@ public class LongFallBootsItem extends ArmorItem
 		return LongFallBootsConfig.long_fall_boots_max_energy_stored.get();
 	}
 
-	public static long getTransfer()
-	{
-		return 1000L;
-	}
-
 	@Override
 	public final ICapabilityProvider initCapabilities(ItemStack stack, CompoundTag tag)
 	{
@@ -111,13 +106,13 @@ public class LongFallBootsItem extends ArmorItem
 			@Override
 			public long maxReceive()
 			{
-				return getTransfer();
+				return 1000L;
 			}
 
 			@Override
 			public long maxExtract()
 			{
-				return getTransfer();
+				return 1000L;
 			}
 		};
 	}

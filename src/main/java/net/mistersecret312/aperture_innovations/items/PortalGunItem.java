@@ -183,7 +183,10 @@ public class PortalGunItem extends Item implements GeoItem
 				stack.getCapability(ForgeCapabilities.ENERGY).ifPresent(cap -> {
 					if(cap instanceof ApertureEnergy energy)
 					{
-						long toExtract = PortalGunConfig.portal_gun_passive_consumption.get();
+						long toExtract = link.isInterdimensionalLink() ?
+												 PortalGunConfig.portal_gun_passive_consumption.get() :
+												 PortalGunConfig.portal_gun_interdimensional_passive_consumption.get();
+
 						long extracted = energy.extractLongEnergy(toExtract, false);
 						if(extracted < toExtract)
 						{
@@ -241,11 +244,6 @@ public class PortalGunItem extends Item implements GeoItem
 		return PortalGunConfig.portal_gun_max_energy_stored.get();
 	}
 
-	public static long getTransfer()
-	{
-		return PortalGunConfig.portal_gun_uses_energy.get() ? 10000L : 0L;
-	}
-
 	@Override
 	public final ICapabilityProvider initCapabilities(ItemStack stack, CompoundTag tag)
 	{
@@ -260,13 +258,19 @@ public class PortalGunItem extends Item implements GeoItem
 			@Override
 			public long maxReceive()
 			{
-				return getTransfer();
+				return 10000L;
 			}
 
 			@Override
 			public long maxExtract()
 			{
-				return getTransfer();
+				return 10000L;
+			}
+
+			@Override
+			public boolean canReceiveEnergy()
+			{
+				return true;
 			}
 		};
 	}

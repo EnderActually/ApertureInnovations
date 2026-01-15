@@ -239,11 +239,13 @@ public class PortalUtilities
 
 	public static Pair<UUID, Boolean> getClosestPortal(Entity entity)
 	{
-		Level level = entity.level();
-
 		UUID uuid = null;
 		boolean isPrimary = false;
 		double closestDistance = Double.MAX_VALUE;
+		if(entity == null)
+			return Pair.of(uuid, isPrimary);
+
+		Level level = entity.level();
 
 		if(level.isClientSide() && entity != null)
 		{

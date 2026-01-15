@@ -11,6 +11,7 @@ public class PortalGunConfig
 	public static ForgeConfigSpec.LongValue portal_gun_max_energy_stored;
 	public static ForgeConfigSpec.LongValue portal_gun_shoot_consumption;
 	public static ForgeConfigSpec.LongValue portal_gun_passive_consumption;
+	public static ForgeConfigSpec.LongValue portal_gun_interdimensional_passive_consumption;
 	public static ForgeConfigSpec.BooleanValue portal_gun_consume_on_shot;
 
 	public static void init(ForgeConfigSpec.Builder server)
@@ -25,7 +26,7 @@ public class PortalGunConfig
 
 		portal_gun_uses_energy = server
 			.comment("If true, the Portal Gun will require energy to create and upkeep portals")
-			.define("portal_gun_uses_energy", true);
+			.define("portal_gun_uses_energy", false);
 
 		portal_gun_max_energy_stored = server
 			.comment("The maximum amount of energy the Portal Gun can store in itself")
@@ -42,5 +43,9 @@ public class PortalGunConfig
 		portal_gun_passive_consumption = server
 			.comment("The amount of energy the Portal Gun uses when two portals are open")
 			.defineInRange("portal_gun_passive_consumption", 10, 0L, Long.MAX_VALUE);
+
+		portal_gun_interdimensional_passive_consumption = server
+			.comment("The amount of energy the Portal Gun uses when two portals are open")
+			.defineInRange("portal_gun_interdimensional_passive_consumption", 100, 0L, Long.MAX_VALUE);
 	}
 }

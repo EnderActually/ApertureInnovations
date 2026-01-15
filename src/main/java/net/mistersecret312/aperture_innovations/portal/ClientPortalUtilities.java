@@ -90,6 +90,12 @@ public class ClientPortalUtilities
 		}
 	}
 
+	public static ResourceLocation getPortalGunTexture(ClientPortalLink link)
+	{
+		ClientPortalGunVariant variant = link.getVariant();
+		return variant.getTexture();
+	}
+
 	public static ResourceLocation getPortalClosedTexture(ClientPortalLink link, boolean isPrimary)
 	{
 		ClientPortalGunVariant variant = link.getVariant();

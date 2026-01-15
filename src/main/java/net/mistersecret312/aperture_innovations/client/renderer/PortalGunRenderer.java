@@ -116,15 +116,16 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
 	protected @Nullable ResourceLocation getTextureOverrideForBone(GeoBone bone, PortalGunItem animatable,
 																   float partialTick)
 	{
-		List<String> gunCore = Lists.newArrayList("CoreOuter", "CoreInner", "PortalLight", "Muzzle");
-		if(gunCore.contains(bone.getName()))
+		int portal = this.getAnimatable().getLastShotPortal(this.currentItemStack);
+		ClientPortalLink link = PortalUtilities.getPortalLinks().get(this.getAnimatable().getUUID(this.currentItemStack, false));
+		if(link != null)
 		{
-			int portal = this.getAnimatable().getLastShotPortal(this.currentItemStack);
-			ClientPortalLink link = PortalUtilities.getPortalLinks().get(this.getAnimatable().getUUID(this.currentItemStack, false));
-			if(link != null)
+			List<String> gunCore = Lists.newArrayList("CoreOuter", "CoreInner", "PortalLight", "Muzzle");
+			if(gunCore.contains(bone.getName()))
 				return ClientPortalUtilities.getPortalGunCoreTexture(link, portal);
+			else return ClientPortalUtilities.getPortalGunTexture(link);
 		}
-		return new ResourceLocation(ApertureInnovations.MODID, "textures/item/portal_gun_2.png");
+		return new ResourceLocation(ApertureInnovations.MODID, "textures/item/portal_gun.png");
 	}
 
 	@Override
