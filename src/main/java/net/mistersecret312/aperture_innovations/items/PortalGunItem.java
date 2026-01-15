@@ -194,7 +194,9 @@ public class PortalGunItem extends Item implements GeoItem
 				@Nullable IEnergyStorage cap = stack.getCapability(Capabilities.EnergyStorage.ITEM);
 				if(cap != null && cap instanceof ApertureEnergy energy)
 				{
-					long toExtract = PortalGunConfig.portal_gun_passive_consumption.get();
+					long toExtract = link.isInterdimensionalLink() ?
+											 PortalGunConfig.portal_gun_passive_consumption.get() :
+											 PortalGunConfig.portal_gun_interdimensional_passive_consumption.get();
 					long extracted = energy.extractLongEnergy(toExtract, false);
 					if(extracted < toExtract)
 					{

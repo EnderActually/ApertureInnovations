@@ -228,8 +228,10 @@ public class CommonEvents
 					Vector3f newSpeed = oldSpeed.rotate(rotationQ);
 					if(!isOnWall && !otherWall)
 					{
-						if(!isOnCeiling && !otherCeiling) newSpeed = new Vector3f(newSpeed.x, -newSpeed.y, newSpeed.z);
-						if(isOnCeiling && !otherCeiling) newSpeed = new Vector3f(newSpeed.x, -newSpeed.y, newSpeed.z);
+						if(!isOnCeiling && !otherCeiling)
+							newSpeed = new Vector3f(newSpeed.x, -newSpeed.y + (link.isInterdimensionalLink() ? 0.25f : 0f), newSpeed.z);
+						if(isOnCeiling && !otherCeiling)
+							newSpeed = new Vector3f(newSpeed.x, -newSpeed.y, newSpeed.z);
 					}
 					//						if(!isOnWall && otherWall)
 					//							newSpeed.mul(0.1f, 1f, 0.1f).rotateX(-90);

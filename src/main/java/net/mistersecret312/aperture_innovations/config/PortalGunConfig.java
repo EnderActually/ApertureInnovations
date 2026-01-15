@@ -12,6 +12,7 @@ public class PortalGunConfig
 	public static ModConfigSpec.LongValue portal_gun_max_energy_stored;
 	public static ModConfigSpec.LongValue portal_gun_shoot_consumption;
 	public static ModConfigSpec.LongValue portal_gun_passive_consumption;
+	public static ModConfigSpec.LongValue portal_gun_interdimensional_passive_consumption;
 	public static ModConfigSpec.BooleanValue portal_gun_consume_on_shot;
 
 	public static void init(ModConfigSpec.Builder server)
@@ -43,5 +44,9 @@ public class PortalGunConfig
 		portal_gun_passive_consumption = server
 			.comment("The amount of energy the Portal Gun uses when two portals are open")
 			.defineInRange("portal_gun_passive_consumption", 10L, 0L, Long.MAX_VALUE);
+
+		portal_gun_interdimensional_passive_consumption = server
+			.comment("The amount of energy the Portal Gun uses when two portals are open between dimensions")
+			.defineInRange("portal_gun_interdimensional_passive_consumption", 100L, 0L, Long.MAX_VALUE);
 	}
 }
