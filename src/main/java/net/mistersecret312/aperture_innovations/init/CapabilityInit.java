@@ -10,7 +10,7 @@ import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
 
 @Mod.EventBusSubscriber(modid = ApertureInnovations.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
-public class    CapabilityInit
+public class CapabilityInit
 {
     public static final Capability<ApertureCapability> APERTURE = CapabilityManager.get(new CapabilityToken<ApertureCapability>() {});
 

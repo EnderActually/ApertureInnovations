@@ -1,25 +1,16 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    " W ",
-    "RSG",
-    " B "
+    " D ",
+    "DSD",
+    " D "
   ],
   "key": {
     "S": {
       "item": "minecraft:slime_ball"
     },
-    "W": {
-      "item": "minecraft:white_dye"
-    },
-    "B": {
-      "item": "minecraft:blue_dye"
-    },
-    "R": {
-      "item": "minecraft:red_dye"
-    },
-    "G": {
-      "item": "minecraft:green_dye"
+    "D": {
+      "tag": "forge:dyes"
     }
   },
   "result": {

@@ -17,6 +17,10 @@
     "minecraft:smooth_quartz_stairs",
     "minecraft:smooth_quartz_slab",
     "minecraft:iron_block",
-    "minecraft:calcite"
+    "minecraft:calcite",
+    "minecraft:end_stone",
+    "minecraft:end_stone_bricks",
+    "minecraft:end_stone_brick_stairs",
+    "minecraft:end_stone_brick_slab"
   ]
 }
