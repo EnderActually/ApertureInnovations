@@ -57,6 +57,10 @@ public class ApertureInnovations
 	public static final TagKey<Block> PORTALABLE = TagKey.create(
 			BuiltInRegistries.BLOCK.key(), ResourceLocation.fromNamespaceAndPath(MODID, "portalable"));
 
+	public static ResourceLocation of(String path) {
+		return ResourceLocation.fromNamespaceAndPath(MODID, path);
+	}
+
 	public ApertureInnovations(IEventBus modEventBus, ModContainer modContainer)
 	{
 		ItemInit.register(modEventBus);

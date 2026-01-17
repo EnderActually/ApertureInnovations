@@ -130,8 +130,8 @@ public class PortalRenderer
 		poseStack.scale(scale, scale, scale);
 
 		VertexConsumer consumerA = buffer.getBuffer(
-				PortalRenderTypes.portal(isPrimary ? link.getVariant().primaryPortal.getMaskTexture()
-												 : link.getVariant().secondaryPortal.getMaskTexture()));
+				PortalRenderTypes.portal(isPrimary ? link.getVariant().primaryPortal().getMaskTexture()
+												 : link.getVariant().secondaryPortal().getMaskTexture()));
 
 		consumerA.addVertex(poseStack.last().pose(), -0.5f, -0.5f, 0)
 				 .setUv(0, 1)

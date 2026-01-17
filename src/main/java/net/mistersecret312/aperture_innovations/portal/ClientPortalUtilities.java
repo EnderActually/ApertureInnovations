@@ -19,7 +19,7 @@ public class ClientPortalUtilities
 	{
 		ClientPortalGunVariant variant = link.getVariant();
 		int gunColor = isPrimary ? link.primaryPortalColor() : link.secondaryPortalColor();
-		ColorUtil.RGBA variantColor = isPrimary ? variant.getPrimaryPortal().getColor() : variant.secondaryPortal.getColor();
+		ColorUtil.RGBA variantColor = isPrimary ? variant.primaryPortal().getColor() : variant.secondaryPortal().getColor();
 		if(gunColor == -1)
 			return variantColor;
 		else
@@ -34,16 +34,16 @@ public class ClientPortalUtilities
 		ClientPortalGunVariant variant = link.getVariant();
 		int gunColor = isPrimary ? link.primaryPortalColor() : link.secondaryPortalColor();
 		if(gunColor == -1)
-			return variant.getCrosshairTexture();
+			return variant.crosshairTexture();
 		else
 		{
 			return isPrimary
-						   ? variant.getPrimaryPortal().isGenericColoring()
-									 ? variant.getGenericPortal().getCrosshairTexture() :
-									 variant.getCrosshairTexture()
-						   : variant.getSecondaryPortal().isGenericColoring() ?
-									 variant.getGenericPortal().getCrosshairTexture() :
-									 variant.getCrosshairTexture();
+						   ? variant.primaryPortal().isGenericColoring()
+									 ? variant.genericPortal().getCrosshairTexture() :
+									 variant.crosshairTexture()
+						   : variant.secondaryPortal().isGenericColoring() ?
+									 variant.genericPortal().getCrosshairTexture() :
+									 variant.crosshairTexture();
 		}
 	}
 
@@ -52,15 +52,15 @@ public class ClientPortalUtilities
 		ClientPortalGunVariant variant = link.getVariant();
 		int gunColor = isPrimary ? link.primaryPortalColor() : link.secondaryPortalColor();
 		if(gunColor == -1)
-			return isPrimary ? variant.getPrimaryPortal().getHighlightTexture() : variant.getSecondaryPortal().getHighlightTexture();
+			return isPrimary ? variant.primaryPortal().getHighlightTexture() : variant.secondaryPortal().getHighlightTexture();
 		else
 		{
-			return isPrimary ? variant.getPrimaryPortal().isGenericColoring() ?
-									   variant.getGenericPortal().getHighlightTexture() :
-									   variant.getPrimaryPortal().getHighlightTexture()
-						   : variant.getSecondaryPortal().isGenericColoring() ?
-									 variant.getGenericPortal().getHighlightTexture() :
-									 variant.getSecondaryPortal().getHighlightTexture();
+			return isPrimary ? variant.primaryPortal().isGenericColoring() ?
+									   variant.genericPortal().getHighlightTexture() :
+									   variant.primaryPortal().getHighlightTexture()
+						   : variant.secondaryPortal().isGenericColoring() ?
+									 variant.genericPortal().getHighlightTexture() :
+									 variant.secondaryPortal().getHighlightTexture();
 		}
 
 	}
@@ -69,10 +69,10 @@ public class ClientPortalUtilities
 	{
 		ClientPortalGunVariant variant = link.getVariant();
 
-		ResourceLocation genericCore = variant.getGenericPortal().getCoreTexture();
-		ResourceLocation idleCore = variant.getIdleCoreTexture();
-		ResourceLocation primaryCore = variant.getPrimaryPortal().getCoreTexture();
-		ResourceLocation secondaryCore = variant.getSecondaryPortal().getCoreTexture();
+		ResourceLocation genericCore = variant.genericPortal().getCoreTexture();
+		ResourceLocation idleCore = variant.idleCoreTexture();
+		ResourceLocation primaryCore = variant.primaryPortal().getCoreTexture();
+		ResourceLocation secondaryCore = variant.secondaryPortal().getCoreTexture();
 
 		if(lastPortal == -1)
 			return idleCore;
@@ -83,9 +83,9 @@ public class ClientPortalUtilities
 			return isPrimary ? primaryCore : secondaryCore;
 		else
 		{
-			return isPrimary ? variant.getPrimaryPortal().isGenericColoring() ?
+			return isPrimary ? variant.primaryPortal().isGenericColoring() ?
 									   genericCore : primaryCore
-						     : variant.getSecondaryPortal().isGenericColoring() ?
+						     : variant.secondaryPortal().isGenericColoring() ?
 									   genericCore : secondaryCore;
 		}
 	}
@@ -93,7 +93,7 @@ public class ClientPortalUtilities
 	public static ResourceLocation getPortalGunTexture(ClientPortalLink link)
 	{
 		ClientPortalGunVariant variant = link.getVariant();
-		return variant.getTexture();
+		return variant.texture();
 	}
 
 	public static ResourceLocation getPortalClosedTexture(ClientPortalLink link, boolean isPrimary)
@@ -101,15 +101,15 @@ public class ClientPortalUtilities
 		ClientPortalGunVariant variant = link.getVariant();
 		int gunColor = isPrimary ? link.primaryPortalColor() : link.secondaryPortalColor();
 		if(gunColor == -1)
-			return isPrimary ? variant.getPrimaryPortal().getClosedTexture() : variant.getSecondaryPortal().getClosedTexture();
+			return isPrimary ? variant.primaryPortal().getClosedTexture() : variant.secondaryPortal().getClosedTexture();
 		else
 		{
-			return isPrimary ? variant.getPrimaryPortal().isGenericColoring() ?
-									   variant.getGenericPortal().getClosedTexture() :
-									   variant.getPrimaryPortal().getClosedTexture()
-						   : variant.getSecondaryPortal().isGenericColoring() ?
-									 variant.getGenericPortal().getClosedTexture() :
-									 variant.getSecondaryPortal().getClosedTexture();
+			return isPrimary ? variant.primaryPortal().isGenericColoring() ?
+									   variant.genericPortal().getClosedTexture() :
+									   variant.primaryPortal().getClosedTexture()
+						   : variant.secondaryPortal().isGenericColoring() ?
+									 variant.genericPortal().getClosedTexture() :
+									 variant.secondaryPortal().getClosedTexture();
 		}
 	}
 
@@ -118,15 +118,15 @@ public class ClientPortalUtilities
 		ClientPortalGunVariant variant = link.getVariant();
 		int gunColor = isPrimary ? link.primaryPortalColor() : link.secondaryPortalColor();
 		if(gunColor == -1)
-			return isPrimary ? variant.getPrimaryPortal().getVortexTexture() : variant.getSecondaryPortal().getVortexTexture();
+			return isPrimary ? variant.primaryPortal().getVortexTexture() : variant.secondaryPortal().getVortexTexture();
 		else
 		{
-			return isPrimary ? variant.getPrimaryPortal().isGenericColoring() ?
-									   variant.getGenericPortal().getVortexTexture() :
-									   variant.getPrimaryPortal().getVortexTexture()
-						   : variant.getSecondaryPortal().isGenericColoring() ?
-									 variant.getGenericPortal().getVortexTexture() :
-									 variant.getSecondaryPortal().getVortexTexture();
+			return isPrimary ? variant.primaryPortal().isGenericColoring() ?
+									   variant.genericPortal().getVortexTexture() :
+									   variant.primaryPortal().getVortexTexture()
+						   : variant.secondaryPortal().isGenericColoring() ?
+									 variant.genericPortal().getVortexTexture() :
+									 variant.secondaryPortal().getVortexTexture();
 		}
 	}
 

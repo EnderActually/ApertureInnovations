@@ -2,11 +2,8 @@ package net.mistersecret312.aperture_innovations.sounds;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
-import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortalGunVariant;
-import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalUtilities;
 import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
@@ -113,60 +110,60 @@ public class SoundAccess
 	{
 		ClientPortalGunVariant variant = PortalUtilities.getPortalLinks().get(uuid).getVariant();
 		if(isPrimary)
-			return SoundEvent.createVariableRangeEvent(variant.getPrimaryPortal().getAmbientSound());
-		else return SoundEvent.createVariableRangeEvent(variant.getSecondaryPortal().getAmbientSound());
+			return SoundEvent.createVariableRangeEvent(variant.primaryPortal().getAmbientSound());
+		else return SoundEvent.createVariableRangeEvent(variant.secondaryPortal().getAmbientSound());
 	}
 
 	public static SoundEvent getPortalOpenSound(UUID uuid, boolean isPrimary)
 	{
 		ClientPortalGunVariant variant = PortalUtilities.getPortalLinks().get(uuid).getVariant();
 		if(isPrimary)
-			return SoundEvent.createVariableRangeEvent(variant.getPrimaryPortal().getOpeningSound());
-		else return SoundEvent.createVariableRangeEvent(variant.getSecondaryPortal().getOpeningSound());
+			return SoundEvent.createVariableRangeEvent(variant.primaryPortal().getOpeningSound());
+		else return SoundEvent.createVariableRangeEvent(variant.secondaryPortal().getOpeningSound());
 	}
 
 	public static SoundEvent getEnterPortalSound(UUID uuid, boolean isPrimary)
 	{
 		ClientPortalGunVariant variant = PortalUtilities.getPortalLinks().get(uuid).getVariant();
 		if(isPrimary)
-			return SoundEvent.createVariableRangeEvent(variant.getPrimaryPortal().getEnterSound());
-		else return SoundEvent.createVariableRangeEvent(variant.getSecondaryPortal().getEnterSound());
+			return SoundEvent.createVariableRangeEvent(variant.primaryPortal().getEnterSound());
+		else return SoundEvent.createVariableRangeEvent(variant.secondaryPortal().getEnterSound());
 	}
 
 	public static SoundEvent getFizzlePortalSound(UUID uuid, boolean isPrimary)
 	{
 		ClientPortalGunVariant variant = PortalUtilities.getPortalLinks().get(uuid).getVariant();
 		if(isPrimary)
-			return SoundEvent.createVariableRangeEvent(variant.getPrimaryPortal().getFizzleSound());
-		else return SoundEvent.createVariableRangeEvent(variant.getSecondaryPortal().getFizzleSound());
+			return SoundEvent.createVariableRangeEvent(variant.primaryPortal().getFizzleSound());
+		else return SoundEvent.createVariableRangeEvent(variant.secondaryPortal().getFizzleSound());
 	}
 
 	public static SoundEvent getInvalidSurfaceSound(UUID uuid, boolean isPrimary)
 	{
 		ClientPortalGunVariant variant = PortalUtilities.getPortalLinks().get(uuid).getVariant();
 		if(isPrimary)
-			return SoundEvent.createVariableRangeEvent(variant.getPrimaryPortal().getInvalidSurfaceSound());
-		else return SoundEvent.createVariableRangeEvent(variant.getSecondaryPortal().getInvalidSurfaceSound());
+			return SoundEvent.createVariableRangeEvent(variant.primaryPortal().getInvalidSurfaceSound());
+		else return SoundEvent.createVariableRangeEvent(variant.secondaryPortal().getInvalidSurfaceSound());
 	}
 
 	public static SoundEvent getGunActivateSound(UUID uuid)
 	{
 		ClientPortalGunVariant variant = PortalUtilities.getPortalLinks().get(uuid).getVariant();
-		return SoundEvent.createVariableRangeEvent(variant.getActivationSound());
+		return SoundEvent.createVariableRangeEvent(variant.activationSound());
 	}
 
 	public static SoundEvent getShotPortalSound(UUID uuid, boolean isPrimary)
 	{
 		ClientPortalGunVariant variant = PortalUtilities.getPortalLinks().get(uuid).getVariant();
 		if(isPrimary)
-			return SoundEvent.createVariableRangeEvent(variant.getPrimaryPortal().getShotSound());
-		else return SoundEvent.createVariableRangeEvent(variant.getSecondaryPortal().getShotSound());
+			return SoundEvent.createVariableRangeEvent(variant.primaryPortal().getShotSound());
+		else return SoundEvent.createVariableRangeEvent(variant.secondaryPortal().getShotSound());
 	}
 
 	public static SoundEvent getGunResetSound(UUID uuid)
 	{
 		ClientPortalGunVariant variant = PortalUtilities.getPortalLinks().get(uuid).getVariant();
-		return SoundEvent.createVariableRangeEvent(variant.getResetSound());
+		return SoundEvent.createVariableRangeEvent(variant.resetSound());
 	}
 
 }

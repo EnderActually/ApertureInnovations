@@ -8,7 +8,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.Util;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
@@ -25,7 +24,6 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import software.bernie.geckolib.cache.object.GeoBone;
 import software.bernie.geckolib.model.DefaultedItemGeoModel;
-import software.bernie.geckolib.renderer.layer.AutoGlowingGeoLayer;
 import software.bernie.geckolib.renderer.specialty.DynamicGeoItemRenderer;
 import software.bernie.geckolib.util.RenderUtil;
 
@@ -33,190 +31,178 @@ import java.awt.*;
 import java.util.List;
 import java.util.function.BiFunction;
 
-public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
-{
-	public PortalGunRenderer()
-	{
-		super(new DefaultedItemGeoModel<>(ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "portal_gun")));
-	}
+public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem> {
+    public PortalGunRenderer() {
+        super(new DefaultedItemGeoModel<>(ApertureInnovations.of( "portal_gun")));
+    }
 
-	@Override
-	protected boolean boneRenderOverride(PoseStack poseStack, GeoBone bone, MultiBufferSource bufferSource,
-										 VertexConsumer buffer, float partialTick, int packedLight, int packedOverlay,
-										 int colour)
-	{
-		List<String> gunCore = Lists.newArrayList("CoreOuter", "CoreInner", "PortalLight", "Muzzle");
-		if(gunCore.contains(bone.getName()))
-		{
-			int portal = this.getAnimatable().getLastShotPortal(this.currentItemStack);
-			ClientPortalLink link = PortalUtilities.getPortalLinks().get(this.getAnimatable().getUUID(this.currentItemStack, false));
+    @Override
+    protected boolean boneRenderOverride(PoseStack poseStack, GeoBone bone, MultiBufferSource bufferSource,
+                                         VertexConsumer buffer, float partialTick, int packedLight, int packedOverlay,
+                                         int colour) {
+        List<String> gunCore = Lists.newArrayList("CoreOuter", "CoreInner", "PortalLight", "Muzzle");
+        if (gunCore.contains(bone.getName())) {
+            int portal = this.getAnimatable().getLastShotPortal(this.currentItemStack);
+            ClientPortalLink link = PortalUtilities.getPortalLinks().get(this.getAnimatable().getUUID(this.currentItemStack, false));
 
-			if(portal == -1)
-				return super.boneRenderOverride(poseStack, bone, bufferSource, buffer,
-						partialTick, packedLight, packedOverlay, colour);
+            if (portal == -1)
+                return super.boneRenderOverride(poseStack, bone, bufferSource, buffer,
+                        partialTick, packedLight, packedOverlay, colour);
 
-			ColorUtil.RGBA color = ClientPortalUtilities.getPortalColor(link, portal == 0);
-			Color originalColor = new Color(colour, true);
+            ColorUtil.RGBA color = ClientPortalUtilities.getPortalColor(link, portal == 0);
+            Color originalColor = new Color(colour, true);
 
-			float red = (originalColor.getRed() * color.red())/255F;
-			float green = (originalColor.getGreen() * color.green())/255F;
-			float blue = (originalColor.getBlue() * color.blue())/255F;
-			float alpha = (originalColor.getAlpha() * color.alpha())/255F;
+            float red = (originalColor.getRed() * color.red()) / 255F;
+            float green = (originalColor.getGreen() * color.green()) / 255F;
+            float blue = (originalColor.getBlue() * color.blue()) / 255F;
+            float alpha = (originalColor.getAlpha() * color.alpha()) / 255F;
 
-			Color resultColor = new Color(red, green, blue, alpha);
+            Color resultColor = new Color(red, green, blue, alpha);
 
-			renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, resultColor.getRGB());
-			return true;
-		}
+            renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, resultColor.getRGB());
+            return true;
+        }
 
-		if(bone.getName().equals("StripePrimary") || bone.getName().equals("StripeSecondary"))
-		{
-			boolean isPrimary = bone.getName().equals("StripePrimary");
-			int stripeColor = isPrimary ? this.getAnimatable().getPrimaryStripeColor(this.currentItemStack) :
-					this.getAnimatable().getSecondaryStripeColor(this.currentItemStack);
-			if(stripeColor == -1)
-			{
-				ClientPortalLink link = PortalUtilities.getPortalLinks().get(this.getAnimatable().getUUID(this.currentItemStack, false));
-				ClientPortalGunVariant variant = ClientPortalGunVariant.DEFAULT_VARIANT;
-				if(link != null)
-					variant = link.getVariant();
-				ColorUtil.RGBA color = isPrimary ? variant.getPrimaryStripeColor() : variant.getSecondaryStripeColor();
+        if (bone.getName().equals("StripePrimary") || bone.getName().equals("StripeSecondary")) {
+            boolean isPrimary = bone.getName().equals("StripePrimary");
+            int stripeColor = isPrimary ? this.getAnimatable().getPrimaryStripeColor(this.currentItemStack) :
+                    this.getAnimatable().getSecondaryStripeColor(this.currentItemStack);
+            if (stripeColor == -1) {
+                ClientPortalLink link = PortalUtilities.getPortalLinks().get(this.getAnimatable().getUUID(this.currentItemStack, false));
+                ClientPortalGunVariant variant = ClientPortalGunVariant.DEFAULT_VARIANT;
+                if (link != null)
+                    variant = link.getVariant();
+                ColorUtil.RGBA color = isPrimary ? variant.primaryStripeColor() : variant.secondaryStripeColor();
 
-				if(color.red() == 1F && color.green() == 1F && color.blue() == 1F && color.alpha() == 1F)
-					return true;
+                if (color.red() == 1F && color.green() == 1F && color.blue() == 1F && color.alpha() == 1F)
+                    return true;
 
-				Color originalColor = new Color(colour, true);
+                Color originalColor = new Color(colour, true);
 
-				float red = (originalColor.getRed() * color.red())/255F;
-				float green = (originalColor.getGreen() * color.green())/255F;
-				float blue = (originalColor.getBlue() * color.blue())/255F;
-				float alpha = (originalColor.getAlpha() * color.alpha())/255F;
+                float red = (originalColor.getRed() * color.red()) / 255F;
+                float green = (originalColor.getGreen() * color.green()) / 255F;
+                float blue = (originalColor.getBlue() * color.blue()) / 255F;
+                float alpha = (originalColor.getAlpha() * color.alpha()) / 255F;
 
-				Color resultColor = new Color(red, green, blue, alpha);
+                Color resultColor = new Color(red, green, blue, alpha);
 
-				renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, resultColor.getRGB());				return true;
-			}
-			else
-			{
-				Color color = new Color(stripeColor, false);
-				if(color.getRGB() == -1)
-					return true;
+                renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, resultColor.getRGB());
+            } else {
+                Color color = new Color(stripeColor, false);
+                if (color.getRGB() == -1)
+                    return true;
 
-				Color originalColor = new Color(colour, true);
+                Color originalColor = new Color(colour, true);
 
-				float red = (originalColor.getRed() * color.getRed())/255F;
-				float green = (originalColor.getGreen() * color.getGreen())/255F;
-				float blue = (originalColor.getBlue() * color.getBlue())/255F;
-				float alpha = (originalColor.getAlpha() * color.getAlpha())/255F;
+                float red = (originalColor.getRed() * color.getRed()) / 255F;
+                float green = (originalColor.getGreen() * color.getGreen()) / 255F;
+                float blue = (originalColor.getBlue() * color.getBlue()) / 255F;
+                float alpha = (originalColor.getAlpha() * color.getAlpha()) / 255F;
 
-				Color resultColor = new Color(red/255F, green/255F, blue/255F, alpha/255F);
+                Color resultColor = new Color(red / 255F, green / 255F, blue / 255F, alpha / 255F);
 
-				renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, resultColor.getRGB());				return true;
-			}
-		}
+                renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, resultColor.getRGB());
+            }
+            return true;
+        }
 
-		return super.boneRenderOverride(poseStack, bone, bufferSource, buffer, partialTick, packedLight, packedOverlay,
-				colour);
-	}
+        return super.boneRenderOverride(poseStack, bone, bufferSource, buffer, partialTick, packedLight, packedOverlay,
+                colour);
+    }
 
-	@Override
-	protected @Nullable RenderType getRenderTypeOverrideForBone(GeoBone bone, PortalGunItem animatable,
-																ResourceLocation texturePath,
-																MultiBufferSource bufferSource, float partialTick)
-	{
-		List<String> gunCore = Lists.newArrayList("CoreOuter", "CoreInner", "PortalLight", "Muzzle");
-		if(gunCore.contains(bone.getName()))
-		{
-			return GLOWING_RENDER_TYPE.apply(getTextureOverrideForBone(bone, animatable, partialTick), false);
-		}
-		return super.getRenderTypeOverrideForBone(bone, animatable, texturePath, bufferSource, partialTick);
-	}
+    @Override
+    protected @Nullable RenderType getRenderTypeOverrideForBone(GeoBone bone, PortalGunItem animatable,
+                                                                ResourceLocation texturePath,
+                                                                MultiBufferSource bufferSource, float partialTick) {
+        List<String> gunCore = Lists.newArrayList("CoreOuter", "CoreInner", "PortalLight", "Muzzle");
+        if (gunCore.contains(bone.getName())) {
+            return GLOWING_RENDER_TYPE.apply(getTextureOverrideForBone(bone, animatable, partialTick), false);
+        }
+        return super.getRenderTypeOverrideForBone(bone, animatable, texturePath, bufferSource, partialTick);
+    }
 
-	@Override
-	protected @Nullable ResourceLocation getTextureOverrideForBone(GeoBone bone, PortalGunItem animatable,
-																   float partialTick)
-	{
-		int portal = this.getAnimatable().getLastShotPortal(this.currentItemStack);
-		ClientPortalLink link = PortalUtilities.getPortalLinks().get(this.getAnimatable().getUUID(this.currentItemStack, false));
-		if(link != null)
-		{
-			List<String> gunCore = Lists.newArrayList("CoreOuter", "CoreInner", "PortalLight", "Muzzle");
-			if(gunCore.contains(bone.getName()))
-				return ClientPortalUtilities.getPortalGunCoreTexture(link, portal);
-			else return ClientPortalUtilities.getPortalGunTexture(link);
-		}
-		return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "textures/item/portal_gun.png");
-	}
+    @Override
+    protected @Nullable ResourceLocation getTextureOverrideForBone(GeoBone bone, PortalGunItem animatable,
+                                                                   float partialTick) {
+        int portal = this.getAnimatable().getLastShotPortal(this.currentItemStack);
+        ClientPortalLink link = PortalUtilities.getPortalLinks().get(this.getAnimatable().getUUID(this.currentItemStack, false));
+        if (link != null) {
+            List<String> gunCore = Lists.newArrayList("CoreOuter", "CoreInner", "PortalLight", "Muzzle");
+            if (gunCore.contains(bone.getName()))
+                return ClientPortalUtilities.getPortalGunCoreTexture(link, portal);
+            else return ClientPortalUtilities.getPortalGunTexture(link);
+        }
+        return ApertureInnovations.of( "textures/item/portal_gun.png");
+    }
 
-	@Override
-	public RenderType getRenderType(PortalGunItem animatable, ResourceLocation texture,
-									@Nullable MultiBufferSource bufferSource, float partialTick)
-	{
-		return RenderType.entityTranslucent(texture);
-	}
+    @Override
+    public RenderType getRenderType(PortalGunItem animatable, ResourceLocation texture,
+                                    @Nullable MultiBufferSource bufferSource, float partialTick) {
+        return RenderType.entityTranslucent(texture);
+    }
 
-	@Override
-	public void renderRecursively(PoseStack poseStack, PortalGunItem animatable, GeoBone bone, RenderType renderType, MultiBufferSource bufferSource, VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight, int packedOverlay, int colour) {
-		poseStack.pushPose();
-		RenderUtil.translateMatrixToBone(poseStack, bone);
-		RenderUtil.translateToPivotPoint(poseStack, bone);
-		RenderUtil.rotateMatrixAroundBone(poseStack, bone);
-		RenderUtil.scaleMatrixForBone(poseStack, bone);
+    @Override
+    public void renderRecursively(PoseStack poseStack, PortalGunItem animatable, GeoBone bone, RenderType renderType, MultiBufferSource bufferSource, VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight, int packedOverlay, int colour) {
+        poseStack.pushPose();
+        RenderUtil.translateMatrixToBone(poseStack, bone);
+        RenderUtil.translateToPivotPoint(poseStack, bone);
+        RenderUtil.rotateMatrixAroundBone(poseStack, bone);
+        RenderUtil.scaleMatrixForBone(poseStack, bone);
 
-		if (bone.isTrackingMatrices()) {
-			Matrix4f poseState = new Matrix4f(poseStack.last().pose());
+        if (bone.isTrackingMatrices()) {
+            Matrix4f poseState = new Matrix4f(poseStack.last().pose());
 
-			bone.setModelSpaceMatrix(RenderUtil.invertAndMultiplyMatrices(poseState, this.modelRenderTranslations));
-			bone.setLocalSpaceMatrix(RenderUtil.invertAndMultiplyMatrices(poseState, this.itemRenderTranslations));
-		}
+            bone.setModelSpaceMatrix(RenderUtil.invertAndMultiplyMatrices(poseState, this.modelRenderTranslations));
+            bone.setLocalSpaceMatrix(RenderUtil.invertAndMultiplyMatrices(poseState, this.itemRenderTranslations));
+        }
 
-		RenderUtil.translateAwayFromPivotPoint(poseStack, bone);
+        RenderUtil.translateAwayFromPivotPoint(poseStack, bone);
 
-		this.textureOverride = getTextureOverrideForBone(bone, this.animatable, partialTick);
-		ResourceLocation texture = this.textureOverride == null ? getTextureLocation(this.animatable) : this.textureOverride;
-		RenderType renderTypeOverride = getRenderTypeOverrideForBone(bone, this.animatable, texture, bufferSource, partialTick);
+        this.textureOverride = getTextureOverrideForBone(bone, this.animatable, partialTick);
+        ResourceLocation texture = this.textureOverride == null ? getTextureLocation(this.animatable) : this.textureOverride;
+        RenderType renderTypeOverride = getRenderTypeOverrideForBone(bone, this.animatable, texture, bufferSource, partialTick);
 
-		if (texture != null && renderTypeOverride == null)
-			renderTypeOverride = getRenderType(this.animatable, texture, bufferSource, partialTick);
+        if (texture != null && renderTypeOverride == null)
+            renderTypeOverride = getRenderType(this.animatable, texture, bufferSource, partialTick);
 
-		if (renderTypeOverride != null)
-			buffer = bufferSource.getBuffer(renderTypeOverride);
+        if (renderTypeOverride != null)
+            buffer = bufferSource.getBuffer(renderTypeOverride);
 
-		if (!boneRenderOverride(poseStack, bone, bufferSource, buffer, partialTick, packedLight, packedOverlay, colour))
-			super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, colour);
+        if (!boneRenderOverride(poseStack, bone, bufferSource, buffer, partialTick, packedLight, packedOverlay, colour))
+            super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, colour);
 
-		if (renderTypeOverride != null)
-			buffer = bufferSource.getBuffer(renderTypeOverride);
+        if (renderTypeOverride != null)
+            buffer = bufferSource.getBuffer(renderTypeOverride);
 
-		if (!isReRender)
-			applyRenderLayersForBone(poseStack, animatable, bone, renderTypeOverride, bufferSource, buffer, partialTick, packedLight, packedOverlay);
+        if (!isReRender)
+            applyRenderLayersForBone(poseStack, animatable, bone, renderTypeOverride, bufferSource, buffer, partialTick, packedLight, packedOverlay);
 
-		buffer = checkAndRefreshBuffer(isReRender, buffer, bufferSource, renderTypeOverride);
+        buffer = checkAndRefreshBuffer(isReRender, buffer, bufferSource, renderTypeOverride);
 
-		super.renderChildBones(poseStack, animatable, bone, renderType, bufferSource, buffer, isReRender, partialTick, packedLight, packedOverlay, colour);
+        super.renderChildBones(poseStack, animatable, bone, renderType, bufferSource, buffer, isReRender, partialTick, packedLight, packedOverlay, colour);
 
-		poseStack.popPose();
-	}
+        poseStack.popPose();
+    }
 
-	private static final RenderStateShard.ShaderStateShard SHADER_STATE = new RenderStateShard.ShaderStateShard(
-			GameRenderer::getRendertypeEntityTranslucentEmissiveShader);
-	private static final RenderStateShard.TransparencyStateShard TRANSPARENCY_STATE = new RenderStateShard.TransparencyStateShard("translucent_transparency", () -> {
-		RenderSystem.enableBlend();
-		RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-	}, () -> {
-		RenderSystem.disableBlend();
-		RenderSystem.defaultBlendFunc();
-	});
-	private static final RenderStateShard.WriteMaskStateShard WRITE_MASK = new RenderStateShard.WriteMaskStateShard(true, true);
-	private static final BiFunction<ResourceLocation, Boolean, RenderType> GLOWING_RENDER_TYPE = Util.memoize((texture, isGlowing) -> {
-		RenderStateShard.TextureStateShard textureState = new RenderStateShard.TextureStateShard(texture, false, false);
+    private static final RenderStateShard.ShaderStateShard SHADER_STATE = new RenderStateShard.ShaderStateShard(
+            GameRenderer::getRendertypeEntityTranslucentEmissiveShader);
+    private static final RenderStateShard.TransparencyStateShard TRANSPARENCY_STATE = new RenderStateShard.TransparencyStateShard("translucent_transparency", () -> {
+        RenderSystem.enableBlend();
+        RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+    }, () -> {
+        RenderSystem.disableBlend();
+        RenderSystem.defaultBlendFunc();
+    });
+    private static final RenderStateShard.WriteMaskStateShard WRITE_MASK = new RenderStateShard.WriteMaskStateShard(true, true);
+    private static final BiFunction<ResourceLocation, Boolean, RenderType> GLOWING_RENDER_TYPE = Util.memoize((texture, isGlowing) -> {
+        RenderStateShard.TextureStateShard textureState = new RenderStateShard.TextureStateShard(texture, false, false);
 
-		return RenderType.create("geo_glowing_layer", DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 256, false, true,
-				RenderType.CompositeState.builder()
-										 .setShaderState(SHADER_STATE)
-										 .setTextureState(textureState)
-										 .setTransparencyState(TRANSPARENCY_STATE)
-										 .setOverlayState(new RenderStateShard.OverlayStateShard(true))
-										 .setWriteMaskState(WRITE_MASK).createCompositeState(isGlowing));
-	});
+        return RenderType.create("geo_glowing_layer", DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 256, false, true,
+                RenderType.CompositeState.builder()
+                        .setShaderState(SHADER_STATE)
+                        .setTextureState(textureState)
+                        .setTransparencyState(TRANSPARENCY_STATE)
+                        .setOverlayState(new RenderStateShard.OverlayStateShard(true))
+                        .setWriteMaskState(WRITE_MASK).createCompositeState(isGlowing));
+    });
 }

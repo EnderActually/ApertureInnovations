@@ -22,7 +22,13 @@ public class CrosshairOverlay
 {
 	public static final LayeredDraw.Layer OVERLAY = (guiGraphics, deltaTracker) -> {
 			LocalPlayer player = Minecraft.getInstance().player;
+
+			if (Minecraft.getInstance().options.hideGui) return;
+
+			if (!Minecraft.getInstance().options.getCameraType().isFirstPerson()) return;
+
 			if (player == null) return;
+
 
 			PoseStack poseStack = guiGraphics.pose();
 

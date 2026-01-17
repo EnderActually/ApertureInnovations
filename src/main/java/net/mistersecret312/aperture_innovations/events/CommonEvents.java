@@ -188,7 +188,7 @@ public class CommonEvents
 
 					if(!otherWall && !isOnWall && !isOnCeiling && otherCeiling)
 					{
-						otherPortalPos = otherPortalPos.add(0, -3, 0);
+						otherPortalPos = otherPortalPos.add(0, -2, 0);
 					}
 					if(!otherWall && !isOnWall && !isOnCeiling && !otherCeiling)
 					{
@@ -200,7 +200,7 @@ public class CommonEvents
 					}
 					if(isOnWall && otherCeiling)
 					{
-						otherPortalPos = otherPortalPos.add(0, -3, 0);
+						otherPortalPos = otherPortalPos.add(0, -2, 0);
 					}
 					if(isOnWall && !otherWall && !otherCeiling)
 					{
