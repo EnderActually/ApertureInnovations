@@ -402,6 +402,8 @@ public class CommonEvents
 		{
 			Pair<UUID, Boolean> closestPortal = PortalUtilities.getClosestPortal(player);
 			UUID linkID = closestPortal.getFirst();
+			if(linkID == null)
+				return;
 			boolean isPrimary = closestPortal.getSecond();
 
 			Vec3 portalPos = PortalUtilities.getPortalPos(level, linkID, isPrimary);
@@ -428,6 +430,8 @@ public class CommonEvents
 		{
 			Pair<UUID, Boolean> closestPortal = PortalUtilities.getClosestPortal(player);
 			UUID linkID = closestPortal.getFirst();
+			if(linkID == null)
+				return;
 			boolean isPrimary = closestPortal.getSecond();
 
 			Vec3 portalPos = PortalUtilities.getPortalPos(level, linkID, isPrimary);
