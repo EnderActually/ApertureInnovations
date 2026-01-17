@@ -20,6 +20,6 @@ public class LongFallBootsConfig
 
 		fall_energy_consumption = server
 			.comment("The amount of energy the Long Fall Boots use when dampening the damage")
-			.defineInRange("portal_gun_shoot_consumption", 250L, 0L, Long.MAX_VALUE);
+			.defineInRange("fall_energy_consumption", 250L, 0L, Long.MAX_VALUE);
 	}
 }
