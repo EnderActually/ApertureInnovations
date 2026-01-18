@@ -19,7 +19,7 @@ import java.util.UUID;
 
 public class ApertureCapability implements INBTSerializable<CompoundTag>
 {
-	public Vector3d distanceVec;
+	public Vector3d distanceVec = new Vector3d();
 	public Pair<UUID, Boolean> portal;
 
 	public double horizontalDistance;
