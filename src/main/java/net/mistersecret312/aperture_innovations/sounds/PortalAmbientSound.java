@@ -1,6 +1,7 @@
 package net.mistersecret312.aperture_innovations.sounds;
 
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 
 public class PortalAmbientSound extends PortalSound<ClientPortalLink>
@@ -8,8 +9,8 @@ public class PortalAmbientSound extends PortalSound<ClientPortalLink>
 	private static final float VOLUME_MIN = 0.0F;
 	private static final float VOLUME_MAX = 0.2F;
 
-	public PortalAmbientSound(ClientPortalLink fountain, boolean isPrimary, SoundEvent soundEvent) {
-		super(fountain, isPrimary, soundEvent, 2, 4);
+	public PortalAmbientSound(ClientPortalLink link, boolean isPrimary, SoundEvent soundEvent) {
+		super(link, isPrimary, soundEvent, SoundSource.AMBIENT, 2, 4);
 		this.looping = true;
 		this.volume = VOLUME_MIN;
 	}

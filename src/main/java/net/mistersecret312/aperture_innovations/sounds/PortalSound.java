@@ -18,8 +18,8 @@ public class PortalSound<T extends ClientPortalLink> extends AbstractTickableSou
 	protected int fullDistance;
 	protected int maxDistance;
 
-	public PortalSound(T link, boolean isPrimary, SoundEvent soundEvent, int fullDistance, int maxDistance) {
-		super(soundEvent, SoundSource.AMBIENT, SoundInstance.createUnseededRandom());
+	public PortalSound(T link, boolean isPrimary, SoundEvent soundEvent, SoundSource source, int fullDistance, int maxDistance) {
+		super(soundEvent, source, SoundInstance.createUnseededRandom());
 
 		this.link = link;
 		this.portalPos = isPrimary ? link.posPrimary() : link.posSecondary();
