@@ -44,6 +44,8 @@ import net.neoforged.neoforge.registries.*;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 
+import static net.neoforged.fml.loading.FMLEnvironment.dist;
+
 @Mod(ApertureInnovations.MODID)
 public class ApertureInnovations
 {
@@ -83,7 +85,8 @@ public class ApertureInnovations
 			});
 
 		modContainer.registerConfig(ModConfig.Type.COMMON, Config.COMMON_CONFIG, "aperture_innovations-common.toml");
-		modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+		if(dist.isClient())
+			modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
 	}
 
 	public static void registerCapabilities(RegisterCapabilitiesEvent event)

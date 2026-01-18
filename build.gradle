@@ -84,7 +84,6 @@ dependencies {
 
     implementation "software.bernie.geckolib:geckolib-neoforge-${minecraft_version}:${geckolib_version}"
     implementation "curse.maven:mekanism-268560:7132168"
-    implementation "curse.maven:sgjourney-689083:7173640"
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {

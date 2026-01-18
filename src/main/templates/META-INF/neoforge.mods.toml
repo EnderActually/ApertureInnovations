@@ -41,3 +41,6 @@ type = "required"
 versionRange = "[4.8.2, 4.9)"
 ordering = "NONE"
 side = "BOTH"
+
+["lithium:options"]
+"mixin.entity.collisions.movement"=false
