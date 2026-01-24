@@ -2,6 +2,7 @@ package net.mistersecret312.aperture_innovations;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.logging.LogUtils;
+import net.fabricmc.api.ModInitializer;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -20,37 +21,15 @@ import net.mistersecret312.aperture_innovations.items.ColorfulGelItem;
 import net.mistersecret312.aperture_innovations.items.ColorfulGelItemProperty;
 import net.mistersecret312.aperture_innovations.items.LongFallBootsItem;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.config.ModConfig;
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
-import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
-import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
-import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
-import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
-import net.neoforged.neoforge.client.gui.ConfigurationScreen;
-import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
-import net.neoforged.neoforge.client.settings.KeyConflictContext;
-import net.neoforged.neoforge.client.settings.KeyModifier;
-import net.neoforged.neoforge.common.util.Lazy;
-import net.neoforged.neoforge.registries.*;
+import org.apache.logging.log4j.util.Lazy;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import static net.neoforged.fml.loading.FMLEnvironment.dist;
-
-@Mod(ApertureInnovations.MODID)
-public class ApertureInnovations
+public class ApertureInnovations implements ModInitializer
 {
 	public static final String MODID = "aperture_innovations";
-	public static final Logger LOGGER = LogUtils.getLogger();
+	public static final Logger LOGGER = LoggerFactory.getLogger(MODID);
 
 	public static final TagKey<Block> SHOOT_THROUGH = TagKey.create(
 			BuiltInRegistries.BLOCK.key(), ResourceLocation.fromNamespaceAndPath(MODID, "shoot_through"));
@@ -65,11 +44,6 @@ public class ApertureInnovations
 
 	public ApertureInnovations(IEventBus modEventBus, ModContainer modContainer)
 	{
-		ItemInit.register(modEventBus);
-		BlockInit.register(modEventBus);
-		ItemTabInit.register(modEventBus);
-		SoundInit.register(modEventBus);
-		StatisticsInit.register(modEventBus);
 		RecipeInit.register(modEventBus);
 		AdvancementInit.register(modEventBus);
 		AttachmentTypeInit.register(modEventBus);
@@ -87,6 +61,15 @@ public class ApertureInnovations
 		modContainer.registerConfig(ModConfig.Type.COMMON, Config.COMMON_CONFIG, "aperture_innovations-common.toml");
 		if(dist.isClient())
 			modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+	}
+
+	@Override
+	public void onInitialize() {
+		ItemInit.initialize();
+		BlockInit.initialize();
+		ItemTabInit.initialize();
+		SoundInit.initialize();
+		StatisticsInit.register();
 	}
 
 	public static void registerCapabilities(RegisterCapabilitiesEvent event)

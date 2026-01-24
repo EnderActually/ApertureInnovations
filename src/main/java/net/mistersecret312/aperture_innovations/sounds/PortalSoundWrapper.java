@@ -8,10 +8,10 @@ public class PortalSoundWrapper<T extends ClientPortalLink> extends SoundWrapper
 	protected static Minecraft minecraft = Minecraft.getInstance();
 
 	protected T link;
-	protected PortalSound<?> sound;
+	protected PortalSound<T> sound;
 	protected boolean playingSound = false;
 
-	protected PortalSoundWrapper(T link, PortalSound sound)
+	protected PortalSoundWrapper(T link, PortalSound<T> sound)
 	{
 		this.link = link;
 		this.sound = sound;
