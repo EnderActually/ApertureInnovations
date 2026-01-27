@@ -13,6 +13,7 @@ import net.minecraft.util.FastColor;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.world.ForgeChunkManager;
 import net.minecraftforge.network.PacketDistributor;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
@@ -21,6 +22,8 @@ import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalAmbientSoundPacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalSoundsPacket;
+import net.neoforged.neoforge.network.PacketDistributor;
+import org.joml.Matrix4f;
 
 import java.util.UUID;
 
@@ -28,117 +31,116 @@ public class PortalLink
 {
 	public UUID linkID;
 
-	public BlockPos posPrimary;
-	public BlockPos posSecondary;
-
-	public boolean wallPrimary;
-	public boolean wallSecondary;
-
-	public boolean ceilingPrimary;
-	public boolean ceilingSecondary;
-
-	public ResourceKey<Level> dimensionPrimary;
-	public ResourceKey<Level> dimensionSecondary;
-
-	public Direction directionPrimary;
-	public Direction directionSecondary;
-
-	public boolean moonshotPrimary = false;
-	public boolean moonshotSecondary = false;
-
-	public int openingPrimary = 0;
-	public int openingSecondary = 0;
+	private Portal primaryPortal;
+	private Portal secondaryPortal;
 
 	public ResourceLocation variantKey = null;
-
-	public int primaryPortalColor = -1;
-	public int secondaryPortalColor = -1;
 
 	public PortalLink(UUID linkID, ResourceLocation variantKey)
 	{
 		this.linkID = linkID;
 		this.variantKey = variantKey;
+
+		this.primaryPortal = new Portal();
+		this.secondaryPortal = new Portal();
 	}
 
-	public PortalLink(UUID linkID, BlockPos posPrimary, BlockPos posSecondary,
-					  boolean wallPrimary, boolean wallSecondary,
-					  boolean ceilingPrimary, boolean ceilingSecondary,
-					  ResourceKey<Level> dimensionPrimary, ResourceKey<Level> dimensionSecondary,
-					  Direction directionPrimary, Direction directionSecondary,
-					  ResourceLocation variantKey, int primaryPortalColor, int secondaryPortalColor)
+	public PortalLink(UUID linkID, Portal primaryPortal, Portal secondaryPortal,
+					  ResourceLocation variantKey)
 	{
 		this.linkID = linkID;
 
-		this.posPrimary = posPrimary;
-		this.posSecondary = posSecondary;
-
-		this.wallPrimary = wallPrimary;
-		this.wallSecondary = wallSecondary;
-
-		this.ceilingPrimary = ceilingPrimary;
-		this.ceilingSecondary = ceilingSecondary;
-
-		this.dimensionPrimary = dimensionPrimary;
-		this.dimensionSecondary = dimensionSecondary;
-
-		this.directionPrimary = directionPrimary;
-		this.directionSecondary = directionSecondary;
-
-		this.primaryPortalColor = primaryPortalColor;
-		this.secondaryPortalColor = secondaryPortalColor;
+		this.primaryPortal = primaryPortal;
+		this.secondaryPortal = secondaryPortal;
 
 		this.variantKey = variantKey;
 	}
 
-	public void createPrimaryPortal(Level level, BlockPos pos, ResourceKey<Level> dimension, Direction direction, Direction facing)
+	public void createPrimaryPortal(Level level, Vec3 pos, ResourceKey<Level> dimension, Direction direction, Direction facing)
 	{
-		this.posPrimary = pos;
-		this.dimensionPrimary = dimension;
-		this.directionPrimary = facing.equals(Direction.UP) ? direction : facing;
-		this.wallPrimary = facing.equals(Direction.UP);
-		this.ceilingPrimary = direction.equals(Direction.DOWN);
-		this.moonshotPrimary = false;
-		this.openingPrimary = 0;
+		float xRot = 0;
+		float yRot = direction.toYRot();
+		if(direction.equals(Direction.UP))
+		{
+			xRot = -90;
+			yRot = facing.toYRot();
+		}
+		if(direction.equals(Direction.DOWN))
+		{
+			xRot = 90;
+			yRot = facing.toYRot();
+		}
+		if(direction.getAxis().equals(Direction.Axis.X))
+			yRot = -yRot;
 
-		Level portalLevel = level.getServer().getLevel(dimensionPrimary);
+		this.primaryPortal.setPosition(pos);
+		this.primaryPortal.setYRotation(yRot);
+		this.primaryPortal.setXRotation(xRot);
+		this.primaryPortal.setDimension(dimension);
+		this.primaryPortal.setMoonshot(false);
+
+		ServerLevel portalLevel = level.getServer().getLevel(dimension);
 		if(portalLevel != null)
 		{
-			NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(
-							() -> portalLevel.getChunkAt(pos)),
+			int x = (int) pos.x;
+			int z = (int) pos.z;
+			PacketDistributor.sendToPlayersTrackingChunk(portalLevel, new ChunkPos(x, z),
 					new ClientboundPortalSoundsPacket.OpenPortal(linkID, true));
+
 		}
-		PortalLinkData.get(level).setDirty();
+
+		PortalLinkData.get(level).setDirty(linkID, true);
 	}
 
-	public void createSecondaryPortal(Level level, BlockPos pos, ResourceKey<Level> dimension, Direction direction, Direction facing)
+	public void createSecondaryPortal(Level level, Vec3 pos, ResourceKey<Level> dimension,
+									  Direction direction, Direction facing)
 	{
-		this.posSecondary = pos;
-		this.dimensionSecondary = dimension;
-		this.directionSecondary = facing.equals(Direction.UP) ? direction : facing;
-		this.wallSecondary = facing.equals(Direction.UP);
-		this.ceilingSecondary = direction.equals(Direction.DOWN);
-		this.moonshotSecondary = false;
-		this.openingSecondary = 0;
+		float xRot = 0;
+		float yRot = direction.toYRot();
+		if(direction.equals(Direction.UP))
+		{
+			xRot = -90;
+			yRot = facing.toYRot();
+		}
+		if(direction.equals(Direction.DOWN))
+		{
+			xRot = 90;
+			yRot = facing.toYRot();
+		}
+		if(direction.getAxis().equals(Direction.Axis.X))
+			yRot = -yRot;
 
-		Level portalLevel = level.getServer().getLevel(dimensionSecondary);
+		this.secondaryPortal.setPosition(pos);
+		this.secondaryPortal.setYRotation(yRot);
+		this.secondaryPortal.setXRotation(xRot);
+		this.secondaryPortal.setDimension(dimension);
+		this.secondaryPortal.setMoonshot(false);
+
+		ServerLevel portalLevel = level.getServer().getLevel(dimension);
 		if(portalLevel != null)
 		{
-			NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(
-							() -> portalLevel.getChunkAt(pos)),
+			int x = (int) pos.x;
+			int z = (int) pos.z;
+			PacketDistributor.sendToPlayersTrackingChunk(portalLevel, new ChunkPos(x, z),
 					new ClientboundPortalSoundsPacket.OpenPortal(linkID, false));
+
 		}
 
-		PortalLinkData.get(level).setDirty();
+		PortalLinkData.get(level).setDirty(linkID, false);
 	}
 
 	public void updateColors(Level level, int primaryPortalColor, int secondaryPortalColor)
 	{
-		if(this.primaryPortalColor != primaryPortalColor || this.secondaryPortalColor != secondaryPortalColor)
+		if(this.primaryPortal.getColor() != primaryPortalColor)
 		{
-			this.primaryPortalColor = primaryPortalColor;
-			this.secondaryPortalColor = secondaryPortalColor;
+			this.primaryPortal.setColor(primaryPortalColor);
+			PortalLinkData.get(level).setDirty(linkID, true);
+		}
 
-			PortalLinkData.get(level).setDirty();
+		if(this.secondaryPortal.getColor() != secondaryPortalColor)
+		{
+			this.secondaryPortal.setColor(secondaryPortalColor);
+			PortalLinkData.get(level).setDirty(linkID, false);
 		}
 	}
 
@@ -147,147 +149,105 @@ public class PortalLink
 		if(this.variantKey != variantKey)
 		{
 			this.variantKey = variantKey;
-			PortalLinkData.get(level).setDirty();
+			PortalLinkData.get(level).setDirty(linkID, true);
+			PortalLinkData.get(level).setDirty(linkID, false);
 		}
 	}
 
 	public void reset(Level level)
 	{
-		if(posPrimary != null || moonshotPrimary)
+		if(primaryPortal.isOpen())
 			resetPrimary(level);
 
-		if(posSecondary != null || moonshotSecondary)
+		if(secondaryPortal.isOpen())
 			resetSecondary(level);
 	}
 
 	public void resetPrimary(Level level)
 	{
-		if(posPrimary != null)
+		if(primaryPortal.isInWorld())
 		{
-			Level portalLevel = level.getServer().getLevel(dimensionPrimary);
+			ServerLevel portalLevel = level.getServer().getLevel(primaryPortal.getDimension());
 			if(portalLevel != null)
 			{
-				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(
-								() -> portalLevel.getChunkAt(posPrimary)),
+				int x = (int) primaryPortal.getPosition().x;
+				int z = (int) primaryPortal.getPosition().z;
+				PacketDistributor.sendToPlayersTrackingChunk(portalLevel, new ChunkPos(x, z),
 						new ClientboundPortalSoundsPacket.FizzlePortal(linkID, true));
 			}
 		}
+		int color = primaryPortal.getColor();
 
-		this.posPrimary = null;
-		this.wallPrimary = false;
-		this.ceilingPrimary = false;
-		this.dimensionPrimary = null;
-		this.directionPrimary = null;
-		this.openingPrimary = 0;
-		this.moonshotPrimary = false;
+		this.primaryPortal = new Portal();
+		this.primaryPortal.setColor(color);
 
-		PortalLinkData.get(level).setDirty();
+		PortalLinkData.get(level).setDirty(linkID, true);
 	}
 
 	public void resetSecondary(Level level)
 	{
-		if(posSecondary != null)
+		if(secondaryPortal.isInWorld())
 		{
-			Level portalLevel = level.getServer().getLevel(dimensionSecondary);
+			ServerLevel portalLevel = level.getServer().getLevel(secondaryPortal.getDimension());
 			if(portalLevel != null)
 			{
-				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(
-								() -> portalLevel.getChunkAt(posSecondary)),
+				int x = (int) secondaryPortal.getPosition().x;
+				int z = (int) secondaryPortal.getPosition().z;
+				PacketDistributor.sendToPlayersTrackingChunk(portalLevel, new ChunkPos(x, z),
 						new ClientboundPortalSoundsPacket.FizzlePortal(linkID, false));
+
 			}
 		}
+		int color = secondaryPortal.getColor();
 
-		this.posSecondary = null;
-		this.wallSecondary = false;
-		this.ceilingSecondary = false;
-		this.dimensionSecondary = null;
-		this.directionSecondary = null;
-		this.openingSecondary = 0;
-		this.moonshotSecondary = false;
+		this.secondaryPortal = new Portal();
+		this.secondaryPortal.setColor(color);
 
-		PortalLinkData.get(level).setDirty();
+		PortalLinkData.get(level).setDirty(linkID, false);
 	}
 
 	public void setMoonshot(boolean isPrimary, boolean moonshot, Level level)
 	{
 		if(isPrimary)
 		{
-			posPrimary = null;
-			moonshotPrimary = moonshot;
+			primaryPortal.setPosition(null);
+			primaryPortal.setMoonshot(moonshot);
 		}
 		else
 		{
-			posSecondary = null;
-			moonshotSecondary = moonshot;
-		};
+			secondaryPortal.setPosition(null);
+			secondaryPortal.setMoonshot(moonshot);
+		}
 
-		PortalLinkData.get(level).setDirty();
+		PortalLinkData.get(level).setDirty(linkID, isPrimary);
 	}
 
 	public boolean isOpen()
 	{
-		return (posPrimary != null || moonshotPrimary) && (posSecondary != null || moonshotSecondary);
+		return primaryPortal.isOpen() && secondaryPortal.isOpen();
 	}
 
 	public boolean isInterdimensionalLink()
 	{
-		if(posPrimary == null || posSecondary == null)
-			return false;
-
-		return dimensionPrimary != dimensionSecondary;
+		if(isOpen())
+		{
+			return !primaryPortal.getDimension().equals(secondaryPortal.getDimension());
+		}
+		return false;
 	}
 
 	public static PortalLink load(CompoundTag tag)
 	{
 		UUID linkID = tag.getUUID("link");
+		Portal primaryPortal = new Portal();
+		Portal secondaryPortal = new Portal();
 
-		BlockPos posPrimary = null;
-		boolean wallPrimary = false;
-		boolean ceilingPrimary = false;
-		ResourceKey<Level> dimensionPrimary = null;
-		Direction directionPrimary = null;
-		int openingPrimary = 0;
-
-		if(tag.contains("posPrimary"))
-		{
-			posPrimary = NbtUtils.readBlockPos(tag.getCompound("posPrimary"));
-			wallPrimary = tag.getBoolean("wallPrimary");
-			ceilingPrimary = tag.getBoolean("ceilingPrimary");
-			dimensionPrimary = stringToDimension(tag.getString("dimensionPrimary"));
-			directionPrimary = Direction.from3DDataValue(tag.getInt("directionPrimary"));
-			openingPrimary = tag.getInt("openingPrimary");
-		}
-
-		BlockPos posSecondary = null;
-		boolean wallSecondary = false;
-		boolean ceilingSecondary = false;
-		ResourceKey<Level> dimensionSecondary = null;
-		Direction directionSecondary = null;
-		int openingSecondary = 0;
-
-		if(tag.contains("posSecondary"))
-		{
-			posSecondary = NbtUtils.readBlockPos(tag.getCompound("posSecondary"));
-			wallSecondary = tag.getBoolean("wallSecondary");
-			ceilingSecondary = tag.getBoolean("ceilingSecondary");
-			dimensionSecondary = stringToDimension(tag.getString("dimensionSecondary"));
-			directionSecondary = Direction.from3DDataValue(tag.getInt("directionSecondary"));
-			openingSecondary = tag.getInt("openingSecondary");
-		}
+		primaryPortal.load(tag.getCompound("primaryPortal"));
+		secondaryPortal.load(tag.getCompound("secondaryPortal"));
 
 		ResourceLocation variantKey = ResourceLocation.parse(tag.getString("variantKey"));
-		int primaryPortalColor = tag.getInt("primaryPortalColor");
-		int secondaryPortalColor = tag.getInt("secondaryPortalColor");
 
-		PortalLink link = new PortalLink(linkID, posPrimary, posSecondary,
-				wallPrimary, wallSecondary,
-				ceilingPrimary, ceilingSecondary,
-				dimensionPrimary, dimensionSecondary,
-				directionPrimary, directionSecondary,
-				variantKey, primaryPortalColor, secondaryPortalColor);
-
-		link.openingPrimary = openingPrimary;
-		link.openingSecondary = openingSecondary;
+		PortalLink link = new PortalLink(linkID, variantKey);
 
 		return link;
 	}
@@ -298,32 +258,12 @@ public class PortalLink
 
 		tag.putUUID("link", linkID);
 
-		if(posPrimary != null)
-		{
-			tag.put("posPrimary", NbtUtils.writeBlockPos(posPrimary));
-			tag.putBoolean("wallPrimary", wallPrimary);
-			tag.putBoolean("ceilingPrimary", ceilingPrimary);
-			tag.putString("dimensionPrimary", dimensionPrimary.location().toString());
-			tag.putInt("directionPrimary", directionPrimary.get3DDataValue());
-			tag.putInt("openingPrimary", openingPrimary);
-		}
-
-		if(posSecondary != null)
-		{
-			tag.put("posSecondary", NbtUtils.writeBlockPos(posSecondary));
-			tag.putBoolean("wallSecondary", wallSecondary);
-			tag.putBoolean("ceilingSecondary", ceilingSecondary);
-			tag.putString("dimensionSecondary", dimensionSecondary.location().toString());
-			tag.putInt("directionSecondary", directionSecondary.get3DDataValue());
-			tag.putInt("openingSecondary", openingSecondary);
-		}
+		tag.put("primaryPortal", this.primaryPortal.save());
+		tag.put("secondaryPortal", this.secondaryPortal.save());
 
 		if(variantKey == null)
 			variantKey = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "chell");
 		tag.putString("variantKey", variantKey.toString());
-
-		tag.putInt("primaryPortalColor", primaryPortalColor);
-		tag.putInt("secondaryPortalColor", secondaryPortalColor);
 
 		return tag;
 	}
@@ -335,13 +275,23 @@ public class PortalLink
 		return registry.get(variantKey);
 	}
 
-	public static ResourceKey<Level> stringToDimension(String dimensionString)
+	public Portal getSecondaryPortal()
 	{
-		String[] split = dimensionString.split(":");
+		return secondaryPortal;
+	}
 
-		if(split.length > 1)
-			return ResourceKey.create(ResourceKey.createRegistryKey(new ResourceLocation("minecraft", "dimension")), new ResourceLocation(split[0], split[1]));
+	public void setSecondaryPortal(Portal secondaryPortal)
+	{
+		this.secondaryPortal = secondaryPortal;
+	}
 
-		return null;
+	public Portal getPrimaryPortal()
+	{
+		return primaryPortal;
+	}
+
+	public void setPrimaryPortal(Portal primaryPortal)
+	{
+		this.primaryPortal = primaryPortal;
 	}
 }

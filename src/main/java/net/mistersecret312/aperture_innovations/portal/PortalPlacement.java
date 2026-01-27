@@ -9,6 +9,7 @@ import net.minecraft.world.level.block.TorchBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.UUID;
@@ -66,7 +67,7 @@ public class PortalPlacement
 			return new Result(tryBottomPos, rotation, face);
 		}
 
-		return null;
+		return new Result(hitPos, rotation, face);
 	}
 
 	private static boolean isValidSpot(Level level, BlockPos bottomPos, Direction rotation, Direction face,
@@ -129,7 +130,9 @@ public class PortalPlacement
 					boolean onWall = PortalUtilities.isPortalOnWall(level, entryID, entryPrimarity);
 					boolean onCeiling = PortalUtilities.isPortalOnCeiling(level, entryID, entryPrimarity);
 
-					AABB portalBox = PortalUtilities.getPortalTeleportBox(portalPos, portalDirection, onWall, onCeiling);
+					Vec2 rotation = PortalUtilities.getPortalRotation(level, entryID, entryPrimarity);
+
+					AABB portalBox = PortalUtilities.getPortalTeleportBox(portalPos, rotation.x, rotation.y);
 					if(portalBox.intersects(new AABB(pos)))
 						found.set(true);
 				}

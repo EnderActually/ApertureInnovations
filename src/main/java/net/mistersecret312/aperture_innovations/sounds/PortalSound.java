@@ -13,7 +13,7 @@ import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 public class PortalSound<T extends ClientPortalLink> extends AbstractTickableSoundInstance
 {
 	protected T link;
-	protected BlockPos portalPos;
+	protected Vec3 portalPos;
 	protected Minecraft minecraft = Minecraft.getInstance();
 	protected int fullDistance;
 	protected int maxDistance;
@@ -22,9 +22,9 @@ public class PortalSound<T extends ClientPortalLink> extends AbstractTickableSou
 		super(soundEvent, source, SoundInstance.createUnseededRandom());
 
 		this.link = link;
-		this.portalPos = isPrimary ? link.posPrimary() : link.posSecondary();
-		if(portalPos == null)
-			portalPos = minecraft.player.getOnPos();
+		this.portalPos = isPrimary ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
+		if(portalPos == null && minecraft.player != null)
+			portalPos = minecraft.player.position();
 		this.relative = true;
 		this.fullDistance = fullDistance;
 		this.maxDistance = maxDistance;
@@ -52,7 +52,7 @@ public class PortalSound<T extends ClientPortalLink> extends AbstractTickableSou
 	{
 		LocalPlayer player = minecraft.player;
 		Vec3 playerPos = player.position();
-		return portalPos.getCenter().distanceTo(playerPos);
+		return portalPos.distanceTo(playerPos);
 	}
 
 	public float getVolume()

@@ -84,7 +84,8 @@ public class PortalLinkData extends SavedData
 											.location();
 
 		this.portalLinks.put(uuid, new PortalLink(uuid, location));
-		this.setDirty();
+		this.setDirty(uuid, true);
+		this.setDirty(uuid, false);
 	}
 	
 	public PortalLink getLink(UUID uuid)
@@ -102,12 +103,23 @@ public class PortalLinkData extends SavedData
 		else return null;
 	}
 
+	public void setDirty(UUID uuid, boolean isPrimary)
+	{
+		PortalLink link = portalLinks.get(uuid);
+		if(isPrimary)
+			PacketDistributor.sendToAllPlayers(new ClientBoundPortalSyncPacket(uuid, true,
+					link.getPrimaryPortal(), link.variantKey));
+		else
+			PacketDistributor.sendToAllPlayers(new ClientBoundPortalSyncPacket(uuid, false,
+					link.getSecondaryPortal(), link.variantKey));
+
+		this.setDirty();
+	}
+
 	@Override
 	public void setDirty()
 	{
 		super.setDirty();
-		NetworkInit.INSTANCE.send(
-				PacketDistributor.ALL.noArg(), new ClientBoundPortalLinkSyncPacket(portalLinks, new HashMap<>()));
 	}
 
 	public PortalLinkData(MinecraftServer server)
@@ -144,6 +156,11 @@ public class PortalLinkData extends SavedData
 			throw new RuntimeException("Don't access this client-side!");
 
 		return PortalLinkData.get(level.getServer());
+	}
+
+	public static SavedData.Factory<PortalLinkData> dataFactory(MinecraftServer server)
+	{
+		return new SavedData.Factory<>(() -> create(server), (tag, provider) -> load(server, tag));
 	}
 
 	@Nonnull

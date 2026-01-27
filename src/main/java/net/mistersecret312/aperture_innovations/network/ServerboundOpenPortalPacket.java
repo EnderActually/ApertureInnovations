@@ -57,6 +57,8 @@ public class ServerboundOpenPortalPacket
 			ServerPlayer player = ctx.get().getSender();
 			Level level = player.level();
 
+			boolean isPrimary = packet.isPrimary;
+
 			ItemStack main = player.getMainHandItem();
 			ItemStack off = player.getOffhandItem();
 			boolean hasPortalGun = main.is(ItemInit.PORTAL_GUN.get()) || off.is(ItemInit.PORTAL_GUN.get());
@@ -133,7 +135,7 @@ public class ServerboundOpenPortalPacket
 				}
 
 				PortalPlacement.Result placement = PortalPlacement.getBestPlacement(level, result, player, linkID, isPrimary);
-				if(placement != null)
+				if(true)
 				{
 					portalGun.stopTriggeredAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
 					portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
@@ -145,7 +147,8 @@ public class ServerboundOpenPortalPacket
 					if(isPrimary)
 					{
 						portalGun.setLastShotPortal(gunStack, 0);
-						link.createPrimaryPortal(level, placement.bottomPos, level.dimension(), placement.facing, placement.rotation);
+						link.createPrimaryPortal(level, result.getLocation(), level.dimension(), placement.facing,
+								placement.rotation);
 
 						NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(player.blockPosition())),
 								new ClientboundPortalSoundsPacket.ShootPortal(linkID, player.blockPosition(), isPrimary));
@@ -153,7 +156,8 @@ public class ServerboundOpenPortalPacket
 					else
 					{
 						portalGun.setLastShotPortal(gunStack, 1);
-						link.createSecondaryPortal(level, placement.bottomPos, level.dimension(), placement.facing, placement.rotation);
+						link.createSecondaryPortal(level, result.getLocation(), level.dimension(), placement.facing,
+								placement.rotation);
 
 						NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(player.blockPosition())),
 								new ClientboundPortalSoundsPacket.ShootPortal(linkID, player.blockPosition(), isPrimary));					}
