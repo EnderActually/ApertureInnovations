@@ -5,6 +5,7 @@ import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -16,9 +17,13 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.items.LongFallBootsItem;
@@ -36,6 +41,7 @@ import net.neoforged.neoforge.client.event.*;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.joml.Matrix4f;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -59,25 +65,22 @@ public class ClientEvents
 
 				for(int i = 0; i < 2; i++)
 				{
-					ResourceKey<Level> dimension = i == 0 ? link.dimensionPrimary() : link.dimensionSecondary();
+					boolean isPrimary = i == 0;
+					ResourceKey<Level> dimension = isPrimary ? link.getPrimaryPortal().getDimension() :
+														   link.getSecondaryPortal().getDimension();
 					if(level.dimension() != dimension)
 						continue;
 
 					poseStack.pushPose();
 
-					float scale = ClientPortalUtilities.getPortalOpeningAnimationProgress(linkID, i == 0);
+					float scale = ClientPortalUtilities.getPortalOpeningAnimationProgress(linkID, isPrimary);
 
-					BlockPos portalPos = i == 0 ? link.posPrimary() : link.posSecondary();
-					BlockPos otherPortalPos = i == 0 ? link.posSecondary() : link.posPrimary();
-
-					boolean moonshot = i == 0 ? link.moonshotPrimary() : link.moonshotSecondary();
-					boolean otherMoonshot = i == 0 ? link.moonshotSecondary() : link.moonshotPrimary();
-
-					if((portalPos != null || moonshot) && (otherPortalPos != null || otherMoonshot))
+					Vec3 portalPos = isPrimary ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
+					if(link.getPrimaryPortal().isInWorld() && link.getSecondaryPortal().isInWorld())
 					{
-						if(level.isLoaded(portalPos))
+						if(level.isLoaded(BlockPos.containing(portalPos)))
 						{
-							renderPortalNonSee(buffer, event.getProjectionMatrix(), poseStack, camera, link, i == 0, scale);
+							renderPortalNonSee(buffer, poseStack, camera, link, i == 0, scale);
 						}
 					}
 					poseStack.popPose();
@@ -95,6 +98,62 @@ public class ClientEvents
 
 				poseStack.pushPose();
 
+				{
+					poseStack.pushPose();
+
+					Pair<UUID, Boolean> portal = PortalUtilities.getClosestPortal(Minecraft.getInstance().player);
+					UUID uuid = portal.getFirst();
+					boolean isPrimary = portal.getSecond();
+					if(uuid == null) return;
+
+					Level level = Minecraft.getInstance().level;
+
+					Vec3 portalPos = PortalUtilities.getPortalPos(level, uuid, isPrimary);
+					Vec2 rotation = PortalUtilities.getPortalRotation(level, uuid, isPrimary);
+
+					AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, rotation.x, rotation.y);
+					AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPos, rotation.x, rotation.y);
+					AABB placementBox = PortalUtilities.getPortalPlacementBox(portalPos, rotation.x, rotation.y);
+
+					AABB floorBox = PortalUtilities.getPortalFloorBox(portalPos, rotation.x, rotation.y);
+
+					List<VoxelShape> shapesIDK = PortalUtilities.getPortalVoxels(level, portalPos, rotation.x, rotation.y);
+
+					poseStack.translate(-camera.getPosition().x ,
+							-camera.getPosition().y,
+							-camera.getPosition().z);
+
+					BlockPos.betweenClosedStream(placementBox).forEach(pos ->
+						{
+							BlockState state = level.getBlockState(pos);
+
+							VoxelShape shape = state.getCollisionShape(level, pos).move(pos.getX(), pos.getY(), pos.getZ());
+							for(AABB aabb : shape.toAabbs())
+							{
+								if(!aabb.intersects(placementBox))
+								{
+									//Finds air where the portal is
+								}
+							}
+						});
+
+					for(VoxelShape voxelShape : shapesIDK)
+					{
+//						LevelRenderer.renderVoxelShape(poseStack, buffer.getBuffer(PortalRenderTypes.lines()),
+//								voxelShape, 0, 0, 0, 1f, 1f, 0f, 1f, false);
+					}
+//					LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(PortalRenderTypes.lines()), portalBox, 0f,
+//							1f, 1f, 1f);
+					LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(PortalRenderTypes.lines()), placementBox,
+							0.87f, 0.25f, 0.15f, 1f);
+					LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(PortalRenderTypes.lines()), teleportBox,
+							1f, 1f, 0f, 1f);
+//					LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(PortalRenderTypes.lines()), floorBox, 1f,
+//							0f, 0f, 1f);
+
+					poseStack.popPose();
+				}
+
 				ResourceLocation texturePrimary = ClientPortalUtilities.getPortalVortexTexture(link, true);
 				ResourceLocation textureSecondary = ClientPortalUtilities.getPortalVortexTexture(link, false);
 
@@ -106,28 +165,27 @@ public class ClientEvents
 
 				for(int i = 0; i < 2; i++)
 				{
-					ResourceKey<Level> dimension = i == 0 ? link.dimensionPrimary() : link.dimensionSecondary();
+					boolean isPrimary = i == 0;
+					ResourceKey<Level> dimension = isPrimary ? link.getPrimaryPortal().getDimension() : link.getSecondaryPortal().getDimension();
 					if(Minecraft.getInstance().level.dimension() != dimension) continue;
 
-					float scale = ClientPortalUtilities.getPortalOpeningAnimationProgress(link.linkID(), i == 0);
+					float scale = ClientPortalUtilities.getPortalOpeningAnimationProgress(link.linkID(), isPrimary);
 
-					BlockPos portalPos = i == 0 ? link.posPrimary() : link.posSecondary();
-					BlockPos otherPortalPos = i == 0 ? link.posSecondary() : link.posPrimary();
+					Vec3 portalPos = isPrimary ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
 
-					if(portalPos != null && Minecraft.getInstance().level.isLoaded(
-							portalPos) && event.getLevelRenderer().getFrustum()
-											   .isVisible(new AABB(portalPos).inflate(1)))
+					if(portalPos != null
+							   && Minecraft.getInstance().level.isLoaded(BlockPos.containing(portalPos))
+							   && event.getLevelRenderer().getFrustum().isVisible(new AABB(portalPos, portalPos).inflate(1)))
 					{
-						if(i == 0)
-						{
+						if(isPrimary)
 							primaryRender(link, buffer, poseStack, camera, scale);
-						} else secondaryRender(link, buffer, poseStack, camera, scale);
+						else
+							secondaryRender(link, buffer, poseStack, camera, scale);
 					}
 
-
-					if(i == 0 && link.posPrimary() != null)
+					if(isPrimary && link.getPrimaryPortal().isInWorld())
 						renderPortalVortex(link, camera, primary, buffer, poseStack, true);
-					else if(link.posSecondary() != null)
+					else if(link.getSecondaryPortal().isInWorld())
 						renderPortalVortex(link, camera, secondary, buffer, poseStack, false);
 				}
 
@@ -142,7 +200,6 @@ public class ClientEvents
 	{
 		Player player = event.getPlayer();
 		Level level = player.level();
-		BlockPos pos = event.getBlockPos();
 
 		if(event.getOverlayType().equals(RenderBlockScreenEffectEvent.OverlayType.BLOCK))
 		{
@@ -153,11 +210,9 @@ public class ClientEvents
 				return;
 
 			Vec3 portalPos = PortalUtilities.getPortalPos(level, uuid, isPrimary);
-			Direction portalDirection = PortalUtilities.getPortalDirection(level, uuid, isPrimary);
-			boolean isOnWall = PortalUtilities.isPortalOnWall(level, uuid, isPrimary);
-			boolean isOnCeiling = PortalUtilities.isPortalOnCeiling(level, uuid, isPrimary);
+			Vec2 rotation = PortalUtilities.getPortalRotation(level, uuid, isPrimary);
 
-			AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, portalDirection, isOnWall, isOnCeiling);
+			AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, rotation.x, rotation.y);
 			if(portalBox.contains(player.getEyePosition()))
 				event.setCanceled(true);
 		}
@@ -181,6 +236,7 @@ public class ClientEvents
 		PortalGunItem gunItem = (PortalGunItem) gunItemStack.getItem();
 
 		int dualityState = gunItem.getDualityState(gunItemStack);
+		UUID uuid = gunItem.getUUID(gunItemStack, false);
 
 		if(!player.isShiftKeyDown() && event.getButton() == 0 &&
 				   event.getAction() == 1 && (dualityState == 2 || dualityState == 0))
@@ -208,14 +264,14 @@ public class ClientEvents
 					for(int i = 0; i < 2; i++)
 					{
 						boolean isPrimary = i == 0;
-						BlockPos portalPos = isPrimary ? link.posPrimary() : link.posSecondary();
+						Vec3 portalPos = isPrimary ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
 
 						if(portalPos != null)
 						{
 							float progress = ClientPortalUtilities.getPortalOpeningAnimationProgress(linkID, isPrimary);
 							if(progress < 1F)
 							{
-								progress += 0.25F;
+								progress += 0.25f;
 								ClientPortalUtilities.setPortalOpeningAnimationProgress(progress, linkID, isPrimary);
 							}
 						}

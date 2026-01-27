@@ -108,12 +108,10 @@ public class PortalLinkData extends SavedData
 		PortalLink link = portalLinks.get(uuid);
 		if(isPrimary)
 			PacketDistributor.sendToAllPlayers(new ClientBoundPortalSyncPacket(uuid, true,
-					link.posPrimary, link.directionPrimary, link.wallPrimary, link.ceilingPrimary,
-					link.dimensionPrimary, link.moonshotPrimary, link.variantKey, link.primaryPortalColor));
+					link.getPrimaryPortal(), link.variantKey));
 		else
 			PacketDistributor.sendToAllPlayers(new ClientBoundPortalSyncPacket(uuid, false,
-					link.posSecondary, link.directionSecondary, link.wallSecondary, link.ceilingSecondary,
-					link.dimensionSecondary, link.moonshotSecondary, link.variantKey, link.secondaryPortalColor));
+					link.getSecondaryPortal(), link.variantKey));
 
 		this.setDirty();
 	}

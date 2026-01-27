@@ -18,7 +18,7 @@ public class ClientPortalUtilities
 	public static ColorUtil.RGBA getPortalColor(ClientPortalLink link, boolean isPrimary)
 	{
 		ClientPortalGunVariant variant = link.getVariant();
-		int gunColor = isPrimary ? link.primaryPortalColor() : link.secondaryPortalColor();
+		int gunColor = isPrimary ? link.getPrimaryPortal().getColor() : link.getSecondaryPortal().getColor();
 		ColorUtil.RGBA variantColor = isPrimary ? variant.primaryPortal().getColor() : variant.secondaryPortal().getColor();
 		if(gunColor == -1)
 			return variantColor;
@@ -32,7 +32,7 @@ public class ClientPortalUtilities
 	public static ResourceLocation getCrosshairTexture(ClientPortalLink link, boolean isPrimary)
 	{
 		ClientPortalGunVariant variant = link.getVariant();
-		int gunColor = isPrimary ? link.primaryPortalColor() : link.secondaryPortalColor();
+		int gunColor = isPrimary ? link.getPrimaryPortal().getColor() : link.getSecondaryPortal().getColor();
 		if(gunColor == -1)
 			return variant.crosshairTexture();
 		else
@@ -50,7 +50,7 @@ public class ClientPortalUtilities
 	public static ResourceLocation getPortalHighlightTexture(ClientPortalLink link, boolean isPrimary)
 	{
 		ClientPortalGunVariant variant = link.getVariant();
-		int gunColor = isPrimary ? link.primaryPortalColor() : link.secondaryPortalColor();
+		int gunColor = isPrimary ? link.getPrimaryPortal().getColor() : link.getSecondaryPortal().getColor();
 		if(gunColor == -1)
 			return isPrimary ? variant.primaryPortal().getHighlightTexture() : variant.secondaryPortal().getHighlightTexture();
 		else
@@ -78,7 +78,7 @@ public class ClientPortalUtilities
 			return idleCore;
 		boolean isPrimary = lastPortal == 0;
 
-		int gunColor = isPrimary ? link.primaryPortalColor() : link.secondaryPortalColor();
+		int gunColor = isPrimary ? link.getPrimaryPortal().getColor() : link.getSecondaryPortal().getColor();
 		if(gunColor == -1)
 			return isPrimary ? primaryCore : secondaryCore;
 		else
@@ -99,7 +99,7 @@ public class ClientPortalUtilities
 	public static ResourceLocation getPortalClosedTexture(ClientPortalLink link, boolean isPrimary)
 	{
 		ClientPortalGunVariant variant = link.getVariant();
-		int gunColor = isPrimary ? link.primaryPortalColor() : link.secondaryPortalColor();
+		int gunColor = isPrimary ? link.getPrimaryPortal().getColor() : link.getSecondaryPortal().getColor();
 		if(gunColor == -1)
 			return isPrimary ? variant.primaryPortal().getClosedTexture() : variant.secondaryPortal().getClosedTexture();
 		else
@@ -116,7 +116,7 @@ public class ClientPortalUtilities
 	public static ResourceLocation getPortalVortexTexture(ClientPortalLink link, boolean isPrimary)
 	{
 		ClientPortalGunVariant variant = link.getVariant();
-		int gunColor = isPrimary ? link.primaryPortalColor() : link.secondaryPortalColor();
+		int gunColor = isPrimary ? link.getPrimaryPortal().getColor() : link.getSecondaryPortal().getColor();
 		if(gunColor == -1)
 			return isPrimary ? variant.primaryPortal().getVortexTexture() : variant.secondaryPortal().getVortexTexture();
 		else

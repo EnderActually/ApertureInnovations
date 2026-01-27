@@ -137,7 +137,7 @@ public record ServerboundOpenPortalPacket(boolean isPrimary) implements CustomPa
 				}
 
 				PortalPlacement.Result placement = PortalPlacement.getBestPlacement(level, result, player, linkID, isPrimary);
-				if(placement != null)
+				if(true)
 				{
 					portalGun.stopTriggeredAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main",
 							"shoot");
@@ -150,7 +150,7 @@ public record ServerboundOpenPortalPacket(boolean isPrimary) implements CustomPa
 					if(isPrimary)
 					{
 						portalGun.setLastShotPortal(gunStack, 0);
-						link.createPrimaryPortal(level, placement.bottomPos, level.dimension(), placement.facing,
+						link.createPrimaryPortal(level, result.getLocation(), level.dimension(), placement.facing,
 								placement.rotation);
 
 						PacketDistributor.sendToPlayersTrackingChunk((ServerLevel) level, new ChunkPos(player.blockPosition()),
@@ -159,7 +159,7 @@ public record ServerboundOpenPortalPacket(boolean isPrimary) implements CustomPa
 					} else
 					{
 						portalGun.setLastShotPortal(gunStack, 1);
-						link.createSecondaryPortal(level, placement.bottomPos, level.dimension(), placement.facing,
+						link.createSecondaryPortal(level, result.getLocation(), level.dimension(), placement.facing,
 								placement.rotation);
 
 						PacketDistributor.sendToPlayersTrackingChunk((ServerLevel) level, new ChunkPos(player.blockPosition()),

@@ -83,14 +83,14 @@ public record ServerboundResetPortalLinkPacket() implements CustomPacketPayload
 					linkData.addFreshLink(linkID);
 					link = linkData.getLink(linkID);
 				}
-				if((link.posPrimary == null && !link.moonshotPrimary)
-						   && (link.posSecondary == null) && !link.moonshotSecondary)
+				if(!link.getPrimaryPortal().isOpen() && !link.getSecondaryPortal().isOpen())
 					return;
+
 				if(pairLink != null && dualityState != 2)
 				{
-					if(dualityState == 1 && (pairLink.posSecondary == null && !pairLink.moonshotSecondary))
+					if(dualityState == 1 && !pairLink.getSecondaryPortal().isOpen())
 						return;
-					if(dualityState == 0 && (pairLink.posPrimary == null && !pairLink.moonshotPrimary))
+					if(dualityState == 0 && !pairLink.getPrimaryPortal().isOpen())
 						return;
 				}
 

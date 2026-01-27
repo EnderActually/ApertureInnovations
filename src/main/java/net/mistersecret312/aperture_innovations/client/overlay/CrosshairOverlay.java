@@ -45,8 +45,8 @@ public class CrosshairOverlay
 			ClientPortalLink link = LINKS.get(portalGun.getUUID(gunStack, false));
 			if(link != null)
 			{
-				boolean hasPrimary = link.posPrimary() != null || link.moonshotPrimary();
-				boolean hasSecondary = link.posSecondary() != null || link.moonshotSecondary();
+				boolean hasPrimary = link.getPrimaryPortal().isOpen();
+				boolean hasSecondary = link.getSecondaryPortal().isOpen();
 
 				ColorUtil.RGBA primaryColor = ClientPortalUtilities.getPortalColor(link, true);
 				ColorUtil.RGBA secondaryColor = ClientPortalUtilities.getPortalColor(link, false);

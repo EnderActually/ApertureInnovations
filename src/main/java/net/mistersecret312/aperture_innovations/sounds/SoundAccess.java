@@ -1,8 +1,10 @@
 package net.mistersecret312.aperture_innovations.sounds;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.WinScreen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortalGunVariant;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalUtilities;
@@ -30,7 +32,7 @@ public class SoundAccess
 				ClientPortalUtilities.setAmbientSound(ambientSound, uuid, isPrimary);
 			}
 
-			BlockPos portalPos = isPrimary ? link.posPrimary() : link.posSecondary();
+			Vec3 portalPos = isPrimary ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
 			if(!portalPos.equals(ambientSound.sound.portalPos))
 			{
 				ambientSound.stopSound();
@@ -54,7 +56,6 @@ public class SoundAccess
 		GenericPortalSound sound = new GenericPortalSound(PortalUtilities.getPortalLinks().get(linkID), isPrimary,
 				getPortalOpenSound(linkID, isPrimary), 5, 10, 0.35F);
 		ClientPortalUtilities.setPortalOpeningAnimationProgress(0F, linkID, isPrimary);
-		//playPortalAmbient(linkID, isPrimary, false);
 		minecraft.getSoundManager().play(sound);
 	}
 
