@@ -145,12 +145,12 @@ public class Portal
 
 	public boolean isOnCeiling()
 	{
-		return xRot == -90;
+		return xRot == 90;
 	}
 
 	public boolean isOnFloor()
 	{
-		return xRot == 90;
+		return xRot == -90;
 	}
 
 	public boolean isInWorld()
