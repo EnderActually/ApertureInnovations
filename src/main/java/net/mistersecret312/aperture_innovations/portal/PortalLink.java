@@ -63,7 +63,7 @@ public class PortalLink
 		if(direction.equals(Direction.UP))
 		{
 			xRot = -90;
-			yRot = facing.toYRot();
+			yRot = facing.toYRot()+(facing.getAxis().equals(Direction.Axis.X) ? 0 : 180);
 		}
 		if(direction.equals(Direction.DOWN))
 		{
@@ -100,7 +100,7 @@ public class PortalLink
 		if(direction.equals(Direction.UP))
 		{
 			xRot = -90;
-			yRot = facing.toYRot();
+			yRot = facing.toYRot()+180;
 		}
 		if(direction.equals(Direction.DOWN))
 		{
