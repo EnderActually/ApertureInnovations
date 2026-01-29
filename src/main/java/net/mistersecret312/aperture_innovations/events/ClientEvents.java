@@ -41,9 +41,11 @@ import org.joml.Matrix4f;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import static net.mistersecret312.aperture_innovations.client.renderer.PortalRenderer.*;
 
@@ -127,7 +129,7 @@ public class ClientEvents
 					AtomicReference<VoxelShape> bumpingShape = new AtomicReference<>(Shapes.create(placementBox));
 					if(true)
 					{
-						BlockPos.betweenClosedStream(portalBox.inflate(0.05)).forEach(pos ->
+						BlockPos.betweenClosedStream(portalBox.inflate(0.025)).forEach(pos ->
 							{
 								BlockState state = level.getBlockState(pos);
 								if(!state.isAir())
@@ -181,29 +183,36 @@ public class ClientEvents
 							boolean ceiling = PortalUtilities.isPortalOnCeiling(level, uuid, isPrimary);
 
 							AABB placement = placementBox.inflate(0.025);
-							if(!wall && !ceiling)
+							boolean equal = false;
+							if(!wall)
 							{
-								placement = placement.setMinY(firstPart.minY);
+								equal = firstPart.maxX == placement.maxX && firstPart.minX == placement.minX
+												&& firstPart.maxZ == placement.maxZ && firstPart.minZ == placement.minZ;
 							}
 							if(wall)
 							{
 								if(direction.getAxis().equals(Direction.Axis.Z))
-									placement = placement.setMinZ(firstPart.minZ);
+								{
+									equal = firstPart.maxX == placement.maxX && firstPart.minX == placement.minX
+													&& firstPart.maxY == placement.maxY && firstPart.minY == placement.minY;
+								}
 								if(direction.getAxis().equals(Direction.Axis.X))
-									placement = placement.setMaxX(firstPart.maxX);
+								{
+									equal = firstPart.maxY == placement.maxY && firstPart.minY == placement.minY
+													&& firstPart.maxZ == placement.maxZ && firstPart.minZ == placement.minZ;
+								}
 							}
-							if(!firstPart.equals(placement))
+							if(!equal || placementShape.get().toAabbs().size() != 1)
 							{
-								//System.out.println("invalid placement!");
-								//Portal doesn't have space
+								System.out.println("Invalid Portal Placement! - Client");
 							}
 						}
 
 						LevelRenderer.renderVoxelShape(poseStack, buffer.getBuffer(PortalRenderTypes.lines()),
 								placementShape.get(), 0, 0, 0, 1f, 0.2f, 0.6f, 1f, false);
 
-						LevelRenderer.renderVoxelShape(poseStack, buffer.getBuffer(PortalRenderTypes.lines()),
-								bumpingShape.get(), 0, 0, 0, 0.25f, 1f, 0.5f, 1f, false);
+//						LevelRenderer.renderVoxelShape(poseStack, buffer.getBuffer(PortalRenderTypes.lines()),
+//								bumpingShape.get(), 0, 0, 0, 0.25f, 1f, 0.5f, 1f, false);
 					}
 					for(VoxelShape voxelShape : shapesIDK)
 					{

@@ -19,8 +19,8 @@ public class ClientPortalLink
 {
 	public UUID linkID;
 
-	private Portal primaryPortal;
-	private Portal secondaryPortal;
+	private Portal primaryPortal = new Portal();
+	private Portal secondaryPortal = new Portal();
 	
 	public ResourceLocation variantKey;
 
@@ -31,9 +31,7 @@ public class ClientPortalLink
 					 ResourceLocation variantKey)
 	{
 		this.linkID = linkID;
-
 		this.variantKey = variantKey;
-
 	}
 
 	public boolean isOpen()
