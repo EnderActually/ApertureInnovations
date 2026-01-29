@@ -12,20 +12,27 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.world.ForgeChunkManager;
 import net.minecraftforge.network.PacketDistributor;
+import net.minecraft.world.phys.shapes.BooleanOp;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalAmbientSoundPacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalSoundsPacket;
-import net.neoforged.neoforge.network.PacketDistributor;
 import org.joml.Matrix4f;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class PortalLink
 {
@@ -73,6 +80,10 @@ public class PortalLink
 		if(direction.getAxis().equals(Direction.Axis.X))
 			yRot = -yRot;
 
+		boolean valid = checkForValidity(level, pos, xRot, yRot, direction, true);
+		if(!valid)
+			return;
+
 		this.primaryPortal.setPosition(pos);
 		this.primaryPortal.setYRotation(yRot);
 		this.primaryPortal.setXRotation(xRot);
@@ -80,6 +91,7 @@ public class PortalLink
 		this.primaryPortal.setMoonshot(false);
 
 		ServerLevel portalLevel = level.getServer().getLevel(dimension);
+
 		if(portalLevel != null)
 		{
 			int x = (int) pos.x;
@@ -110,6 +122,10 @@ public class PortalLink
 		if(direction.getAxis().equals(Direction.Axis.X))
 			yRot = -yRot;
 
+		boolean valid = checkForValidity(level, pos, xRot, yRot, direction, false);
+		if(!valid)
+			return;
+
 		this.secondaryPortal.setPosition(pos);
 		this.secondaryPortal.setYRotation(yRot);
 		this.secondaryPortal.setXRotation(xRot);
@@ -117,16 +133,78 @@ public class PortalLink
 		this.secondaryPortal.setMoonshot(false);
 
 		ServerLevel portalLevel = level.getServer().getLevel(dimension);
+
 		if(portalLevel != null)
 		{
 			int x = (int) pos.x;
 			int z = (int) pos.z;
 			PacketDistributor.sendToPlayersTrackingChunk(portalLevel, new ChunkPos(x, z),
 					new ClientboundPortalSoundsPacket.OpenPortal(linkID, false));
-
 		}
 
 		PortalLinkData.get(level).setDirty(linkID, false);
+	}
+
+	public boolean checkForValidity(Level level, Vec3 position, float xRot, float yRot, Direction direction, boolean isPrimary)
+	{
+		AABB portalBox = PortalUtilities.getPortalBoundingBox(position, xRot, yRot).inflate(0.025);
+		AABB placementBox = PortalUtilities.getPortalPlacementBox(position, xRot, yRot).inflate(0.025);
+
+		List<BlockPos> positions = BlockPos.betweenClosedStream(portalBox).toList();
+
+		VoxelShape placementShape = Shapes.create(placementBox);
+		AtomicReference<VoxelShape> placementReference = new AtomicReference<>(placementShape);
+		BlockPos.betweenClosedStream(portalBox).forEach(pos ->
+			{
+				BlockState state = level.getBlockState(pos);
+				if(!state.isAir())
+				{
+					VoxelShape shape = state.getCollisionShape(level, pos)
+											   .move(pos.getX(), pos.getY(), pos.getZ());
+
+					if(!placementReference.get().isEmpty())
+						placementReference.set(Shapes.join(placementReference.get(), shape, BooleanOp.ONLY_FIRST));
+				}
+			});
+		placementShape = placementReference.get();
+
+		if(!placementShape.toAabbs().isEmpty())
+		{
+			List<AABB> parts = placementShape.toAabbs();
+			AABB firstPart = parts.getFirst();
+
+			boolean wall = PortalUtilities.isPortalOnWall(level, linkID, isPrimary);
+
+			AABB placement = placementBox;
+			boolean equal = false;
+			if(!wall)
+			{
+				equal = firstPart.maxX == placement.maxX && firstPart.minX == placement.minX
+						&& firstPart.maxZ == placement.maxZ && firstPart.minZ == placement.minZ;
+			}
+			if(wall)
+			{
+				if(direction.getAxis().equals(Direction.Axis.Z))
+				{
+					equal = firstPart.maxX == placement.maxX && firstPart.minX == placement.minX
+							&& firstPart.maxY == placement.maxY && firstPart.minY == placement.minY;
+				}
+				if(direction.getAxis().equals(Direction.Axis.X))
+				{
+					equal = firstPart.maxY == placement.maxY && firstPart.minY == placement.minY
+							&& firstPart.maxZ == placement.maxZ && firstPart.minZ == placement.minZ;
+				}
+			}
+			if(equal && placementShape.toAabbs().size() == 1)
+				return true;
+			else
+			{
+				System.out.println("Invalid Portal Placement! - Server");
+				return false;
+			}
+		}
+
+		return false;
 	}
 
 	public void updateColors(Level level, int primaryPortalColor, int secondaryPortalColor)
@@ -248,6 +326,8 @@ public class PortalLink
 		ResourceLocation variantKey = ResourceLocation.parse(tag.getString("variantKey"));
 
 		PortalLink link = new PortalLink(linkID, variantKey);
+		link.setPrimaryPortal(primaryPortal);
+		link.setSecondaryPortal(secondaryPortal);
 
 		return link;
 	}
