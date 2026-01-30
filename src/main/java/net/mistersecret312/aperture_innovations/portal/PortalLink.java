@@ -1,5 +1,6 @@
 package net.mistersecret312.aperture_innovations.portal;
 
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
@@ -12,6 +13,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -77,12 +79,6 @@ public class PortalLink
 			xRot = 90;
 			yRot = facing.toYRot();
 		}
-		if(direction.getAxis().equals(Direction.Axis.X))
-			yRot = -yRot;
-
-		boolean valid = checkForValidity(level, pos, xRot, yRot, direction, true);
-		if(!valid)
-			return;
 
 		this.primaryPortal.setPosition(pos);
 		this.primaryPortal.setYRotation(yRot);
@@ -119,8 +115,6 @@ public class PortalLink
 			xRot = 90;
 			yRot = facing.toYRot();
 		}
-		if(direction.getAxis().equals(Direction.Axis.X))
-			yRot = -yRot;
 
 		boolean valid = checkForValidity(level, pos, xRot, yRot, direction, false);
 		if(!valid)
@@ -150,9 +144,8 @@ public class PortalLink
 		AABB portalBox = PortalUtilities.getPortalBoundingBox(position, xRot, yRot).inflate(0.025);
 		AABB placementBox = PortalUtilities.getPortalPlacementBox(position, xRot, yRot).inflate(0.025);
 
-		List<BlockPos> positions = BlockPos.betweenClosedStream(portalBox).toList();
-
 		VoxelShape placementShape = Shapes.create(placementBox);
+
 		AtomicReference<VoxelShape> placementReference = new AtomicReference<>(placementShape);
 		BlockPos.betweenClosedStream(portalBox).forEach(pos ->
 			{
@@ -175,31 +168,30 @@ public class PortalLink
 
 			boolean wall = PortalUtilities.isPortalOnWall(level, linkID, isPrimary);
 
-			AABB placement = placementBox;
 			boolean equal = false;
 			if(!wall)
 			{
-				equal = firstPart.maxX == placement.maxX && firstPart.minX == placement.minX
-						&& firstPart.maxZ == placement.maxZ && firstPart.minZ == placement.minZ;
+				equal = firstPart.maxX == placementBox.maxX && firstPart.minX == placementBox.minX
+						&& firstPart.maxZ == placementBox.maxZ && firstPart.minZ == placementBox.minZ;
 			}
 			if(wall)
 			{
 				if(direction.getAxis().equals(Direction.Axis.Z))
 				{
-					equal = firstPart.maxX == placement.maxX && firstPart.minX == placement.minX
-							&& firstPart.maxY == placement.maxY && firstPart.minY == placement.minY;
+					equal = firstPart.maxX == placementBox.maxX && firstPart.minX == placementBox.minX
+							&& firstPart.maxY == placementBox.maxY && firstPart.minY == placementBox.minY;
 				}
 				if(direction.getAxis().equals(Direction.Axis.X))
 				{
-					equal = firstPart.maxY == placement.maxY && firstPart.minY == placement.minY
-							&& firstPart.maxZ == placement.maxZ && firstPart.minZ == placement.minZ;
+					equal = firstPart.maxY == placementBox.maxY && firstPart.minY == placementBox.minY
+							&& firstPart.maxZ == placementBox.maxZ && firstPart.minZ == placementBox.minZ;
 				}
 			}
 			if(equal && placementShape.toAabbs().size() == 1)
 				return true;
 			else
 			{
-				System.out.println("Invalid Portal Placement! - Server");
+				//System.out.println("Invalid Portal Placement! - Server");
 				return false;
 			}
 		}

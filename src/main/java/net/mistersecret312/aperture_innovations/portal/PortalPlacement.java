@@ -42,30 +42,6 @@ public class PortalPlacement
 		} else {
 			rotation = Direction.UP;
 		}
-		BlockPos tryBottomPos;
-
-		if(!face.getAxis().isVertical())
-			tryBottomPos = hitPos.relative(rotation.getOpposite());
-		else
-		{
-			if(face.getAxisDirection().equals(Direction.AxisDirection.POSITIVE))
-				tryBottomPos = hitPos.relative(rotation.getOpposite());
-			else tryBottomPos = hitPos.relative(rotation);
-		}
-		if (isValidSpot(level, tryBottomPos, rotation, face, uuid, isPrimary))
-		{
-			return new Result(tryBottomPos, rotation, face);
-		}
-
-		tryBottomPos = hitPos;
-		if(face.getAxis().isVertical())
-		{
-			if(face.getAxisDirection().equals(Direction.AxisDirection.POSITIVE))
-				tryBottomPos = hitPos;
-		}
-		if (isValidSpot(level, tryBottomPos, rotation, face, uuid, isPrimary)) {
-			return new Result(tryBottomPos, rotation, face);
-		}
 
 		return new Result(hitPos, rotation, face);
 	}
