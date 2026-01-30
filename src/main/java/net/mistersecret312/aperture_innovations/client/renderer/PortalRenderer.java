@@ -40,8 +40,10 @@ public class PortalRenderer
 			poseStack.translate(-camera.getPosition().x + pos.x,
 					-camera.getPosition().y + pos.y,
 					-camera.getPosition().z + pos.z);
+			Direction direction = Direction.fromYRot(link.getPrimaryPortal().getYRotation());
 
-			poseStack.mulPose(Axis.YP.rotationDegrees(link.getPrimaryPortal().getYRotation()));
+			poseStack.mulPose(Axis.YP.rotationDegrees(link.getPrimaryPortal().getYRotation()+(direction.getAxis().equals(
+					Direction.Axis.X) ? 180 : 0)));
 			poseStack.mulPose(Axis.XP.rotationDegrees(link.getPrimaryPortal().getXRotation()));
 
 			poseStack.translate(0f, 0f, 0f);
@@ -68,7 +70,9 @@ public class PortalRenderer
 					-camera.getPosition().y + pos.y,
 					-camera.getPosition().z + pos.z);
 
-			poseStack.mulPose(Axis.YP.rotationDegrees(link.getSecondaryPortal().getYRotation()));
+			Direction direction = Direction.fromYRot(link.getSecondaryPortal().getYRotation());
+			poseStack.mulPose(Axis.YP.rotationDegrees(link.getSecondaryPortal().getYRotation() + (direction.getAxis().equals(
+					Direction.Axis.X) ? 180 : 0)));
 			poseStack.mulPose(Axis.XP.rotationDegrees(link.getSecondaryPortal().getXRotation()));
 
 
@@ -96,6 +100,10 @@ public class PortalRenderer
 
 		float xRot = isPrimary ? link.getPrimaryPortal().getXRotation() : link.getSecondaryPortal().getXRotation();
 		float yRot = isPrimary ? link.getPrimaryPortal().getYRotation() : link.getSecondaryPortal().getYRotation();
+
+		Direction direction = Direction.fromYRot(yRot);
+		if(direction.getAxis().equals(Direction.Axis.X))
+			yRot += 180;
 
 		poseStack.mulPose(Axis.YP.rotationDegrees(yRot));
 		poseStack.mulPose(Axis.XP.rotationDegrees(xRot));
@@ -187,6 +195,10 @@ public class PortalRenderer
 		Vec3 pos = isPrimary ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
 		float xRot = isPrimary ? link.getPrimaryPortal().getXRotation() : link.getSecondaryPortal().getXRotation();
 		float yRot = isPrimary ? link.getPrimaryPortal().getYRotation() : link.getSecondaryPortal().getYRotation();
+
+		Direction direction = Direction.fromYRot(yRot);
+		if(direction.getAxis().equals(Direction.Axis.X))
+			yRot += 180;
 
 		poseStack.translate(pos.x-camera.getPosition().x,
 				pos.y-camera.getPosition().y,

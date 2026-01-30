@@ -1,6 +1,7 @@
 package net.mistersecret312.aperture_innovations.portal;
 
 import com.mojang.datafixers.util.Pair;
+import mekanism.common.lib.multiblock.Structure;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
@@ -161,6 +162,8 @@ public class PortalUtilities
 			direction = Direction.UP;
 		else if(xRot == 90)
 			direction = Direction.DOWN;
+		if(direction.getAxis().equals(Direction.Axis.X))
+			direction = direction.getOpposite();
 
 		if(direction.getAxis().isHorizontal())
 		{
@@ -218,6 +221,8 @@ public class PortalUtilities
 			direction = Direction.UP;
 		else if(xRot == 90)
 			direction = Direction.DOWN;
+		if(direction.getAxis().equals(Direction.Axis.X))
+			direction = direction.getOpposite();
 
 		if(direction.getAxis().isHorizontal())
 		{
@@ -259,6 +264,9 @@ public class PortalUtilities
 		else if(xRot == 90)
 			direction = Direction.DOWN;
 
+		if(direction.getAxis().equals(Direction.Axis.X))
+			direction = direction.getOpposite();
+
 		if(direction.getAxis().isHorizontal())
 		{
 			Direction.Axis axis = direction.getAxis();
@@ -272,12 +280,13 @@ public class PortalUtilities
 		else
 		{
 			Direction.Axis axis = facing.getAxis();
+			boolean ceiling = direction.equals(Direction.DOWN);
 			if(axis.equals(Direction.Axis.X))
-				portal = new AABB(portalPos.x - 0.9, portalPos.y - 0.1, portalPos.z - 0.5,
-						portalPos.x + 0.9, portalPos.y - 0.01, portalPos.z + 0.5);
+				portal = new AABB(portalPos.x - 0.9, portalPos.y - (ceiling ? -0.1 : 0.1), portalPos.z - 0.5,
+						portalPos.x + 0.9, portalPos.y - (ceiling ? -0.01 : 0.01), portalPos.z + 0.5);
 			else if(axis.equals(Direction.Axis.Z))
-				portal = new AABB(portalPos.x - 0.5, portalPos.y - 0.1, portalPos.z - 0.9,
-						portalPos.x + 0.5, portalPos.y - 0.01, portalPos.z + 0.9);
+				portal = new AABB(portalPos.x - 0.5, portalPos.y - (ceiling ? -0.1 : 0.1), portalPos.z - 0.9,
+						portalPos.x + 0.5, portalPos.y - (ceiling ? -0.01 : 0.01), portalPos.z + 0.9);
 
 			return portal;
 		}

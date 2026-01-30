@@ -2,6 +2,7 @@ package net.mistersecret312.aperture_innovations.events;
 
 import com.mojang.datafixers.util.Pair;
 import com.mojang.math.Axis;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceKey;
@@ -59,6 +60,39 @@ public class CommonEvents
 	@SubscribeEvent
 	public static void levelTick(LevelTickEvent.Pre event)
 	{
+		Level level = event.getLevel();
+		if(level instanceof ServerLevel)
+		{
+			PortalLinkData data = PortalLinkData.get(level);
+			for(Map.Entry<UUID, PortalLink> entry : data.portalLinks.entrySet())
+			{
+				PortalLink link = entry.getValue();
+				for(int i = 0; i < 2; i++)
+				{
+					boolean isPrimary = i == 0;
+					Vec3 portalPos = isPrimary ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal()
+																							 .getPosition();
+
+					if(portalPos == null)
+						return;
+
+					float xRot = isPrimary ? link.getPrimaryPortal().getXRotation() : link.getSecondaryPortal()
+																						  .getXRotation();
+					float yRot = isPrimary ? link.getPrimaryPortal().getYRotation() : link.getSecondaryPortal().getYRotation();
+
+					Direction direction = Direction.fromYRot(yRot);
+					if(xRot == -90)
+						direction = Direction.UP;
+					if(xRot == 90)
+						direction = Direction.DOWN;
+
+					if(!link.checkForValidity(level, portalPos, xRot, yRot, direction, isPrimary))
+					{
+					}
+				}
+
+			}
+		}
 //					entity.setDeltaMovement(new Vec3(newSpeed));
 //					entity.resetFallDistance();
 //					if(entity instanceof ServerPlayer player)
