@@ -45,7 +45,7 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem> {
             int portal = this.getAnimatable().getLastShotPortal(this.currentItemStack);
             ClientPortalLink link = PortalUtilities.getPortalLinks().get(this.getAnimatable().getUUID(this.currentItemStack, false));
 
-            if (portal == -1)
+            if (portal == -1 || link == null)
                 return super.boneRenderOverride(poseStack, bone, bufferSource, buffer,
                         partialTick, packedLight, packedOverlay, colour);
 

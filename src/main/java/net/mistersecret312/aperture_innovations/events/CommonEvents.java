@@ -72,9 +72,8 @@ public class CommonEvents
 					boolean isPrimary = i == 0;
 					Vec3 portalPos = isPrimary ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal()
 																							 .getPosition();
-
 					if(portalPos == null)
-						return;
+						continue;
 
 					float xRot = isPrimary ? link.getPrimaryPortal().getXRotation() : link.getSecondaryPortal()
 																						  .getXRotation();
@@ -88,6 +87,9 @@ public class CommonEvents
 
 					if(!link.checkForValidity(level, portalPos, xRot, yRot, direction, isPrimary))
 					{
+						if(isPrimary)
+							link.resetPrimary(level);
+						else link.resetSecondary(level);
 					}
 				}
 

@@ -1,5 +1,6 @@
 package net.mistersecret312.aperture_innovations.portal;
 
+import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -102,17 +103,13 @@ public class PortalLink
 		if(direction.equals(Direction.UP))
 		{
 			xRot = -90;
-			yRot = facing.toYRot()+180;
+			yRot = facing.toYRot()+(facing.getAxis().equals(Direction.Axis.X) ? 0 : 180);
 		}
 		if(direction.equals(Direction.DOWN))
 		{
 			xRot = 90;
 			yRot = facing.toYRot();
 		}
-
-		boolean valid = checkForValidity(level, pos, xRot, yRot, direction, false);
-		if(!valid)
-			return;
 
 		this.secondaryPortal.setPosition(pos);
 		this.secondaryPortal.setYRotation(yRot);
@@ -138,29 +135,59 @@ public class PortalLink
 		AABB portalBox = PortalUtilities.getPortalBoundingBox(position, xRot, yRot).inflate(0.025);
 		AABB placementBox = PortalUtilities.getPortalPlacementBox(position, xRot, yRot).inflate(0.025);
 
+		Pair<UUID, Boolean> closestPortalPair = PortalUtilities.getClosestPortal(level, position);
+		Portal closestPortal;
+		if(level.isClientSide() && closestPortalPair.getFirst() != null)
+		{
+			ClientPortalLink link = PortalUtilities.getPortalLinks().get(closestPortalPair.getFirst());
+			if(closestPortalPair.getSecond())
+				closestPortal = link.getPrimaryPortal();
+			else closestPortal = link.getSecondaryPortal();
+		}
+		else if(closestPortalPair.getFirst() != null)
+		{
+			PortalLink link = PortalUtilities.getPortalLinks(level).get(closestPortalPair.getFirst());
+			if(closestPortalPair.getSecond())
+				closestPortal = link.getPrimaryPortal();
+			else closestPortal = link.getSecondaryPortal();
+		}
+		else
+			closestPortal = null;
+
 		VoxelShape placementShape = Shapes.create(placementBox);
 
 		AtomicReference<VoxelShape> placementReference = new AtomicReference<>(placementShape);
 		BlockPos.betweenClosedStream(portalBox).forEach(pos ->
 			{
 				BlockState state = level.getBlockState(pos);
+				if(closestPortal != null)
+				{
+					VoxelShape shape = Shapes.create(PortalUtilities.getPortalPlacementBox(closestPortal.getPosition(),
+							closestPortal.getXRotation(), closestPortal.getYRotation()));
+
+					if(!placementReference.get().isEmpty())
+						placementReference.set(Shapes.join(placementReference.get(), shape, BooleanOp.ONLY_FIRST));
+				}
 				if(!state.isAir())
 				{
 					VoxelShape shape = state.getCollisionShape(level, pos)
 											   .move(pos.getX(), pos.getY(), pos.getZ());
+
+					if(state.is(ApertureInnovations.IMPORTALABLE))
+						shape = Shapes.create(shape.bounds().inflate(0.025));
 
 					if(!placementReference.get().isEmpty())
 						placementReference.set(Shapes.join(placementReference.get(), shape, BooleanOp.ONLY_FIRST));
 				}
 			});
 		placementShape = placementReference.get();
+		List<AABB> shapeList = placementShape.toAabbs();
 
-		if(!placementShape.toAabbs().isEmpty())
+		if(!shapeList.isEmpty())
 		{
-			List<AABB> parts = placementShape.toAabbs();
-			AABB firstPart = parts.getFirst();
+			AABB firstPart = shapeList.getFirst();
 
-			boolean wall = PortalUtilities.isPortalOnWall(level, linkID, isPrimary);
+			boolean wall = direction.getAxis().isHorizontal();
 
 			boolean equal = false;
 			if(!wall)
@@ -181,13 +208,8 @@ public class PortalLink
 							&& firstPart.maxZ == placementBox.maxZ && firstPart.minZ == placementBox.minZ;
 				}
 			}
-			if(equal && placementShape.toAabbs().size() == 1)
-				return true;
-			else
-			{
-				//System.out.println("Invalid Portal Placement! - Server");
-				return false;
-			}
+
+			return equal && shapeList.size() == 1;
 		}
 
 		return false;
