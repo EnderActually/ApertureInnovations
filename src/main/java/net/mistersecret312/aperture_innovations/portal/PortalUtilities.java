@@ -170,20 +170,21 @@ public class PortalUtilities
 			Direction.Axis axis = direction.getAxis();
 			boolean positive = direction.getAxisDirection().equals(Direction.AxisDirection.POSITIVE);
 			if(axis.equals(Direction.Axis.X))
-				portal = new AABB(portalPos.x - (positive ? 0.25 : 0.9), portalPos.y - 0.95, portalPos.z - 0.45,
-						portalPos.x + (positive ? 0.9 : 0.25), portalPos.y + 0.95, portalPos.z + 0.45);
-			else portal = new AABB(portalPos.x - 0.45, portalPos.y - 0.95, portalPos.z - (positive ? 0.9 : 0.25),
-					portalPos.x + 0.45, portalPos.y + 0.95, portalPos.z + (positive ? 0.25 : 0.9));
+				portal = new AABB(portalPos.x - (positive ? 0.25 : 0.4), portalPos.y - 0.95, portalPos.z - 0.45,
+						portalPos.x + (positive ? 0.4 : 0.25), portalPos.y + 0.95, portalPos.z + 0.45);
+			else portal = new AABB(portalPos.x - 0.45, portalPos.y - 0.95, portalPos.z - (positive ? 0.4 : 0.25),
+					portalPos.x + 0.45, portalPos.y + 0.95, portalPos.z + (positive ? 0.25 : 0.4));
 		}
 		else
 		{
 			Direction.Axis axis = facing.getAxis();
+			boolean positive = direction.getAxisDirection().equals(Direction.AxisDirection.POSITIVE);
 			if(axis.equals(Direction.Axis.X))
-				portal = new AABB(portalPos.x - 0.9, portalPos.y - 0.5, portalPos.z - 0.5, portalPos.x + 0.9,
-						portalPos.y + 0.01, portalPos.z + 0.5);
+				portal = new AABB(portalPos.x - 0.9, portalPos.y - (positive ? 0.4 : 0.01), portalPos.z - 0.5,
+						portalPos.x + 0.9, portalPos.y + (positive ? 0.01 : 0.4), portalPos.z + 0.5);
 			else if(axis.equals(Direction.Axis.Z))
-				portal = new AABB(portalPos.x - 0.5, portalPos.y - 0.5, portalPos.z - 0.9, portalPos.x + 0.5,
-						portalPos.y + 0.01, portalPos.z + 0.9);
+				portal = new AABB(portalPos.x - 0.5, portalPos.y - (positive ? 0.4 : 0.01), portalPos.z - 0.9,
+						portalPos.x + 0.5, portalPos.y + (positive ? 0.01 : 0.4), portalPos.z + 0.9);
 
 			return portal;
 		}
@@ -243,11 +244,6 @@ public class PortalUtilities
 			else if(axis.equals(Direction.Axis.Z))
 				portal = new AABB(portalPos.x - 0.5, portalPos.y - 0.01, portalPos.z - 0.9,
 						portalPos.x + 0.5, portalPos.y + 0.1, portalPos.z + 0.9);
-
-			if(direction.getAxisDirection().equals(Direction.AxisDirection.POSITIVE))
-				portal = portal.expandTowards(0, 0,0);
-			else
-				portal = portal.expandTowards(0, 0, 0);
 
 			return portal;
 		}
@@ -362,5 +358,175 @@ public class PortalUtilities
 			}
 			return Pair.of(uuid, isPrimary);
 		}
+	}
+
+	public static Pair<UUID, Boolean> getClosestPortal(Level level, Vec3 position)
+	{
+		UUID uuid = null;
+		boolean isPrimary = false;
+		double closestDistance = Double.MAX_VALUE;
+		if(position == null)
+			return Pair.of(uuid, isPrimary);
+
+		if(level.isClientSide())
+		{
+			for(Map.Entry<UUID, ClientPortalLink> entry : getPortalLinks().entrySet())
+			{
+				ClientPortalLink link = entry.getValue();
+				for(int i = 0; i < 2; i++)
+				{
+					Vec3 pos = i == 0 ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
+					if(pos == null)
+						continue;
+					if(pos.equals(position))
+						continue;
+
+					double distance = position.distanceTo(pos);
+					if(closestDistance > distance)
+					{
+						closestDistance = distance;
+						uuid = entry.getKey();
+						isPrimary = i == 0;
+					}
+				}
+			}
+			return Pair.of(uuid, isPrimary);
+		}
+		else
+		{
+			for(Map.Entry<UUID, PortalLink> entry : getPortalLinks(level).entrySet())
+			{
+				PortalLink link = entry.getValue();
+				for(int i = 0; i < 2; i++)
+				{
+					Vec3 pos = i == 0 ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
+					if(pos == null)
+						continue;
+					if(pos.equals(position))
+						continue;
+
+					double distance = position.distanceTo(pos);
+					if(closestDistance > distance)
+					{
+						closestDistance = distance;
+						uuid = entry.getKey();
+						isPrimary = i == 0;
+					}
+				}
+			}
+			return Pair.of(uuid, isPrimary);
+		}
+	}
+
+	public static Pair<UUID, Boolean> getClosestPortal(Level level, Portal portal)
+	{
+		UUID uuid = null;
+		boolean isPrimary = false;
+		double closestDistance = Double.MAX_VALUE;
+		if(portal == null)
+			return Pair.of(uuid, isPrimary);
+
+		if(level.isClientSide())
+		{
+			for(Map.Entry<UUID, ClientPortalLink> entry : getPortalLinks().entrySet())
+			{
+				ClientPortalLink link = entry.getValue();
+				for(int i = 0; i < 2; i++)
+				{
+					Vec3 pos = i == 0 ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
+					if(pos == null)
+						continue;
+					if(pos.equals(portal.getPosition()))
+						continue;
+
+					double distance = portal.getPosition().distanceTo(pos);
+					if(closestDistance > distance)
+					{
+						closestDistance = distance;
+						uuid = entry.getKey();
+						isPrimary = i == 0;
+					}
+				}
+			}
+			return Pair.of(uuid, isPrimary);
+		}
+		else
+		{
+			for(Map.Entry<UUID, PortalLink> entry : getPortalLinks(level).entrySet())
+			{
+				PortalLink link = entry.getValue();
+				for(int i = 0; i < 2; i++)
+				{
+					Vec3 pos = i == 0 ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
+					if(pos == null)
+						continue;
+					if(pos.equals(portal.getPosition()))
+						continue;
+
+					double distance = portal.getPosition().distanceTo(pos);
+					if(closestDistance > distance)
+					{
+						closestDistance = distance;
+						uuid = entry.getKey();
+						isPrimary = i == 0;
+					}
+				}
+			}
+			return Pair.of(uuid, isPrimary);
+		}
+	}
+
+	public static Pair<Portal, Boolean> getPortalByPosition(Level level, Vec3 position)
+	{
+		Portal portal = null;
+		boolean isPrimary = false;
+		if(level.isClientSide())
+		{
+			HashMap<UUID, ClientPortalLink> links = getPortalLinks();
+			for(Map.Entry<UUID, ClientPortalLink> entry : links.entrySet())
+			{
+				ClientPortalLink link = entry.getValue();
+				for(int i = 0; i < 2; i++)
+				{
+					isPrimary = i == 0;
+					if(isPrimary && position.equals(link.getPrimaryPortal().getPosition()))
+					{
+						portal = link.getPrimaryPortal();
+						return Pair.of(portal, true);
+					}
+
+					if(!isPrimary && position.equals(link.getSecondaryPortal().getPosition()))
+					{
+						portal = link.getSecondaryPortal();
+						return Pair.of(portal, false);
+					}
+				}
+			}
+		}
+		else
+		{
+			HashMap<UUID, PortalLink> links = getPortalLinks(level);
+			for(Map.Entry<UUID, PortalLink> entry : links.entrySet())
+			{
+				PortalLink link = entry.getValue();
+				for(int i = 0; i < 2; i++)
+				{
+					isPrimary = i == 0;
+					if(isPrimary && position.equals(link.getPrimaryPortal().getPosition()))
+					{
+						portal = link.getPrimaryPortal();
+						return Pair.of(portal, true);
+					}
+
+					if(!isPrimary && position.equals(link.getSecondaryPortal().getPosition()))
+					{
+						portal = link.getSecondaryPortal();
+						return Pair.of(portal, false);
+					}
+				}
+			}
+		}
+
+		return Pair.of(portal, isPrimary);
 	}
 }

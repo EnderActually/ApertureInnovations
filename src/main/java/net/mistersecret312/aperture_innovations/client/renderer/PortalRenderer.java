@@ -40,11 +40,19 @@ public class PortalRenderer
 			poseStack.translate(-camera.getPosition().x + pos.x,
 					-camera.getPosition().y + pos.y,
 					-camera.getPosition().z + pos.z);
-			Direction direction = Direction.fromYRot(link.getPrimaryPortal().getYRotation());
 
-			poseStack.mulPose(Axis.YP.rotationDegrees(link.getPrimaryPortal().getYRotation()+(direction.getAxis().equals(
-					Direction.Axis.X) ? 180 : 0)));
-			poseStack.mulPose(Axis.XP.rotationDegrees(link.getPrimaryPortal().getXRotation()));
+			float xRot = link.getPrimaryPortal().getXRotation();
+			float yRot = link.getPrimaryPortal().getYRotation();
+
+			Direction direction = Direction.fromYRot(yRot);
+			if(xRot == -90)
+				direction = Direction.UP;
+			if(xRot == 90)
+				direction = Direction.DOWN;
+
+			poseStack.mulPose(Axis.YP.rotationDegrees(yRot + ((direction.getAxis().equals(
+					Direction.Axis.X) && direction.getAxis().isHorizontal()) ? 180 : 0)));
+			poseStack.mulPose(Axis.XP.rotationDegrees(xRot));
 
 			poseStack.translate(0f, 0f, 0f);
 
@@ -70,11 +78,18 @@ public class PortalRenderer
 					-camera.getPosition().y + pos.y,
 					-camera.getPosition().z + pos.z);
 
-			Direction direction = Direction.fromYRot(link.getSecondaryPortal().getYRotation());
-			poseStack.mulPose(Axis.YP.rotationDegrees(link.getSecondaryPortal().getYRotation() + (direction.getAxis().equals(
-					Direction.Axis.X) ? 180 : 0)));
-			poseStack.mulPose(Axis.XP.rotationDegrees(link.getSecondaryPortal().getXRotation()));
+			float xRot = link.getSecondaryPortal().getXRotation();
+			float yRot = link.getSecondaryPortal().getYRotation();
 
+			Direction direction = Direction.fromYRot(yRot);
+			if(xRot == -90)
+				direction = Direction.UP;
+			if(xRot == 90)
+				direction = Direction.DOWN;
+
+			poseStack.mulPose(Axis.YP.rotationDegrees(yRot + ((direction.getAxis().equals(
+					Direction.Axis.X) && direction.getAxis().isHorizontal()) ? 180 : 0)));
+			poseStack.mulPose(Axis.XP.rotationDegrees(xRot));
 
 			poseStack.translate(0f, 0f, 0.001f);
 			poseStack.scale(2f, 2f, 2f);
@@ -246,13 +261,13 @@ public class PortalRenderer
 				ResourceLocation texture = ClientPortalUtilities.getPortalHighlightTexture(link, isPrimary);
 
 				poseStack.pushPose();
-				poseStack.translate(0.15f, 0f, 0f);
+				poseStack.translate(0.12f, -0.001f, 0.01f);
 				renderPortalHighlight(buffer, poseStack, texture, color, isPrimary);
 				poseStack.popPose();
 
 				poseStack.pushPose();
+				poseStack.translate(-0.32f, -0.001f, 0.01f);
 				poseStack.mulPose(Axis.YP.rotationDegrees(180));
-				poseStack.translate(0.35f, 0f, 0f);
 				renderPortalHighlight(buffer, poseStack, texture, color, isPrimary);
 				poseStack.popPose();
 			}
