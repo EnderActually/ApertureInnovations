@@ -168,8 +168,8 @@ public class ClientEvents
 						if(!placements.isEmpty())
 						{
 							AABB box = placements.getFirst();
-							LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(RenderType.lines()), box,
-									box.equals(placementBox.inflate(0.025)) ? 1f : 0f, 0f, 1f, 1f);
+//							LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(RenderType.lines()), box,
+//									box.equals(placementBox.inflate(0.025)) ? 1f : 0f, 0f, 1f, 1f);
 						}
 						//False - to have a look at it bumping with Air, True - to have a look at it bumping with VoxelShapes of blocks
 						if(!placementShape.get().isEmpty() && true)
@@ -236,8 +236,6 @@ public class ClientEvents
 							}
 						}
 
-//						LevelRenderer.renderVoxelShape(poseStack, buffer.getBuffer(PortalRenderTypes.lines()),
-//								placementShape.get(), 0, 2, 0, 1f, 0.2f, 0.6f, 1f, false);
 
 						List<AABB> aabbList = bumpingAirShape.get().toAabbs();
 						for(int i = 0; i < aabbList.size(); i++)
@@ -257,9 +255,6 @@ public class ClientEvents
 							if(smthn || (aabb.getXsize() <= 0.05D || aabb.getZsize() <= 0.05D || aabb.getYsize() <= 0.05D))
 								continue;
 
-//							LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(RenderType.lines()), aabb,
-//									0.2f, 1f, 0.25f, 1f);
-
 							Vec3i normal = new Vec3i(direction.getNormal().getX() == 0 ? 1 : 0,
 									direction.getNormal().getY() == 0 ? 1 : 0,
 									direction.getNormal().getZ() == 0 ? 1 : 0);
@@ -270,39 +265,9 @@ public class ClientEvents
 							Direction nearest = Direction.getNearest(offsetToCenter);
 							Vector3f sizes = new Vec3(aabb.getXsize(), aabb.getYsize(), aabb.getZsize()).toVector3f();
 							sizes.mul(nearest.step());
-
-							//System.out.println("================Client================");
-							//System.out.println("Direction = " + nearest.toString());
-							//System.out.println("Offset = " + sizes.toString(NumberFormat.getNumberInstance()));
-
 						}
 
-//						LevelRenderer.renderVoxelShape(poseStack, buffer.getBuffer(PortalRenderTypes.lines()),
-//								bumpingAirShape.get(), 1, 2, 0, 0.25f, 1f, 0.5f, 1f, false);
-//						LevelRenderer.renderVoxelShape(poseStack, buffer.getBuffer(PortalRenderTypes.lines()),
-//								bumpingBlockShape.get(), 1, 3, 0, 0.25f, 0.5f, 1f, 1f, false);
-
 					}
-					for(VoxelShape voxelShape : shapesIDK)
-					{
-//						LevelRenderer.renderVoxelShape(poseStack, buffer.getBuffer(PortalRenderTypes.lines()),
-//								voxelShape, 0, 0, 0, 1f, 1f, 0f, 1f, false);
-					}
-//					LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(PortalRenderTypes.lines()), portalBox, 0f,
-//							1f, 1f, 1f);
-//					LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(PortalRenderTypes.lines()), placementBox,
-//							0.87f, 0.25f, 0.15f, 1f);
-//					LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(PortalRenderTypes.lines()), teleportBox,
-//							1f, 1f, 0f, 1f);
-//					LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(PortalRenderTypes.lines()), floorBox, 1f,
-//							0f, 0f, 1f);
-
-					AABB portalBoxCopy = PortalUtilities.getPortalPlacementBox(portalPos, xRot, yRot).inflate(0.025).deflate(0.025)
-												 .move(Vec3.directionFromRotation(xRot+(direction.getAxis().isVertical() ? 180 : 0), yRot+180)
-														   .multiply(0.15, 0.15, 0.15));
-
-					LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(RenderType.lines()),
-							portalBoxCopy.inflate(0.025f), 1f, 1f, 1f, 1f);
 
 					poseStack.popPose();
 				}
