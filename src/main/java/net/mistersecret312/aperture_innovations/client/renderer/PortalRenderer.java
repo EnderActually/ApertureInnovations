@@ -261,7 +261,7 @@ public class PortalRenderer
 				ResourceLocation texture = ClientPortalUtilities.getPortalHighlightTexture(link, isPrimary);
 
 				poseStack.pushPose();
-				poseStack.translate(0.12f, -0.001f, 0.01f);
+				poseStack.translate(0.16f, -0.01f, 0.01f);
 				renderPortalHighlight(buffer, poseStack, texture, color, isPrimary);
 				poseStack.popPose();
 

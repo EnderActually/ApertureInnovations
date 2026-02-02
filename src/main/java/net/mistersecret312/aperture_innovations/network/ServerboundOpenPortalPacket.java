@@ -155,15 +155,15 @@ public record ServerboundOpenPortalPacket(boolean isPrimary) implements CustomPa
 				}
 
 
-				Pair<Vec3, Vec2> portalPlacement = positionPortal(level, result.getLocation(), facing, rotation);
+				Pair<Vec3, Vec2> portalPlacement = positionPortal(level, result.getLocation(), facing, rotation, linkID, isPrimary);
 				int tries = 0;
 				boolean valid = link.checkForValidity(level, portalPlacement.getFirst(), portalPlacement.getSecond().x,
-						portalPlacement.getSecond().y, facing, isPrimary);
-				while(!valid && tries < 10)
+						portalPlacement.getSecond().y, facing, linkID, isPrimary);
+				while(!valid && tries < 3)
 				{
-					portalPlacement = positionPortal(level, portalPlacement.getFirst(), facing, rotation);
+					portalPlacement = positionPortal(level, portalPlacement.getFirst(), facing, rotation, linkID, isPrimary);
 					valid = link.checkForValidity(level, portalPlacement.getFirst(), portalPlacement.getSecond().x,
-							portalPlacement.getSecond().y, facing, isPrimary);
+							portalPlacement.getSecond().y, facing, linkID, isPrimary);
 					tries++;
 				}
 
@@ -213,7 +213,7 @@ public record ServerboundOpenPortalPacket(boolean isPrimary) implements CustomPa
 		});
 	}
 
-	public static Pair<Vec3, Vec2> positionPortal(Level level, Vec3 originalPos, Direction direction, Direction facing)
+	public static Pair<Vec3, Vec2> positionPortal(Level level, Vec3 originalPos, Direction direction, Direction facing, UUID id, boolean isPrimary)
 	{
 		Vec3 position = originalPos;
 		Vec2 rotation;
@@ -234,7 +234,26 @@ public record ServerboundOpenPortalPacket(boolean isPrimary) implements CustomPa
 		AABB placementBox = PortalUtilities.getPortalPlacementBox(position, xRot, yRot);
 		AABB portalBox = PortalUtilities.getPortalBoundingBox(position, xRot, yRot);
 
-		Pair<UUID, Boolean> closestPortalPair = PortalUtilities.getClosestPortal(level, position);
+		Portal self;
+		if(level.isClientSide())
+		{
+			ClientPortalLink link =  PortalUtilities.getPortalLinks().get(id);
+			if(isPrimary)
+				self = link.getPrimaryPortal();
+			else self = link.getSecondaryPortal();
+		}
+		else
+		{
+			PortalLink link = PortalUtilities.getPortalLinks(level).get(id);
+			if(isPrimary)
+				self = link.getPrimaryPortal();
+			else self = link.getSecondaryPortal();
+		}
+		Pair<UUID, Boolean> closestPortalPair;
+		if(self.getPosition() == null)
+			closestPortalPair = PortalUtilities.getClosestPortal(level, position, isPrimary);
+		else closestPortalPair = PortalUtilities.getClosestPortal(level, self);
+
 		Portal closestPortal;
 		if(level.isClientSide() && closestPortalPair.getFirst() != null)
 		{
@@ -262,7 +281,13 @@ public record ServerboundOpenPortalPacket(boolean isPrimary) implements CustomPa
 		if(closestPortal != null)
 		{
 			VoxelShape shape = Shapes.create(PortalUtilities.getPortalPlacementBox(closestPortal.getPosition(),
-					closestPortal.getXRotation(), closestPortal.getYRotation()));
+					closestPortal.getXRotation(), closestPortal.getYRotation()).inflate(0.05));
+
+			if(!placementShape.get().isEmpty())
+				placementShape.set(Shapes.join(placementShape.get(), shape, BooleanOp.ONLY_FIRST));
+
+			if(!bumpingAirShape.get().isEmpty())
+				bumpingAirShape.set(Shapes.join(bumpingAirShape.get(), shape, BooleanOp.ONLY_FIRST));
 
 			if(!bumpingBlockShape.get().isEmpty())
 				bumpingBlockShape.set(Shapes.join(bumpingBlockShape.get(), shape, BooleanOp.ONLY_FIRST));

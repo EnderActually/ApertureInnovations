@@ -122,6 +122,7 @@ public class ClientEvents
 					AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, rotation.x, rotation.y);
 					AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPos, rotation.x, rotation.y);
 					AABB placementBox = PortalUtilities.getPortalPlacementBox(portalPos, rotation.x, rotation.y);
+					AABB placementBoxCopy = PortalUtilities.getPortalPlacementBox(portalPos, rotation.x, rotation.y).inflate(0.025);
 
 					AABB floorBox = PortalUtilities.getPortalFloorBox(portalPos, rotation.x, rotation.y);
 
@@ -164,6 +165,12 @@ public class ClientEvents
 								}
 							});
 						List<AABB> placements = placementShape.get().toAabbs();
+						if(!placements.isEmpty())
+						{
+							AABB box = placements.getFirst();
+							LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(RenderType.lines()), box,
+									box.equals(placementBox.inflate(0.025)) ? 1f : 0f, 0f, 1f, 1f);
+						}
 						//False - to have a look at it bumping with Air, True - to have a look at it bumping with VoxelShapes of blocks
 						if(!placementShape.get().isEmpty() && true)
 						{
@@ -281,14 +288,21 @@ public class ClientEvents
 //						LevelRenderer.renderVoxelShape(poseStack, buffer.getBuffer(PortalRenderTypes.lines()),
 //								voxelShape, 0, 0, 0, 1f, 1f, 0f, 1f, false);
 					}
-					LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(PortalRenderTypes.lines()), portalBox, 0f,
-							1f, 1f, 1f);
+//					LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(PortalRenderTypes.lines()), portalBox, 0f,
+//							1f, 1f, 1f);
 //					LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(PortalRenderTypes.lines()), placementBox,
 //							0.87f, 0.25f, 0.15f, 1f);
-					LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(PortalRenderTypes.lines()), teleportBox,
-							1f, 1f, 0f, 1f);
+//					LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(PortalRenderTypes.lines()), teleportBox,
+//							1f, 1f, 0f, 1f);
 //					LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(PortalRenderTypes.lines()), floorBox, 1f,
 //							0f, 0f, 1f);
+
+					AABB portalBoxCopy = PortalUtilities.getPortalPlacementBox(portalPos, xRot, yRot).inflate(0.025).deflate(0.025)
+												 .move(Vec3.directionFromRotation(xRot+(direction.getAxis().isVertical() ? 180 : 0), yRot+180)
+														   .multiply(0.15, 0.15, 0.15));
+
+					LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(RenderType.lines()),
+							portalBoxCopy.inflate(0.025f), 1f, 1f, 1f, 1f);
 
 					poseStack.popPose();
 				}
