@@ -14,6 +14,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
+import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.client.ColorUtil;
 import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
@@ -21,7 +22,6 @@ import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalUtilities;
 import org.joml.Matrix4f;
-import org.joml.Quaternionf;
 import org.lwjgl.opengl.GL11;
 
 import java.util.HashMap;
@@ -36,6 +36,12 @@ public class PortalRenderer
 		if (link.getPrimaryPortal().isInWorld())
 		{
 			poseStack.pushPose();
+
+			if(link.isOpen())
+			{
+				renderPortalNonSee(buffer, poseStack, camera, link, true, scale);
+			}
+
 			Vec3 pos = link.getPrimaryPortal().getPosition();
 			poseStack.translate(-camera.getPosition().x + pos.x,
 					-camera.getPosition().y + pos.y,
@@ -73,6 +79,10 @@ public class PortalRenderer
 		if (link.getSecondaryPortal().isInWorld())
 		{
 			poseStack.pushPose();
+			if(link.isOpen())
+			{
+				renderPortalNonSee(buffer, poseStack, camera, link, false, scale);
+			}
 			Vec3 pos = link.getSecondaryPortal().getPosition();
 			poseStack.translate(-camera.getPosition().x + pos.x,
 					-camera.getPosition().y + pos.y,
@@ -109,7 +119,6 @@ public class PortalRenderer
 		poseStack.pushPose();
 		Vec3 pos = isPrimary ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
 
-		poseStack.mulPose(camera.rotation().invert(new Quaternionf()));
 		poseStack.translate((float) (pos.x-camera.getPosition().x), (float) (pos.y-camera.getPosition().y),
 				(float) (pos.z-camera.getPosition().z));
 
@@ -128,22 +137,43 @@ public class PortalRenderer
 		poseStack.translate(0,0f,0.01f);
 		poseStack.scale(scale, scale, scale);
 
-		VertexConsumer consumerA = buffer.getBuffer(
-				PortalRenderTypes.portal(isPrimary ? link.getVariant().primaryPortal().getMaskTexture()
-												 : link.getVariant().secondaryPortal().getMaskTexture()));
+		if(ApertureInnovations.isIrisLoaded())
+		{
+			VertexConsumer consumerB = buffer.getBuffer(PortalRenderTypes.portalEndMask());
+			consumerB.addVertex(poseStack.last().pose(), -0.5f, -0.5f, 0);
+			consumerB.addVertex(poseStack.last().pose(), 0.5f, -0.5f, 0);
+			consumerB.addVertex(poseStack.last().pose(), 0.5f, 0.5f, 0);
+			consumerB.addVertex(poseStack.last().pose(), -0.5f, 0.5f, 0);
+		}
+
+		VertexConsumer consumerA = buffer.getBuffer(PortalRenderTypes.portal(isPrimary ?
+												 link.getVariant().primaryPortal().getMaskTexture() :
+												 link.getVariant().secondaryPortal().getMaskTexture()));
 
 		consumerA.addVertex(poseStack.last().pose(), -0.5f, -0.5f, 0)
 				 .setUv(0, 1)
 				 .setColor(FastColor.ABGR32.color(255, 255, 255, 255));
+
 		consumerA.addVertex(poseStack.last().pose(), 0.5f, -0.5f, 0)
 				 .setUv(1, 1)
 				 .setColor(FastColor.ABGR32.color(255, 255, 255, 255));
+
 		consumerA.addVertex(poseStack.last().pose(), 0.5f, 0.5f, 0)
 				 .setUv(1, 0)
 				 .setColor(FastColor.ABGR32.color(255, 255, 255, 255));
+
 		consumerA.addVertex(poseStack.last().pose(), -0.5f, 0.5f, 0)
 				 .setUv(0, 0)
 				 .setColor(FastColor.ABGR32.color(255, 255, 255, 255));
+
+		if(!ApertureInnovations.isIrisLoaded())
+		{
+			VertexConsumer consumerB = buffer.getBuffer(PortalRenderTypes.portalEndMask());
+			consumerB.addVertex(poseStack.last().pose(), -0.5f, -0.5f, 0);
+			consumerB.addVertex(poseStack.last().pose(), 0.5f, -0.5f, 0);
+			consumerB.addVertex(poseStack.last().pose(), 0.5f, 0.5f, 0);
+			consumerB.addVertex(poseStack.last().pose(), -0.5f, 0.5f, 0);
+		}
 		poseStack.popPose();
 	}
 
