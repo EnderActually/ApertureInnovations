@@ -68,6 +68,7 @@ public interface CollisionMixin
 		Vec2 rotation = PortalUtilities.getPortalRotation(level, uuid, isPrimary);
 
 		AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, rotation.x, rotation.y);
+		AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPos, rotation.x, rotation.y);
 		AABB floorBox = PortalUtilities.getPortalFloorBox(portalPos, rotation.x, rotation.y).inflate(0d, 0.01d, 0d);
 
 		if(collisionBox.intersects(floorBox) && isOpen)
@@ -75,7 +76,7 @@ public interface CollisionMixin
 
 		List<VoxelShape> readdVoxels = PortalUtilities.getPortalVoxels(level, portalPos, rotation.x, rotation.y);
 
-		list.removeIf(shape -> !shape.isEmpty() && shape.bounds().intersects(portalBox) && isOpen);
+		list.removeIf(shape -> !shape.isEmpty() && shape.bounds().intersects(portalBox) && isOpen && teleportBox.intersects(collisionBox));
 
 		for(VoxelShape voxel : readdVoxels)
 		{

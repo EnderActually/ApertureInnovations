@@ -2,6 +2,7 @@ package net.mistersecret312.aperture_innovations.events;
 
 import com.mojang.datafixers.util.Pair;
 import com.mojang.math.Axis;
+import mekanism.common.network.PacketHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -9,6 +10,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -23,13 +25,11 @@ import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
 import net.mistersecret312.aperture_innovations.config.LongFallBootsConfig;
-import net.mistersecret312.aperture_innovations.init.AdvancementInit;
-import net.mistersecret312.aperture_innovations.init.AttachmentTypeInit;
-import net.mistersecret312.aperture_innovations.init.SoundInit;
-import net.mistersecret312.aperture_innovations.init.StatisticsInit;
+import net.mistersecret312.aperture_innovations.init.*;
 import net.mistersecret312.aperture_innovations.items.LongFallBootsItem;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.network.*;
+import net.mistersecret312.aperture_innovations.portal.Portal;
 import net.mistersecret312.aperture_innovations.portal.PortalLink;
 import net.mistersecret312.aperture_innovations.portal.PortalLinkData;
 import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
@@ -52,6 +52,7 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
+import java.text.NumberFormat;
 import java.util.*;
 
 @EventBusSubscriber(modid = ApertureInnovations.MODID, bus = EventBusSubscriber.Bus.GAME)
@@ -101,27 +102,6 @@ public class CommonEvents
 
 			}
 		}
-//					entity.setDeltaMovement(new Vec3(newSpeed));
-//					entity.resetFallDistance();
-//					if(entity instanceof ServerPlayer player)
-//					{
-//						player.awardStat(StatisticsInit.TIMES_USED_PORTALS.get(), 1);
-//						PacketDistributor.sendToPlayer(player, new ClientboundTeleportMomentumPacket(newSpeed));
-//					}
-//					Vec3 mathOtherPos = otherPortalPos;
-//					ApertureCapability aperture = entity.getData(AttachmentTypeInit.APERTURE);
-//
-//					aperture.portal = new Pair<>(uuid, !isPrimary);
-//					aperture.updateDistance();
-//					aperture.setFrictionlessTime(400);
-
-//					entity.setData(AttachmentTypeInit.APERTURE, aperture);
-//					if(entity instanceof ServerPlayer player)
-//					{
-//						AdvancementInit.PORTAL_TRAVEL.get().trigger(player, dimension.location(),
-//								otherDimension.location(), portalPos.distanceToSqr(mathOtherPos),
-//								aperture.verticalDistance, aperture.horizontalDistance, otherMoonshot);
-//					}
 	}
 
 
@@ -244,10 +224,90 @@ public class CommonEvents
 	{
 		Entity entity = event.getEntity();
 		Level level = entity.level();
-		if(entity instanceof LivingEntity living)
+
+		ApertureCapability aperture = entity.getData(AttachmentTypeInit.APERTURE.get());
+		aperture.tick(level, entity);
+
+		if(aperture.ignorePortalsTime == 0 && !level.isClientSide())
 		{
-			ApertureCapability aperture = living.getData(AttachmentTypeInit.APERTURE);
-			aperture.tick(level, living);
+			Vec3 currentPos = entity.position().add(0, entity.getBbHeight()/2f, 0);
+
+			Vec3 speed = entity.getDeltaMovement();
+			Vec3 nextPos = currentPos.add(speed.multiply(2f, 2f, 2f));
+
+			AABB movementBox = entity.getBoundingBox().expandTowards(speed);
+
+			Pair<UUID, Boolean> pair = PortalUtilities.getClosestPortal(entity);
+			UUID linkID = pair.getFirst();
+			boolean isPrimary = pair.getSecond();
+			if(linkID == null)
+				return;
+
+			PortalLink link = PortalUtilities.getPortalLinks(level).get(linkID);
+			if(link == null || !link.isOpen())
+				return;
+
+			Portal portal = pair.getSecond() ? link.getPrimaryPortal() : link.getSecondaryPortal();
+			Portal otherPortal = pair.getSecond() ? link.getSecondaryPortal() : link.getPrimaryPortal();
+
+			AABB teleportBox = PortalUtilities.getPortalTeleportBox(portal.getPosition(), portal.getXRotation(),
+					portal.getYRotation());
+
+			if(movementBox.intersects(teleportBox))
+			{
+				Direction direction = PortalUtilities.getPortalDirection(level, linkID, isPrimary);
+				Vector3f normal = direction.step();
+
+				Vec3 portalPos = PortalUtilities.getPortalBoundingBox(portal.getPosition(), portal.getXRotation(),
+						portal.getYRotation()).getCenter();
+
+				Vec3 offsetFromPortal = currentPos.subtract(portalPos);
+				Vec3 offsetPortalPlace = currentPos.subtract(portal.getPosition());
+				Vec3 nextOffsetFromPortal = nextPos.subtract(portalPos);
+
+				double relativePos = offsetFromPortal.dot(new Vec3(normal));
+				double nextRelativePos = nextOffsetFromPortal.dot(new Vec3(normal));
+
+				boolean slow = portalPos.closerThan(currentPos, 0.4f) && relativePos > 0;
+				boolean fast = relativePos > 0 && nextRelativePos <= 0;
+
+				if(slow || fast)
+				{
+					float xSum = portal.getXRotation()+otherPortal.getXRotation();
+					float ySum = portal.getYRotation()+otherPortal.getYRotation();
+
+					float xRotDiff = Mth.wrapDegrees(xSum);
+					float yRotDiff = Mth.wrapDegrees(ySum);
+
+					System.out.println("This Portal - X:"+portal.getXRotation() + ", Y:"+portal.getYRotation());
+					System.out.println("Other Portal - X:"+otherPortal.getXRotation() + ", Y:"+otherPortal.getYRotation());
+
+					System.out.println("rotation degrees - X:" + xRotDiff + ", Y:" + yRotDiff);
+
+					Quaternionf rotX = Axis.XP.rotation(xRotDiff);
+					Quaternionf rotY = Axis.YP.rotation(yRotDiff);
+
+					aperture.setIgnorePortalsTime(5);
+
+					Vec3 newSpeed = new Vec3(speed.toVector3f().rotate(rotY).rotate(rotX));
+					Vec3 rotatedOffset = new Vec3(offsetPortalPlace.toVector3f().rotate(rotY).rotate(rotX));
+
+					Vec3 targetPos = otherPortal.getPosition().add(rotatedOffset).subtract(0,entity.getBbHeight()/2, 0);
+
+					entity.setDeltaMovement(newSpeed);
+					entity.teleportTo((ServerLevel) level, targetPos.x, targetPos.y, targetPos.z, Set.of(),
+							(float) (entity.getYRot()+yRotDiff), entity.getXRot());
+					if(entity instanceof ServerPlayer player)
+					{
+						PacketDistributor.sendToPlayer(player, new ClientboundTeleportMomentumPacket(
+								newSpeed.toVector3f()));
+
+						aperture.portal = Pair.of(linkID, isPrimary);
+						aperture.updateDistance();
+						aperture.setFrictionlessTime(100*20);
+					}
+				}
+			}
 		}
 	}
 

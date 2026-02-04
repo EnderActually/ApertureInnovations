@@ -24,6 +24,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
@@ -93,6 +94,11 @@ public class ApertureInnovations
 	{
 		event.registerItem(Capabilities.EnergyStorage.ITEM, (stack, context) -> new PortalGunItem.Energy(stack), ItemInit.PORTAL_GUN);
 		event.registerItem(Capabilities.EnergyStorage.ITEM, (stack, context) -> new LongFallBootsItem.Energy(stack), ItemInit.LONG_FALL_BOOTS);
+	}
+
+	public static boolean isIrisLoaded()
+	{
+		return ModList.get().isLoaded("iris");
 	}
 
 	@EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)

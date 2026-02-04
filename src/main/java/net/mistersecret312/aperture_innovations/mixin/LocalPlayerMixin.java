@@ -56,6 +56,7 @@ public class LocalPlayerMixin
 		List<VoxelShape> reAddVoxels = PortalUtilities.getPortalVoxels(level, portalPos, rotation.x, rotation.y);
 
 		AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, rotation.x, rotation.y);
+		AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPos, rotation.x, rotation.y);
 		AABB floorBox = PortalUtilities.getPortalFloorBox(portalPos, rotation.x, rotation.y).inflate(0d, 0.01d, 0d);
 
 		if(floorBox.intersects(playerBox) && isOpen)
@@ -63,7 +64,7 @@ public class LocalPlayerMixin
 			cir.setReturnValue(false);
 		}
 
-		if(portalBox.intersects(playerBox))
+		if(portalBox.intersects(playerBox) && teleportBox.intersects(playerBox))
 		{
 			cir.setReturnValue(false);
 		}

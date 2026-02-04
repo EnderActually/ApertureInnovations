@@ -2,6 +2,7 @@ package net.mistersecret312.aperture_innovations.events;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.datafixers.util.Pair;
+import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -12,13 +13,11 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec2;
@@ -27,7 +26,6 @@ import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
-import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.network.ServerboundOpenPortalPacket;
@@ -42,16 +40,13 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.*;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
-import java.text.NumberFormat;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 import static net.mistersecret312.aperture_innovations.client.renderer.PortalRenderer.*;
 
@@ -88,7 +83,7 @@ public class ClientEvents
 					{
 						if(level.isLoaded(BlockPos.containing(portalPos)))
 						{
-							renderPortalNonSee(buffer, poseStack, camera, link, i == 0, scale);
+//							renderPortalNonSee(buffer, poseStack, camera, link, i == 0, scale);
 						}
 					}
 					poseStack.popPose();
@@ -124,6 +119,34 @@ public class ClientEvents
 					AABB placementBox = PortalUtilities.getPortalPlacementBox(portalPos, rotation.x, rotation.y);
 					AABB placementBoxCopy = PortalUtilities.getPortalPlacementBox(portalPos, rotation.x, rotation.y).inflate(0.025);
 
+					poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
+
+					{
+						poseStack.pushPose();
+
+						poseStack.translate(portalPos.x, portalPos.y, portalPos.z);
+						Direction direction = PortalUtilities.getPortalDirection(level, uuid, isPrimary);
+						poseStack.translate(direction.getStepX(), direction.getStepY(), direction.getStepZ());
+
+						Vec2 portalRotation = PortalUtilities.getPortalRotation(level, uuid, isPrimary);
+						Vec2 otherRot = PortalUtilities.getPortalRotation(level, uuid, !isPrimary);
+
+
+
+						if(PortalUtilities.isPortalOnWall(level, uuid, isPrimary))
+							poseStack.mulPose(Axis.XP.rotationDegrees(0));
+
+//						LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(RenderType.lines()),
+//								new AABB(-0.25, -0.25, -0.25, 0.25, 1.5, 0.25), 1f, 0f, 0f, 1f);
+//						poseStack.translate(direction.getStepX()*1.75, direction.getStepY()*1.75, direction.getStepZ()*1.75);
+//						LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(RenderType.lines()),
+//								new AABB(-0.25, -0.25, -0.25, 0.25, 0.25, 0.25), 0f, 1f, 0f, 1f);
+
+						poseStack.popPose();
+					}
+//					LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(RenderType.lineStrip()), teleportBox, 0f, 0f, 1f, 1f);
+//					LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(RenderType.lineStrip()), portalBox, 1f, 0f, 1f, 1f);
+
 					AABB floorBox = PortalUtilities.getPortalFloorBox(portalPos, rotation.x, rotation.y);
 
 					List<VoxelShape> shapesIDK = PortalUtilities.getPortalVoxels(level, portalPos, rotation.x,
@@ -138,8 +161,6 @@ public class ClientEvents
 						direction = Direction.UP;
 					if(xRot == 90)
 						direction = Direction.DOWN;
-
-					poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
 
 					AtomicReference<VoxelShape> placementShape = new AtomicReference<>(
 							Shapes.create(placementBox.inflate(0.025)));
