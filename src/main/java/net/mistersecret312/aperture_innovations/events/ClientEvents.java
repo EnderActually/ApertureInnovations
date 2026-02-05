@@ -64,6 +64,40 @@ public class ClientEvents
 		MultiBufferSource.BufferSource buffer = Minecraft.getInstance().renderBuffers().bufferSource();
 		Camera camera = event.getCamera();
 		PoseStack poseStack = event.getPoseStack();
+		Matrix4f matrix4f = event.getModelViewMatrix();
+
+		if(event.getStage() == RenderLevelStageEvent.Stage.AFTER_SKY)
+		{
+			Level level = Minecraft.getInstance().level;
+			LINKS.forEach((linkID, link) -> {
+				poseStack.pushPose();
+
+				for(int i = 0; i < 2; i++)
+				{
+					boolean isPrimary = i == 0;
+					ResourceKey<Level> dimension = isPrimary ? link.getPrimaryPortal().getDimension() :
+														   link.getSecondaryPortal().getDimension();
+					if(level.dimension() != dimension)
+						continue;
+
+					poseStack.pushPose();
+
+					float scale = ClientPortalUtilities.getPortalOpeningAnimationProgress(linkID, isPrimary);
+
+					Vec3 portalPos = isPrimary ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
+					if(link.getPrimaryPortal().isOpen() && link.getSecondaryPortal().isOpen())
+					{
+						if(level.isLoaded(BlockPos.containing(portalPos)))
+						{
+							renderPortalNonSee(buffer, poseStack, camera, link, i == 0, scale);
+						}
+					}
+					poseStack.popPose();
+					buffer.endBatch();
+				}
+				poseStack.popPose();
+			});
+		}
 
 		if(event.getStage() == RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS)
 		{

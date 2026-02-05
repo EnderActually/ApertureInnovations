@@ -251,6 +251,24 @@ public class CommonEvents
 			Portal portal = pair.getSecond() ? link.getPrimaryPortal() : link.getSecondaryPortal();
 			Portal otherPortal = pair.getSecond() ? link.getSecondaryPortal() : link.getPrimaryPortal();
 
+			double distance = portal.getPosition().distanceTo(entity.position());
+			if(distance < 6 && otherPortal.isMoonshot())
+			{
+				Direction direction = PortalUtilities.getPortalDirection(level, linkID, isPrimary);
+
+				Vec3 portalPos = PortalUtilities.getPortalTeleportBox(portal.getPosition(), portal.getXRotation(),
+						portal.getYRotation()).getCenter();
+				portalPos = portalPos.add(direction.getOpposite().getStepX()*entity.getBbWidth()/2f,
+						direction.getOpposite().getStepY()*entity.getBbHeight()/1.25f, direction.getOpposite().getStepZ()*entity.getBbWidth()/2f);
+
+				Vec3 pushVector = portalPos.subtract(entity.position())
+										.multiply(0.08, 0.08, 0.08);
+				entity.push(pushVector);
+				if(entity instanceof ServerPlayer player)
+					PacketDistributor.sendToPlayer(player, new ClientboundTeleportMomentumPacket(
+							player.getDeltaMovement().toVector3f()));
+			}
+
 			AABB teleportBox = PortalUtilities.getPortalTeleportBox(portal.getPosition(), portal.getXRotation(),
 					portal.getYRotation());
 

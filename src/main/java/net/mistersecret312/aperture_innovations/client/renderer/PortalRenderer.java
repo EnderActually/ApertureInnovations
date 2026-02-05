@@ -8,8 +8,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Vec3i;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.item.ItemStack;
@@ -22,8 +24,10 @@ import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalUtilities;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.lwjgl.opengl.GL11;
 
+import java.awt.*;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -39,7 +43,7 @@ public class PortalRenderer
 
 			if(link.isOpen())
 			{
-				renderPortalNonSee(buffer, poseStack, camera, link, true, scale);
+//				renderPortalNonSee(buffer, poseStack, camera, link, true, scale);
 			}
 
 			Vec3 pos = link.getPrimaryPortal().getPosition();
@@ -81,7 +85,7 @@ public class PortalRenderer
 			poseStack.pushPose();
 			if(link.isOpen())
 			{
-				renderPortalNonSee(buffer, poseStack, camera, link, false, scale);
+//				renderPortalNonSee(buffer, poseStack, camera, link, false, scale);
 			}
 			Vec3 pos = link.getSecondaryPortal().getPosition();
 			poseStack.translate(-camera.getPosition().x + pos.x,
@@ -119,6 +123,7 @@ public class PortalRenderer
 		poseStack.pushPose();
 		Vec3 pos = isPrimary ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
 
+		poseStack.mulPose(camera.rotation().invert(new Quaternionf()));
 		poseStack.translate((float) (pos.x-camera.getPosition().x), (float) (pos.y-camera.getPosition().y),
 				(float) (pos.z-camera.getPosition().z));
 
@@ -255,7 +260,7 @@ public class PortalRenderer
 		float scale = ClientPortalUtilities.getPortalOpeningAnimationProgress(link.linkID(), isPrimary);
 		poseStack.scale(2f, 2f, 2f);
 		poseStack.scale(scale, scale, scale);
-		poseStack.translate(0.09375, 0f, 0.0125);
+		poseStack.translate(0, 0f, 0.0125);
 
 		ColorUtil.RGBA color = ClientPortalUtilities.getPortalColor(link, isPrimary);
 
