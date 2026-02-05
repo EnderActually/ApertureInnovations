@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.client.event.RegisterShadersEvent;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.client.ColorUtil;
 import net.mistersecret312.aperture_innovations.client.renderer.geckolib.DynamicGeoItemRenderer;
@@ -41,7 +42,7 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
 			int portal = this.getAnimatable().getLastShotPortal(this.currentItemStack);
 			ClientPortalLink link = PortalUtilities.getPortalLinks().get(this.getAnimatable().getUUID(this.currentItemStack, false));
 
-			if(portal == -1)
+			if(portal == -1 || link == null)
 				return super.boneRenderOverride(poseStack, bone, bufferSource, buffer,
 						partialTick, packedLight, packedOverlay, red, green, blue, alpha);
 
