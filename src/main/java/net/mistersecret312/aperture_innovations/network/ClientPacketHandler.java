@@ -15,6 +15,7 @@ public class ClientPacketHandler
 		if(player != null)
 		{
 			player.setDeltaMovement(new Vec3(speed));
+			player.setOldPosAndRot();
 		}
 	}
 

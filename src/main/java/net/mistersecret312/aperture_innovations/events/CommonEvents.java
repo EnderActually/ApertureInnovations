@@ -258,8 +258,10 @@ public class CommonEvents
 				Direction direction = PortalUtilities.getPortalDirection(level, linkID, isPrimary);
 				Vector3f normal = direction.step();
 
-				Vec3 portalPos = PortalUtilities.getPortalBoundingBox(portal.getPosition(), portal.getXRotation(),
+				Vec3 portalPos = PortalUtilities.getPortalTeleportBox(portal.getPosition(), portal.getXRotation(),
 						portal.getYRotation()).getCenter();
+				portalPos = portalPos.add(direction.getOpposite().getStepX()*entity.getBbWidth()/2f,
+						direction.getOpposite().getStepY()*entity.getBbHeight()/1.25f, direction.getOpposite().getStepZ()*entity.getBbWidth()/2f);
 
 				Vec3 offsetFromPortal = currentPos.subtract(portalPos);
 				Vec3 offsetPortalPlace = currentPos.subtract(portal.getPosition());
@@ -273,34 +275,52 @@ public class CommonEvents
 
 				if(slow || fast)
 				{
-					float xSum = portal.getXRotation()+otherPortal.getXRotation();
-					float ySum = portal.getYRotation()+otherPortal.getYRotation();
+					Quaternionf portalQ = new Quaternionf().rotationYXZ(
+							(float) (Math.PI - Math.toRadians(portal.getYRotation() + (direction.getAxis().isHorizontal() ? 180 : 0))),
+							(float) Math.toRadians(-portal.getXRotation()-90),
+							0);
 
-					float xRotDiff = Mth.wrapDegrees(xSum);
-					float yRotDiff = Mth.wrapDegrees(ySum);
+					Quaternionf otherPortalQ = new Quaternionf().rotationYXZ(
+							(float) (Math.PI - Math.toRadians(otherPortal.getYRotation()+(direction.getAxis().isHorizontal() ? 180 : 0))),
+							(float) Math.toRadians(-otherPortal.getXRotation()-90),
+							0);
+
 
 					System.out.println("This Portal - X:"+portal.getXRotation() + ", Y:"+portal.getYRotation());
 					System.out.println("Other Portal - X:"+otherPortal.getXRotation() + ", Y:"+otherPortal.getYRotation());
 
-					System.out.println("rotation degrees - X:" + xRotDiff + ", Y:" + yRotDiff);
+					if(direction.getAxis().isHorizontal())
+						aperture.setIgnorePortalsTime(5);
 
-					Quaternionf rotX = Axis.XP.rotation(xRotDiff);
-					Quaternionf rotY = Axis.YP.rotation(yRotDiff);
+					Vector3f newSpeed = portalQ.invert(new Quaternionf()).transform(speed.toVector3f());
+					otherPortalQ.rotateZ((float) Math.toRadians(180), new Quaternionf()).transform(newSpeed);
 
-					aperture.setIgnorePortalsTime(5);
+					if(otherPortal.getXRotation() == -90 && newSpeed.length() < 0.5)
+						newSpeed.add(0, 0.05f, 0);
 
-					Vec3 newSpeed = new Vec3(speed.toVector3f().rotate(rotY).rotate(rotX));
-					Vec3 rotatedOffset = new Vec3(offsetPortalPlace.toVector3f().rotate(rotY).rotate(rotX));
+					Vector3f rotatedOffset = portalQ.invert(new Quaternionf()).transform(offsetPortalPlace.toVector3f());
+					otherPortalQ.rotateZ((float) Math.toRadians(180), new Quaternionf()).transform(rotatedOffset);
 
-					Vec3 targetPos = otherPortal.getPosition().add(rotatedOffset).subtract(0,entity.getBbHeight()/2, 0);
+					Vec3 targetPos = otherPortal.getPosition().subtract(0,entity.getBbHeight()/2, 0);
 
-					entity.setDeltaMovement(newSpeed);
+					entity.setDeltaMovement(new Vec3(newSpeed));
+					entity.hasImpulse = true;
+					entity.resetFallDistance();
+
+					Quaternionf rot = new Quaternionf()
+											  .rotationYXZ((180 - entity.getYRot()) * Mth.DEG_TO_RAD, -entity.getXRot() * Mth.DEG_TO_RAD, 0)
+											  .premul(portalQ.invert(new Quaternionf()))
+											  .premul(otherPortalQ.rotateZ((float) Math.toRadians(180), new Quaternionf()))
+											  .conjugate();
+
+					float yaw = (float) Math.atan2(-(rot.x * rot.z + rot.y * rot.w) * 2, 2 * (rot.y * rot.y + rot.z * rot.z) - 1);
 					entity.teleportTo((ServerLevel) level, targetPos.x, targetPos.y, targetPos.z, Set.of(),
-							(float) (entity.getYRot()+yRotDiff), entity.getXRot());
+							(float) Math.toDegrees(yaw)+(direction.getAxis().isVertical() ? 180 : 0), entity.getXRot());
+					entity.setOldPosAndRot();
 					if(entity instanceof ServerPlayer player)
 					{
 						PacketDistributor.sendToPlayer(player, new ClientboundTeleportMomentumPacket(
-								newSpeed.toVector3f()));
+								newSpeed));
 
 						aperture.portal = Pair.of(linkID, isPrimary);
 						aperture.updateDistance();
