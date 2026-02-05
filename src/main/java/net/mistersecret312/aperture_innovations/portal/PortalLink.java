@@ -98,9 +98,6 @@ public class PortalLink
 
 		}
 
-		System.out.println("Rotations Primary - X:" + xRot + ", Y:" + yRot);
-
-
 		PortalLinkData.get(level).setDirty(linkID, true);
 	}
 
@@ -135,8 +132,6 @@ public class PortalLink
 			PacketDistributor.sendToPlayersTrackingChunk(portalLevel, new ChunkPos(x, z),
 					new ClientboundPortalSoundsPacket.OpenPortal(linkID, false));
 		}
-
-		System.out.println("Rotations Secondary - X:" + xRot + ", Y:" + yRot);
 
 		PortalLinkData.get(level).setDirty(linkID, false);
 	}
@@ -322,6 +317,11 @@ public class PortalLink
 	public boolean isOpen()
 	{
 		return primaryPortal.isOpen() && secondaryPortal.isOpen();
+	}
+
+	public boolean isInWorld()
+	{
+		return primaryPortal.isInWorld() && secondaryPortal.isInWorld();
 	}
 
 	public boolean isInterdimensionalLink()

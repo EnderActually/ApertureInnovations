@@ -91,5 +91,10 @@ public class NetworkInit
 				.decoder(ClientboundPortalSoundsPacket.GunActivate::new)
 				.consumerMainThread(ClientboundPortalSoundsPacket.GunActivate::handle).add();
 
+		registrar.playToClient(
+				ClientboundEntityPortalLerpPacket.TYPE,
+				ClientboundEntityPortalLerpPacket.STREAM_CODEC,
+				ClientboundEntityPortalLerpPacket::handle
+		);
 	}
 }
