@@ -22,6 +22,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.advancements.PortalTravelCriterion;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
 import net.mistersecret312.aperture_innovations.config.LongFallBootsConfig;
@@ -256,6 +257,7 @@ public class CommonEvents
 			if(movementBox.intersects(teleportBox))
 			{
 				Direction direction = PortalUtilities.getPortalDirection(level, linkID, isPrimary);
+				Direction otherDirection = PortalUtilities.getPortalDirection(level, linkID, !isPrimary);
 				Vector3f normal = direction.step();
 
 				Vec3 portalPos = PortalUtilities.getPortalTeleportBox(portal.getPosition(), portal.getXRotation(),
@@ -285,23 +287,28 @@ public class CommonEvents
 							(float) Math.toRadians(-otherPortal.getXRotation()-90),
 							0);
 
-
-					System.out.println("This Portal - X:"+portal.getXRotation() + ", Y:"+portal.getYRotation());
-					System.out.println("Other Portal - X:"+otherPortal.getXRotation() + ", Y:"+otherPortal.getYRotation());
-
 					if(direction.getAxis().isHorizontal())
 						aperture.setIgnorePortalsTime(5);
+					if(link.isInWorld() && link.isInterdimensionalLink())
+						aperture.setIgnorePortalsTime(20);
 
 					Vector3f newSpeed = portalQ.invert(new Quaternionf()).transform(speed.toVector3f());
 					otherPortalQ.rotateZ((float) Math.toRadians(180), new Quaternionf()).transform(newSpeed);
 
 					if(otherPortal.getXRotation() == -90 && newSpeed.length() < 0.5)
 						newSpeed.add(0, 0.05f, 0);
+					if(portal.getXRotation() == 0 && otherPortal.getXRotation() == -90)
+						newSpeed.add(0f, 0.5f, 0f);
 
 					Vector3f rotatedOffset = portalQ.invert(new Quaternionf()).transform(offsetPortalPlace.toVector3f());
 					otherPortalQ.rotateZ((float) Math.toRadians(180), new Quaternionf()).transform(rotatedOffset);
 
-					Vec3 targetPos = otherPortal.getPosition().subtract(0,entity.getBbHeight()/2, 0);
+					Vec3 targetPos;
+					if(otherPortal.isMoonshot())
+						targetPos = portalPos.add(0, 1000, 0);
+					else targetPos = otherPortal.getPosition().subtract(0,entity.getBbHeight()/2, 0);
+
+					targetPos = targetPos.add(otherDirection.getStepX()*0.05, 0, otherDirection.getStepZ()*0.05);
 
 					entity.setDeltaMovement(new Vec3(newSpeed));
 					entity.hasImpulse = true;
@@ -313,8 +320,17 @@ public class CommonEvents
 											  .premul(otherPortalQ.rotateZ((float) Math.toRadians(180), new Quaternionf()))
 											  .conjugate();
 
+
+					ServerLevel targetLevel;
+					if(otherPortal.isMoonshot())
+						targetLevel = (ServerLevel) level;
+					else targetLevel = level.getServer().getLevel(otherPortal.getDimension());
+					if(targetLevel == null)
+						return;
+
 					float yaw = (float) Math.atan2(-(rot.x * rot.z + rot.y * rot.w) * 2, 2 * (rot.y * rot.y + rot.z * rot.z) - 1);
-					entity.teleportTo((ServerLevel) level, targetPos.x, targetPos.y, targetPos.z, Set.of(),
+					entity.setPos(targetPos);
+					entity.teleportTo(targetLevel, targetPos.x, targetPos.y, targetPos.z, Set.of(),
 							(float) Math.toDegrees(yaw)+(direction.getAxis().isVertical() ? 180 : 0), entity.getXRot());
 					entity.setOldPosAndRot();
 					if(entity instanceof ServerPlayer player)
@@ -322,9 +338,20 @@ public class CommonEvents
 						PacketDistributor.sendToPlayer(player, new ClientboundTeleportMomentumPacket(
 								newSpeed));
 
-						aperture.portal = Pair.of(linkID, isPrimary);
+						aperture.setPortal(Pair.of(linkID, isPrimary));
 						aperture.updateDistance();
 						aperture.setFrictionlessTime(100*20);
+						AdvancementInit.PORTAL_TRAVEL.get().trigger(player,
+								portal.getDimension().location(),
+								targetLevel.dimension().location(),
+								portal.getPosition().distanceToSqr(targetPos),
+								aperture.verticalDistance, aperture.horizontalDistance,
+								otherPortal.isMoonshot());
+					}
+					else
+					{
+						PacketDistributor.sendToPlayersTrackingEntity(entity, new ClientboundEntityPortalLerpPacket(entity.getId(),
+								targetPos.toVector3f(),(float) Math.toDegrees(yaw)+(direction.getAxis().isVertical() ? 180 : 0), entity.getXRot()));
 					}
 				}
 			}

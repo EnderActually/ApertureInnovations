@@ -61,6 +61,18 @@ public class PortalRenderTypes extends RenderType
 		);
 	}
 
+	public static RenderType laserTest(ResourceLocation location)
+	{
+		return create("laser_test", DefaultVertexFormat.POSITION_TEX_COLOR,
+				VertexFormat.Mode.QUADS, 256, true, true,
+				CompositeState.builder()
+						.setShaderState(POSITION_TEX_COLOR_SHADER)
+						.setTextureState(new TextureStateShard(location, false, false))
+						.setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
+						.setCullState(CULL)
+						.createCompositeState(true));
+	}
+
 	public static RenderType portalVortex(ResourceLocation location)
 	{
 		return create("portal_vortex", DefaultVertexFormat.POSITION_TEX_COLOR,

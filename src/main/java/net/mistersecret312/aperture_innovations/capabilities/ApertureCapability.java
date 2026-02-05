@@ -94,6 +94,11 @@ public class ApertureCapability implements INBTSerializable<CompoundTag>
 		this.ignorePortalsTime = ignorePortalsTime;
 	}
 
+	public void setPortal(Pair<UUID, Boolean> portal)
+	{
+		this.portal = portal;
+	}
+
 	@Override
 	public CompoundTag serializeNBT(HolderLookup.Provider provider)
 	{
