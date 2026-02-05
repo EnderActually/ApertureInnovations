@@ -136,35 +136,29 @@ public class PortalRenderer
 		poseStack.translate(-0.5,0f,0f);
 		poseStack.scale(scale, scale, scale);
 
-		if(Iris.getCurrentPack().isPresent())
+		if(ApertureInnovations.isOculusLoaded())
 		{
-			RenderSystem.setShader(GameRenderer::getPositionTexShader);
-			RenderSystem.setShaderTexture(0, isPrimary ?
-													 link.getVariant().primaryPortal.getMaskTexture() :
-													 link.getVariant().secondaryPortal.getMaskTexture());
+			if(Iris.getCurrentPack().isPresent())
+			{
+				RenderSystem.setShader(GameRenderer::getPositionTexShader);
+				RenderSystem.setShaderTexture(0,
+						isPrimary ? link.getVariant().primaryPortal.getMaskTexture() : link.getVariant().secondaryPortal.getMaskTexture());
 
-			RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+				RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
 
-			builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+				builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
 
-			builder.vertex(matrix,-0.5f, -0.5f, 0)
-				   .uv(0, 1)
-				   .endVertex();
-			builder.vertex(matrix,0.5f, -0.5f, 0)
-				   .uv(1, 1)
-				   .endVertex();
-			builder.vertex(matrix,0.5f, 0.5f, 0)
-				   .uv(1, 0)
-				   .endVertex();
-			builder.vertex(matrix,-0.5f, 0.5f, 0)
-				   .uv(0, 0)
-				   .endVertex();
+				builder.vertex(matrix, -0.5f, -0.5f, 0).uv(0, 1).endVertex();
+				builder.vertex(matrix, 0.5f, -0.5f, 0).uv(1, 1).endVertex();
+				builder.vertex(matrix, 0.5f, 0.5f, 0).uv(1, 0).endVertex();
+				builder.vertex(matrix, -0.5f, 0.5f, 0).uv(0, 0).endVertex();
 
-			BufferUploader.drawWithShader(builder.end());
-			RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+				BufferUploader.drawWithShader(builder.end());
+				RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
 
-			poseStack.popPose();
-			return;
+				poseStack.popPose();
+				return;
+			}
 		}
 
 		if(ApertureInnovations.isOculusLoaded())
@@ -342,7 +336,7 @@ public class PortalRenderer
 		float scale = isPrimary ? link.openingPrimary() : link.openingSecondary();
 
 		poseStack.scale(scale, scale, 1f);
-		poseStack.translate((1-scale)*(-0.5f), 0f, 0f);
+		poseStack.translate((1-scale)*(-0.5f)-0.09375, 0f, 0f);
 		ColorUtil.RGBA color = ClientPortalUtilities.getPortalColor(link, isPrimary);
 
 		VertexConsumer consumerA = buffer.getBuffer(PortalRenderTypes.portalVortex(sprite.atlasLocation()));
