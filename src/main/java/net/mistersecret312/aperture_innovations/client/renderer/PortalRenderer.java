@@ -3,13 +3,11 @@ package net.mistersecret312.aperture_innovations.client.renderer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
-import net.irisshaders.iris.Iris;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.blockentity.TheEndPortalRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
@@ -19,6 +17,7 @@ import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.client.ColorUtil;
 import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
+import net.mistersecret312.aperture_innovations.compat.iris.IrisCompat;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
@@ -136,9 +135,9 @@ public class PortalRenderer
 		poseStack.translate(-0.5,0f,0f);
 		poseStack.scale(scale, scale, scale);
 
-		if(ApertureInnovations.isOculusLoaded())
+		if(IrisCompat.isIrisLoaded())
 		{
-			if(Iris.getCurrentPack().isPresent())
+			if(IrisCompat.areShadersOn())
 			{
 				RenderSystem.setShader(GameRenderer::getPositionTexShader);
 				RenderSystem.setShaderTexture(0,
@@ -161,7 +160,7 @@ public class PortalRenderer
 			}
 		}
 
-		if(ApertureInnovations.isOculusLoaded())
+		if(IrisCompat.isIrisLoaded())
 		{
 			VertexConsumer consumerB = buffer.getBuffer(PortalRenderTypes.portalEndMask());
 			consumerB.vertex(poseStack.last().pose(), -0.5f, -0.5f, 0).endVertex();
@@ -191,7 +190,7 @@ public class PortalRenderer
 				 .uv(0, 0)
 				 .endVertex();
 
-		if(!ApertureInnovations.isOculusLoaded())
+		if(!IrisCompat.isIrisLoaded())
 		{
 			VertexConsumer consumerB = buffer.getBuffer(PortalRenderTypes.portalEndMask());
 			consumerB.vertex(poseStack.last().pose(), -0.5f, -0.5f, 0).endVertex();
