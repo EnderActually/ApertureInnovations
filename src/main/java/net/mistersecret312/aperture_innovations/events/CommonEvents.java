@@ -1,28 +1,21 @@
 package net.mistersecret312.aperture_innovations.events;
 
 import com.mojang.datafixers.util.Pair;
-import com.mojang.math.Axis;
-import mekanism.common.network.PacketHandler;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
-import net.mistersecret312.aperture_innovations.advancements.PortalTravelCriterion;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
 import net.mistersecret312.aperture_innovations.config.LongFallBootsConfig;
@@ -39,22 +32,15 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 import net.neoforged.neoforge.event.entity.EntityInvulnerabilityCheckEvent;
-import net.neoforged.neoforge.event.entity.ProjectileImpactEvent;
 import net.neoforged.neoforge.event.entity.item.ItemTossEvent;
-import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
-import net.neoforged.neoforge.event.entity.living.LivingFallEvent;
 import net.neoforged.neoforge.event.entity.living.LivingUseTotemEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
 
-import java.text.NumberFormat;
 import java.util.*;
 
 @EventBusSubscriber(modid = ApertureInnovations.MODID, bus = EventBusSubscriber.Bus.GAME)
@@ -70,6 +56,27 @@ public class CommonEvents
 			for(Map.Entry<UUID, PortalLink> entry : data.portalLinks.entrySet())
 			{
 				PortalLink link = entry.getValue();
+
+				portals:
+				for(int i = 0; i < 2; i++)
+				{
+					boolean isPrimary = i == 0;
+					Portal portal = isPrimary ? link.getPrimaryPortal() : link.getSecondaryPortal();
+					if(portal.getPosition() == null)
+						continue;
+
+					List<Entity> entities = level.getEntitiesOfClass(Entity.class, new AABB(portal.getPosition(), portal.getPosition()).inflate(5));
+					for(Entity entity : entities)
+					{
+						ApertureCapability aperture = entity.getData(AttachmentTypeInit.APERTURE);
+						if(aperture.ignorePortalsTime != 0)
+							return;
+
+						if(link.teleportLogic(entity, aperture, link, level, isPrimary))
+							break portals;
+					}
+				}
+
 				for(int i = 0; i < 2; i++)
 				{
 					boolean isPrimary = i == 0;
@@ -77,6 +84,11 @@ public class CommonEvents
 
 					if(portalPos == null)
 						continue;
+
+					PacketDistributor.sendToPlayersTrackingChunk((ServerLevel) level,
+							new ChunkPos(BlockPos.containing(portalPos)),
+							new ClientboundPortalAmbientSoundPacket(link.linkID, isPrimary, false));
+
 
 					ResourceKey<Level> portalDim = isPrimary ? link.getPrimaryPortal().getDimension() : link.getSecondaryPortal()
 																											.getDimension();
@@ -229,20 +241,6 @@ public class CommonEvents
 
 		ApertureCapability aperture = entity.getData(AttachmentTypeInit.APERTURE.get());
 		aperture.tick(level, entity);
-
-		if(level.isClientSide())
-			return;
-
-		PortalLinkData links = PortalLinkData.get(level);
-		for(Map.Entry<UUID, PortalLink> entry : links.portalLinks.entrySet())
-		{
-			PortalLink link = entry.getValue();
-
-			if(aperture.ignorePortalsTime != 0)
-				return;
-
-			link.teleportLogic(entity, aperture, link, level);
-		}
 	}
 
 	@SubscribeEvent
