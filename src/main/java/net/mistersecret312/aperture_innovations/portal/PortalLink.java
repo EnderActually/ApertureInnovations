@@ -477,6 +477,12 @@ public class PortalLink
 				targetPos = targetPos.add(otherDirection.getStepX() * 0.05, otherDirection.getStepY() * 0.05,
 						otherDirection.getStepZ() * 0.05);
 
+				if(!portal.isOnWall())
+				{
+					targetPos = targetPos.add(otherDirection.getStepX() * 0.1f,
+							otherDirection.getStepY() * 0.1f, otherDirection.getStepZ() * 0.1f);
+				}
+
 				entity.setDeltaMovement(new Vec3(newSpeed));
 				entity.hasImpulse = true;
 				entity.resetFallDistance();

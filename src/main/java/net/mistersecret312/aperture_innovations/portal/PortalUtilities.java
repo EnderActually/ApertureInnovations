@@ -179,11 +179,11 @@ public class PortalUtilities
 			Direction.Axis axis = facing.getAxis();
 			boolean positive = direction.getAxisDirection().equals(Direction.AxisDirection.POSITIVE);
 			if(axis.equals(Direction.Axis.X))
-				portal = new AABB(portalPos.x - 0.9, portalPos.y - (positive ? 2 : 0.01), portalPos.z - 0.5,
-						portalPos.x + 0.9, portalPos.y + (positive ? 0.01 : 2), portalPos.z + 0.5);
+				portal = new AABB(portalPos.x - 0.9, portalPos.y - (positive ? 2 : 0.01), portalPos.z - 0.45,
+						portalPos.x + 0.9, portalPos.y + (positive ? 0.01 : 2), portalPos.z + 0.45);
 			else if(axis.equals(Direction.Axis.Z))
-				portal = new AABB(portalPos.x - 0.5, portalPos.y - (positive ? 2 : 0.01), portalPos.z - 0.9,
-						portalPos.x + 0.5, portalPos.y + (positive ? 0.01 : 2), portalPos.z + 0.9);
+				portal = new AABB(portalPos.x - 0.45, portalPos.y - (positive ? 2 : 0.01), portalPos.z - 0.9,
+						portalPos.x + 0.45, portalPos.y + (positive ? 0.01 : 2), portalPos.z + 0.9);
 
 			return portal;
 		}

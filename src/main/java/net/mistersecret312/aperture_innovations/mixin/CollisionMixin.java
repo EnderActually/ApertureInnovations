@@ -90,7 +90,7 @@ public interface CollisionMixin
 
 		list.removeIf(shape -> !shape.isEmpty() && shape.bounds().intersects(portalBox)
 									   && isOpen
-									   && dotProduct >= 0);
+									   && dotProduct > 0);
 
 		for(VoxelShape voxel : readdVoxels)
 		{
@@ -102,8 +102,6 @@ public interface CollisionMixin
 				if(aabb.intersects(collisionBox))
 				{
 					list.add(voxel);
-					cir.setReturnValue(list);
-					return;
 				}
 			}
 		}

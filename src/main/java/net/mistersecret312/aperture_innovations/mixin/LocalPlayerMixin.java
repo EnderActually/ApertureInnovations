@@ -75,7 +75,7 @@ public class LocalPlayerMixin
 			cir.setReturnValue(false);
 		}
 
-		if(portalBox.intersects(playerBox) && dotProduct >= 0)
+		if(portalBox.intersects(playerBox) && dotProduct > 0)
 		{
 			cir.setReturnValue(false);
 			return;
