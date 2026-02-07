@@ -156,7 +156,7 @@ public class CommonEvents
 					else
 						NetworkInit.INSTANCE.send(PacketDistributor.PLAYER.with(() -> serverPlayer),
 								new ClientBoundPortalSyncPacket(uuid, false,
-										link.getPrimaryPortal(), link.variantKey));
+										link.getSecondaryPortal(), link.variantKey));
 				}
 			});
 		}

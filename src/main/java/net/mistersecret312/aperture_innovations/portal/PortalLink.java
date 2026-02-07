@@ -478,6 +478,12 @@ public class PortalLink
 				targetPos = targetPos.add(otherDirection.getStepX() * 0.05, otherDirection.getStepY() * 0.05,
 						otherDirection.getStepZ() * 0.05);
 
+				if(!portal.isOnWall())
+				{
+					targetPos = targetPos.add(otherDirection.getStepX() * 0.25f,
+							otherDirection.getStepY() * 0.25f, otherDirection.getStepZ() * 0.25f);
+				}
+
 				entity.setDeltaMovement(new Vec3(newSpeed));
 				entity.hasImpulse = true;
 				entity.resetFallDistance();
@@ -495,20 +501,21 @@ public class PortalLink
 
 				float yaw = (float) Math.atan2(-(rot.x * rot.z + rot.y * rot.w) * 2,
 						2 * (rot.y * rot.y + rot.z * rot.z) - 1);
-//				entity.setPos(targetPos);
+				entity.setPos(targetPos);
 
 				Vec2 portalRot = PortalUtilities.getPortalRotation(level, linkID, isPrimary);
 				Vec2 otherPortalRot = PortalUtilities.getPortalRotation(level, linkID, !isPrimary);
 
-				if(portalRot.y - otherPortalRot.y == 180 && portalRot.x == -90) yaw += (float) Math.toRadians(180);
+				if(portalRot.y - otherPortalRot.y == 180 && portalRot.x == -90)
+					yaw += (float) Math.toRadians(180);
 
 				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(
 						BlockPos.containing(portal.getPosition()))),
 						new ClientboundPortalSoundsPacket.EnterPortal(link.linkID, isPrimary));
 
-//				entity.teleportTo(targetLevel, targetPos.x, targetPos.y, targetPos.z, Set.of(),
-//						(float) Math.toDegrees(yaw) + (direction.getAxis().isVertical() ? 180 : 0), entity.getXRot());
-//				entity.setOldPosAndRot();
+				entity.teleportTo(targetLevel, targetPos.x, targetPos.y, targetPos.z, Set.of(),
+						(float) Math.toDegrees(yaw) + (direction.getAxis().isVertical() ? 180 : 0), entity.getXRot());
+				entity.setOldPosAndRot();
 
 				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(
 								BlockPos.containing(otherPortal.getPosition()))),
@@ -517,8 +524,8 @@ public class PortalLink
 				if(entity instanceof ServerPlayer player)
 				{
 					player.awardStat(StatisticsInit.TIMES_USED_PORTALS.get(), 1);
-//					NetworkInit.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player),
-//							new ClientboundTeleportMomentumPacket(new Vec3(newSpeed)));
+					NetworkInit.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player),
+							new ClientboundTeleportMomentumPacket(new Vec3(newSpeed)));
 
 					aperture.setPortal(Pair.of(linkID, isPrimary));
 					aperture.updateDistance();

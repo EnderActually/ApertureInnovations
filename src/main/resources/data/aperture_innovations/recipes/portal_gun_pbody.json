@@ -26,6 +26,7 @@
     }
   },
   "result": {
-    "item": "aperture_innovations:portal_gun"
+    "item": "aperture_innovations:portal_gun",
+    "nbt": "{variant:'aperture_innovations:pbody'}"
   }
 }

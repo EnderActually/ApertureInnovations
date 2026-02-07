@@ -37,47 +37,64 @@ public interface CollisionMixin
 	@Overwrite
 	default Iterable<VoxelShape> getBlockCollisions(Entity entity, AABB entityBox)
 	{
-		List<VoxelShape> list = new ArrayList<>();
-
 		CollisionGetter getter = ((CollisionGetter) (Object) this);
 
-		Iterable<VoxelShape> iterable =
+		Iterable<VoxelShape> shapes =
 				() -> new BlockCollisions<>(getter, entity, entityBox, false,
 						(pos, shape) -> shape);
 
-		for(VoxelShape voxelShape : iterable) list.add(voxelShape);
+		List<VoxelShape> list = new ArrayList<>();
+		shapes.forEach(list::add);
 
 		if(entity == null)
-			return list;
-
+		{
+			return shapes;
+		}
 		Level level = entity.level();
 		if(level == null)
-			return list;
+		{
+			return shapes;
+		}
 
 		Pair<UUID, Boolean> portal = PortalUtilities.getClosestPortal(entity);
 
 		UUID uuid = portal.getFirst();
 		boolean isPrimary = portal.getSecond();
 		if(uuid == null)
-			return list;
+		{
+			return shapes;
+		}
 
 		boolean isOpen = PortalUtilities.isPortalOpen(level, uuid);
 
 		Vec3 portalPos = PortalUtilities.getPortalPos(level, uuid, isPrimary);
+
 		Vec2 rotation = PortalUtilities.getPortalRotation(level, uuid, isPrimary);
 
 		AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, rotation.x, rotation.y);
 		AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPos, rotation.x, rotation.y);
 		AABB floorBox = PortalUtilities.getPortalFloorBox(portalPos, rotation.x, rotation.y).inflate(0d, 0.01d, 0d);
 
-		List<VoxelShape> readdVoxels = PortalUtilities.getPortalVoxels(level, portalPos, rotation.x, rotation.y);
+		Direction direction = PortalUtilities.getPortalDirection(level, uuid, isPrimary);
 
-		list.removeIf(shape -> shape.bounds().intersects(portalBox)
-									   && isOpen
-									   && teleportBox.intersects(entityBox));
+		Vec3 logicPos = teleportBox.getCenter();
+		logicPos = logicPos.add(direction.getOpposite().getStepX() * entity.getBbWidth() / 2f,
+				direction.getOpposite().getStepY() * entity.getBbHeight() / 1.25f,
+				direction.getOpposite().getStepZ() * entity.getBbWidth() / 2f);
+
+		Vec3 currentPos = entity.position().add(0, entity.getBbHeight() / 2f, 0);
+		Vec3 offsetFromPortal = currentPos.subtract(logicPos);
+
+		double dotProduct = offsetFromPortal.dot(new Vec3(direction.step()));
 
 		if(entityBox.intersects(floorBox) && isOpen)
 			list.add(Shapes.create(floorBox));
+
+		List<VoxelShape> readdVoxels = PortalUtilities.getPortalVoxels(level, portalPos, rotation.x, rotation.y);
+
+		list.removeIf(shape -> !shape.isEmpty() && shape.bounds().intersects(portalBox)
+									   && isOpen
+									   && dotProduct >= 0);
 
 		for(VoxelShape voxel : readdVoxels)
 		{
@@ -87,7 +104,9 @@ public interface CollisionMixin
 			for(AABB aabb : voxel.toAabbs())
 			{
 				if(aabb.intersects(entityBox))
+				{
 					list.add(voxel);
+				}
 			}
 		}
 
