@@ -30,53 +30,54 @@ import java.util.UUID;
 @Mixin(CollisionGetter.class)
 public interface CollisionMixin
 {
-
-	@Inject(method = "getBlockCollisions",
-	at = @At("RETURN"), cancellable = true)
-	default void stopCollision(Entity entity, AABB collisionBox, CallbackInfoReturnable<Iterable<VoxelShape>> cir)
+	/**
+	 * @author mistersecret312
+	 * @reason Portal need removing of collisions in the blocks behind them for smooth teleportation experience
+	 */
+	@Overwrite
+	default Iterable<VoxelShape> getBlockCollisions(Entity entity, AABB entityBox)
 	{
-		Iterable<VoxelShape> shapes = cir.getReturnValue();
 		List<VoxelShape> list = new ArrayList<>();
-		shapes.forEach(list::add);
+
+		CollisionGetter getter = ((CollisionGetter) (Object) this);
+
+		Iterable<VoxelShape> iterable =
+				() -> new BlockCollisions<>(getter, entity, entityBox, false,
+						(pos, shape) -> shape);
+
+		for(VoxelShape voxelShape : iterable) list.add(voxelShape);
 
 		if(entity == null)
-		{
-			cir.setReturnValue(shapes);
-			return;
-		}
+			return list;
+
 		Level level = entity.level();
 		if(level == null)
-		{
-			cir.setReturnValue(shapes);
-			return;
-		}
+			return list;
 
 		Pair<UUID, Boolean> portal = PortalUtilities.getClosestPortal(entity);
 
 		UUID uuid = portal.getFirst();
 		boolean isPrimary = portal.getSecond();
 		if(uuid == null)
-		{
-			cir.setReturnValue(shapes);
-			return;
-		}
+			return list;
 
 		boolean isOpen = PortalUtilities.isPortalOpen(level, uuid);
 
 		Vec3 portalPos = PortalUtilities.getPortalPos(level, uuid, isPrimary);
-
 		Vec2 rotation = PortalUtilities.getPortalRotation(level, uuid, isPrimary);
 
 		AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, rotation.x, rotation.y);
 		AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPos, rotation.x, rotation.y);
 		AABB floorBox = PortalUtilities.getPortalFloorBox(portalPos, rotation.x, rotation.y).inflate(0d, 0.01d, 0d);
 
-		if(collisionBox.intersects(floorBox) && isOpen)
-			list.add(Shapes.create(floorBox));
-
 		List<VoxelShape> readdVoxels = PortalUtilities.getPortalVoxels(level, portalPos, rotation.x, rotation.y);
 
-		list.removeIf(shape -> !shape.isEmpty() && shape.bounds().intersects(portalBox) && isOpen && teleportBox.intersects(collisionBox));
+		list.removeIf(shape -> shape.bounds().intersects(portalBox)
+									   && isOpen
+									   && teleportBox.intersects(entityBox));
+
+		if(entityBox.intersects(floorBox) && isOpen)
+			list.add(Shapes.create(floorBox));
 
 		for(VoxelShape voxel : readdVoxels)
 		{
@@ -85,13 +86,11 @@ public interface CollisionMixin
 
 			for(AABB aabb : voxel.toAabbs())
 			{
-				if(aabb.intersects(collisionBox))
-				{
+				if(aabb.intersects(entityBox))
 					list.add(voxel);
-				}
 			}
 		}
 
-		cir.setReturnValue(list);
+		return list;
 	}
 }

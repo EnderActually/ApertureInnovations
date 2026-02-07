@@ -1,6 +1,5 @@
 package net.mistersecret312.aperture_innovations.portal;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
@@ -15,7 +14,7 @@ import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
-import net.mistersecret312.aperture_innovations.network.ClientBoundPortalLinkSyncPacket;
+import net.mistersecret312.aperture_innovations.network.ClientBoundPortalSyncPacket;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -107,10 +106,10 @@ public class PortalLinkData extends SavedData
 	{
 		PortalLink link = portalLinks.get(uuid);
 		if(isPrimary)
-			PacketDistributor.sendToAllPlayers(new ClientBoundPortalSyncPacket(uuid, true,
+			NetworkInit.INSTANCE.send(PacketDistributor.ALL.noArg(), new ClientBoundPortalSyncPacket(uuid, true,
 					link.getPrimaryPortal(), link.variantKey));
 		else
-			PacketDistributor.sendToAllPlayers(new ClientBoundPortalSyncPacket(uuid, false,
+			NetworkInit.INSTANCE.send(PacketDistributor.ALL.noArg(), new ClientBoundPortalSyncPacket(uuid, false,
 					link.getSecondaryPortal(), link.variantKey));
 
 		this.setDirty();
@@ -156,11 +155,6 @@ public class PortalLinkData extends SavedData
 			throw new RuntimeException("Don't access this client-side!");
 
 		return PortalLinkData.get(level.getServer());
-	}
-
-	public static SavedData.Factory<PortalLinkData> dataFactory(MinecraftServer server)
-	{
-		return new SavedData.Factory<>(() -> create(server), (tag, provider) -> load(server, tag));
 	}
 
 	@Nonnull

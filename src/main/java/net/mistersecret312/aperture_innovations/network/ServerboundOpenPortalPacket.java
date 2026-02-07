@@ -1,15 +1,23 @@
 package net.mistersecret312.aperture_innovations.network;
 
+import com.mojang.datafixers.util.Pair;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Vec3i;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.*;
+import net.minecraft.world.phys.shapes.BooleanOp;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.energy.EnergyStorage;
 import net.minecraftforge.energy.IEnergyStorage;
@@ -21,20 +29,20 @@ import net.mistersecret312.aperture_innovations.config.PortalGunConfig;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
-import net.mistersecret312.aperture_innovations.portal.PortalLink;
-import net.mistersecret312.aperture_innovations.portal.PortalLinkData;
-import net.mistersecret312.aperture_innovations.portal.PortalPlacement;
+import net.mistersecret312.aperture_innovations.portal.*;
+import org.joml.Vector3f;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.bernie.geckolib.animatable.GeoItem;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 public class ServerboundOpenPortalPacket
 {
-	private static final Logger log = LoggerFactory.getLogger(ServerboundOpenPortalPacket.class);
 	boolean isPrimary;
 	public ServerboundOpenPortalPacket(boolean isPrimary)
 	{
@@ -56,8 +64,6 @@ public class ServerboundOpenPortalPacket
 		ctx.get().enqueueWork(() -> {
 			ServerPlayer player = ctx.get().getSender();
 			Level level = player.level();
-
-			boolean isPrimary = packet.isPrimary;
 
 			ItemStack main = player.getMainHandItem();
 			ItemStack off = player.getOffhandItem();
@@ -109,7 +115,7 @@ public class ServerboundOpenPortalPacket
 
 				if(linkID != null && !level.getBlockState(result.getBlockPos()).is(ApertureInnovations.SHOOT_THROUGH) &&
 						   (level.getBlockState(result.getBlockPos()).is(ApertureInnovations.IMPORTALABLE)
-				|| !level.getFluidState(result.getBlockPos()).isEmpty() ||
+									|| !level.getFluidState(result.getBlockPos()).isEmpty() ||
 									(PortalGunConfig.use_portalable_tag.get() && !level.getBlockState(result.getBlockPos()).is(ApertureInnovations.PORTALABLE))))
 				{
 					if(!PortalGunConfig.portal_gun_consume_on_shot.get() && PortalGunConfig.portal_gun_uses_energy.get())
@@ -133,34 +139,58 @@ public class ServerboundOpenPortalPacket
 					linkData.addFreshLink(linkID);
 					link = linkData.getLink(linkID);
 				}
+				Direction facing = result.getDirection();
 
-				PortalPlacement.Result placement = PortalPlacement.getBestPlacement(level, result, player, linkID, isPrimary);
-				if(true)
+				Direction rotation;
+				if (facing.getAxis().isVertical()) {
+					rotation = player.getDirection();
+				} else {
+					rotation = Direction.UP;
+				}
+
+
+				Pair<Vec3, Vec2> portalPlacement = positionPortal(level, result.getLocation(), facing, rotation, linkID, isPrimary);
+				int tries = 0;
+				boolean valid = link.checkForValidity(level, portalPlacement.getFirst(), portalPlacement.getSecond().x,
+						portalPlacement.getSecond().y, facing, linkID, isPrimary);
+				while(!valid && tries < 4)
 				{
-					portalGun.stopTriggeredAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
-					portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
+					portalPlacement = positionPortal(level, portalPlacement.getFirst(), facing, rotation, linkID, isPrimary);
+					valid = link.checkForValidity(level, portalPlacement.getFirst(), portalPlacement.getSecond().x,
+							portalPlacement.getSecond().y, facing, linkID, isPrimary);
+					tries++;
+				}
+
+				if(valid)
+				{
+					portalGun.stopTriggeredAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main",
+							"shoot");
+					portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main",
+							"shoot");
 
 					if(!PortalGunConfig.portal_gun_consume_on_shot.get() && PortalGunConfig.portal_gun_uses_energy.get())
-						if(!consumeEnergy(gunStack, player))
-							return;
+						if(!consumeEnergy(gunStack, player)) return;
 
 					if(isPrimary)
 					{
 						portalGun.setLastShotPortal(gunStack, 0);
-						link.createPrimaryPortal(level, result.getLocation(), level.dimension(), placement.facing,
-								placement.rotation);
+						link.createPrimaryPortal(level, portalPlacement.getFirst(), level.dimension(), facing,
+								rotation);
 
 						NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(player.blockPosition())),
-								new ClientboundPortalSoundsPacket.ShootPortal(linkID, player.blockPosition(), isPrimary));
+								new ClientboundPortalSoundsPacket.ShootPortal(linkID, player.blockPosition(),
+										isPrimary));
 					}
 					else
 					{
 						portalGun.setLastShotPortal(gunStack, 1);
-						link.createSecondaryPortal(level, result.getLocation(), level.dimension(), placement.facing,
-								placement.rotation);
+						link.createSecondaryPortal(level, portalPlacement.getFirst(), level.dimension(), facing,
+								rotation);
 
 						NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(player.blockPosition())),
-								new ClientboundPortalSoundsPacket.ShootPortal(linkID, player.blockPosition(), isPrimary));					}
+								new ClientboundPortalSoundsPacket.ShootPortal(linkID, player.blockPosition(),
+										isPrimary));
+					}
 				}
 				else
 				{
@@ -176,6 +206,184 @@ public class ServerboundOpenPortalPacket
 
 		});
 		return true;
+	}
+
+	public static Pair<Vec3, Vec2> positionPortal(Level level, Vec3 originalPos, Direction direction, Direction facing, UUID id, boolean isPrimary)
+	{
+		Vec3 position = originalPos;
+		Vec2 rotation;
+
+		float xRot = 0;
+		float yRot = direction.toYRot();
+		if(direction.equals(Direction.UP))
+		{
+			xRot = -90;
+			yRot = facing.toYRot()+180;
+		}
+		if(direction.equals(Direction.DOWN))
+		{
+			xRot = 90;
+			yRot = facing.toYRot();
+		}
+
+		AABB placementBox = PortalUtilities.getPortalPlacementBox(position, xRot, yRot);
+		AABB portalBox = PortalUtilities.getPortalBoundingBox(position, xRot, yRot);
+
+		Portal self;
+		if(level.isClientSide())
+		{
+			ClientPortalLink link =  PortalUtilities.getPortalLinks().get(id);
+			if(isPrimary)
+				self = link.getPrimaryPortal();
+			else self = link.getSecondaryPortal();
+		}
+		else
+		{
+			PortalLink link = PortalUtilities.getPortalLinks(level).get(id);
+			if(isPrimary)
+				self = link.getPrimaryPortal();
+			else self = link.getSecondaryPortal();
+		}
+		Pair<UUID, Boolean> closestPortalPair;
+		if(self.getPosition() == null)
+			closestPortalPair = PortalUtilities.getClosestPortal(level, position, isPrimary);
+		else closestPortalPair = PortalUtilities.getClosestPortal(level, self);
+
+		Portal closestPortal;
+		if(level.isClientSide() && closestPortalPair.getFirst() != null)
+		{
+			ClientPortalLink link = PortalUtilities.getPortalLinks().get(closestPortalPair.getFirst());
+			if(closestPortalPair.getSecond())
+				closestPortal = link.getPrimaryPortal();
+			else closestPortal = link.getSecondaryPortal();
+		}
+		else if(closestPortalPair.getFirst() != null)
+		{
+			PortalLink link = PortalUtilities.getPortalLinks(level).get(closestPortalPair.getFirst());
+			if(closestPortalPair.getSecond())
+				closestPortal = link.getPrimaryPortal();
+			else closestPortal = link.getSecondaryPortal();
+		}
+		else
+			closestPortal = null;
+
+		AtomicReference<VoxelShape> placementShape = new AtomicReference<>(
+				Shapes.create(placementBox.inflate(0.025)));
+		AtomicReference<VoxelShape> bumpingAirShape = new AtomicReference<>(Shapes.create(placementBox.inflate(0.025)));
+		AABB blockBumpAABB = placementBox.inflate(0.025).move(new Vec3(direction.step().mul(0.05f)));
+		AtomicReference<VoxelShape> bumpingBlockShape = new AtomicReference<>(Shapes.create(blockBumpAABB));
+
+		if(closestPortal != null)
+		{
+			VoxelShape shape = Shapes.create(PortalUtilities.getPortalPlacementBox(closestPortal.getPosition(),
+					closestPortal.getXRotation(), closestPortal.getYRotation()).inflate(0.05));
+
+			if(!placementShape.get().isEmpty())
+				placementShape.set(Shapes.join(placementShape.get(), shape, BooleanOp.ONLY_FIRST));
+
+			if(!bumpingAirShape.get().isEmpty())
+				bumpingAirShape.set(Shapes.join(bumpingAirShape.get(), shape, BooleanOp.ONLY_FIRST));
+
+			if(!bumpingBlockShape.get().isEmpty())
+				bumpingBlockShape.set(Shapes.join(bumpingBlockShape.get(), shape, BooleanOp.ONLY_FIRST));
+		}
+
+		BlockPos.betweenClosedStream(portalBox.inflate(0.025)).forEach(pos ->
+			{
+				BlockState state = level.getBlockState(pos);
+				if(!state.isAir())
+				{
+					VoxelShape shape = state.getCollisionShape(level, pos)
+											.move(pos.getX(), pos.getY(), pos.getZ());
+
+					if(state.is(ApertureInnovations.IMPORTALABLE))
+						shape = Shapes.create(shape.bounds().inflate(0.025));
+
+					if(!placementShape.get().isEmpty())
+						placementShape.set(Shapes.join(placementShape.get(), shape, BooleanOp.ONLY_FIRST));
+
+					if(!bumpingAirShape.get().isEmpty())
+						bumpingAirShape.set(Shapes.join(bumpingAirShape.get(), shape, BooleanOp.ONLY_FIRST));
+
+					if(!bumpingBlockShape.get().isEmpty())
+						bumpingBlockShape.set(Shapes.join(bumpingBlockShape.get(), shape, BooleanOp.ONLY_FIRST));
+
+				}
+			});
+		List<AABB> placements = placementShape.get().toAabbs();
+		if(!placementShape.get().isEmpty() && placements.size() == 1)
+		{
+			AABB placementAABB = placementBox.inflate(0.025);
+
+			boolean wall = xRot == 0;
+
+			if(wall)
+			{
+				if(direction.getAxis().equals(Direction.Axis.X))
+				{
+					placementAABB = placementAABB.setMinX(placementShape.get().bounds().minX);
+					placementAABB = placementAABB.setMaxX(placementShape.get().bounds().maxX);
+				}
+
+				if(direction.getAxis().equals(Direction.Axis.Z))
+				{
+					placementAABB = placementAABB.setMinZ(placementShape.get().bounds().minZ);
+					placementAABB = placementAABB.setMaxZ(placementShape.get().bounds().maxZ);
+				}
+			} else
+			{
+				placementAABB = placementAABB.setMinY(placementShape.get().bounds().minY);
+				placementAABB = placementAABB.setMaxY(placementShape.get().bounds().maxY);
+			}
+
+			bumpingAirShape.set(Shapes.join(Shapes.create(placementAABB), placementShape.get(),
+					BooleanOp.ONLY_FIRST));
+			bumpingBlockShape.set(Shapes.join(Shapes.create(placementAABB), placementShape.get(),
+					BooleanOp.ONLY_FIRST));
+		}
+
+		List<AABB> aabbList = bumpingAirShape.get().toAabbs();
+		List<AABB> aabbListBlock = bumpingBlockShape.get().toAabbs();
+		aabbList.addAll(aabbListBlock);
+		for(int i = 0; i < aabbList.size(); i++)
+		{
+			AABB aabb = aabbList.get(i);
+			boolean smthn = BlockPos.betweenClosedStream(aabb).anyMatch(pos ->
+				{
+					VoxelShape shape = level.getBlockState(pos).getCollisionShape(level, pos);
+					for(AABB shapeAabb : shape.toAabbs())
+					{
+						if(shapeAabb.intersects(aabb))
+							return true;
+					}
+					return false;
+				});
+
+			if(!aabbListBlock.contains(aabb))
+			{
+				if(smthn || (aabb.getXsize() < 0.05D && direction.getAxis().equals(Direction.Axis.X))
+						   || (aabb.getZsize() < 0.05D && direction.getAxis().equals(Direction.Axis.Z))
+						   || (aabb.getYsize() < 0.05D && direction.getAxis().equals(Direction.Axis.Y)))
+					continue;
+			}
+
+			Vec3i normal = new Vec3i(direction.getNormal().getX() == 0 ? 1 : 0,
+					direction.getNormal().getY() == 0 ? 1 : 0,
+					direction.getNormal().getZ() == 0 ? 1 : 0);
+
+			Vec3 offsetToCenter = aabb.getCenter().vectorTo(position).multiply(2, 2, 2);
+			offsetToCenter = offsetToCenter.multiply(normal.getX(), normal.getY(), normal.getZ());
+
+			Direction nearest = Direction.getNearest(offsetToCenter.x, offsetToCenter.y, offsetToCenter.z);
+			Vector3f sizes = new Vec3(aabb.getXsize(), aabb.getYsize(), aabb.getZsize()).toVector3f();
+			sizes.mul(nearest.step());
+
+			position = position.add(new Vec3(sizes));
+			break;
+		}
+
+		rotation = new Vec2(xRot, yRot);
+		return Pair.of(position, rotation);
 	}
 
 	public boolean consumeEnergy(ItemStack stack, Player player)

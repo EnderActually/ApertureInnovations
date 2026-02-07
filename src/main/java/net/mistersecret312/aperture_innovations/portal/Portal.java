@@ -1,10 +1,8 @@
 package net.mistersecret312.aperture_innovations.portal;
 
-import io.netty.buffer.ByteBuf;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.Utf8String;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
@@ -78,7 +76,7 @@ public class Portal
 		this.setColor(color);
 	}
 
-	public void encode(ByteBuf buffer)
+	public void encode(FriendlyByteBuf buffer)
 	{
 		if(position == null)
 		{
@@ -93,7 +91,7 @@ public class Portal
 		buffer.writeDouble(position.y);
 		buffer.writeDouble(position.z);
 
-		Utf8String.write(buffer, dimension.location().toString(), 32767);
+		buffer.writeUtf(dimension.location().toString());
 		buffer.writeFloat(xRot);
 		buffer.writeFloat(yRot);
 
@@ -101,7 +99,7 @@ public class Portal
 		buffer.writeInt(color);
 	}
 
-	public static Portal decode(ByteBuf buffer)
+	public static Portal decode(FriendlyByteBuf buffer)
 	{
 		Portal portal = new Portal();
 
@@ -118,7 +116,7 @@ public class Portal
 		double z = buffer.readDouble();
 		Vec3 position = new Vec3(x, y, z);
 		ResourceKey<Level> dimension = ResourceKey.create(Registries.DIMENSION,
-			ResourceLocation.parse(Utf8String.read(buffer, 32767)));
+			ResourceLocation.parse(buffer.readUtf()));
 
 		float xRot = buffer.readFloat();
 		float yRot = buffer.readFloat();

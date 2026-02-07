@@ -7,76 +7,74 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.Utf8String;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.network.NetworkEvent;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.client.renderer.PortalRenderer;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalUtilities;
 import net.mistersecret312.aperture_innovations.portal.Portal;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.UUID;
+import java.util.function.Supplier;
 
-public record ClientBoundPortalSyncPacket(UUID linkID, boolean isPrimary, Portal portal, ResourceLocation variant) implements CustomPacketPayload
+public class ClientBoundPortalSyncPacket
 {
-	public static final CustomPacketPayload.Type<ClientBoundPortalSyncPacket> TYPE = new CustomPacketPayload.Type<>(
-			ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "s2c_portal_sync"));
-
-	public static final StreamCodec<ByteBuf, ClientBoundPortalSyncPacket> STREAM_CODEC = new StreamCodec<>()
+	public UUID linkID;
+	public boolean isPrimary;
+	public Portal portal;
+	public ResourceLocation variant;
+	
+	public ClientBoundPortalSyncPacket(UUID linkID, boolean isPrimary, Portal portal, ResourceLocation variant)
 	{
-		@Override
-		public ClientBoundPortalSyncPacket decode(ByteBuf buffer)
-		{
-			UUID uuid = FriendlyByteBuf.readUUID(buffer);
-			boolean isPrimary = buffer.readBoolean();
-			Portal portal = Portal.decode(buffer);
-			ResourceLocation variant = ResourceLocation.parse(Utf8String.read(buffer, 32767));
-
-			return new ClientBoundPortalSyncPacket(uuid, isPrimary, portal, variant);
-		}
-
-		@Override
-		public void encode(ByteBuf buffer, ClientBoundPortalSyncPacket packet)
-		{
-			FriendlyByteBuf.writeUUID(buffer, packet.linkID);
-			buffer.writeBoolean(packet.isPrimary);
-			packet.portal.encode(buffer);
-			Utf8String.write(buffer, packet.variant.toString(), 32767);
-		}
-	};
-
-	@Override
-	public Type<ClientBoundPortalSyncPacket> type()
-	{
-		return TYPE;
+		this.linkID = linkID;
+		this.isPrimary = isPrimary;
+		this.portal = portal;
+		this.variant = variant;
 	}
 
-	public static void handle(ClientBoundPortalSyncPacket packet, IPayloadContext ctx)
+	public void encode(FriendlyByteBuf buffer)
 	{
-		ctx.enqueueWork(() ->
+		buffer.writeUUID(this.linkID);
+		buffer.writeBoolean(isPrimary);
+		portal.encode(buffer);
+		buffer.writeUtf(variant.toString());
+	}
+
+	public static ClientBoundPortalSyncPacket decode(FriendlyByteBuf buffer)
+	{
+		UUID uuid = buffer.readUUID();
+		boolean isPrimary = buffer.readBoolean();
+		Portal portal = Portal.decode(buffer);
+		
+		ResourceLocation variant = ResourceLocation.parse(buffer.readUtf());
+		
+		return new ClientBoundPortalSyncPacket(uuid, isPrimary, portal, variant);
+	}
+
+	public boolean handle(Supplier<NetworkEvent.Context> ctx)
+	{
+		ctx.get().enqueueWork(() ->
 			{
-				ClientPortalLink link = PortalRenderer.LINKS.getOrDefault(packet.linkID, new ClientPortalLink());
-				link.variantKey = packet.variant;
-				link.linkID = packet.linkID;
-				if(packet.isPrimary)
+				ClientPortalLink link = PortalRenderer.LINKS.getOrDefault(linkID, new ClientPortalLink());
+				link.variantKey = variant;
+				link.linkID = linkID;
+				if(isPrimary)
 				{
-					if(packet.portal.getPosition() != null && !packet.portal.getPosition().equals(link.getPrimaryPortal().getPosition()))
-						ClientPortalUtilities.setPortalOpeningAnimationProgress(0F, packet.linkID, true);
-					link.setPrimaryPortal(packet.portal);
+					if(portal.getPosition() != null && !portal.getPosition().equals(link.getPrimaryPortal().getPosition()))
+						ClientPortalUtilities.setPortalOpeningAnimationProgress(0F, linkID, true);
+					link.setPrimaryPortal(portal);
 				}
 				else
 				{
-					if(packet.portal.getPosition() != null && !packet.portal.getPosition().equals(link.getPrimaryPortal().getPosition()))
-						ClientPortalUtilities.setPortalOpeningAnimationProgress(0F, packet.linkID, false);
-					link.setSecondaryPortal(packet.portal);
+					if(portal.getPosition() != null && !portal.getPosition().equals(link.getPrimaryPortal().getPosition()))
+						ClientPortalUtilities.setPortalOpeningAnimationProgress(0F, linkID, false);
+					link.setSecondaryPortal(portal);
 				}
-				PortalRenderer.LINKS.put(packet.linkID, link);
+				PortalRenderer.LINKS.put(linkID, link);
 			});
+		return true;
 	}
 }

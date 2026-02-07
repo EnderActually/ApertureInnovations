@@ -19,7 +19,7 @@ public class ClientPortalUtilities
 	{
 		ClientPortalGunVariant variant = link.getVariant();
 		int gunColor = isPrimary ? link.getPrimaryPortal().getColor() : link.getSecondaryPortal().getColor();
-		ColorUtil.RGBA variantColor = isPrimary ? variant.primaryPortal().getColor() : variant.secondaryPortal().getColor();
+		ColorUtil.RGBA variantColor = isPrimary ? variant.getPrimaryPortal().getColor() : variant.getSecondaryPortal().getColor();
 		if(gunColor == -1)
 			return variantColor;
 		else
@@ -34,16 +34,16 @@ public class ClientPortalUtilities
 		ClientPortalGunVariant variant = link.getVariant();
 		int gunColor = isPrimary ? link.getPrimaryPortal().getColor() : link.getSecondaryPortal().getColor();
 		if(gunColor == -1)
-			return variant.crosshairTexture();
+			return variant.getCrosshairTexture();
 		else
 		{
 			return isPrimary
-						   ? variant.primaryPortal().isGenericColoring()
-									 ? variant.genericPortal().getCrosshairTexture() :
-									 variant.crosshairTexture()
-						   : variant.secondaryPortal().isGenericColoring() ?
-									 variant.genericPortal().getCrosshairTexture() :
-									 variant.crosshairTexture();
+						   ? variant.getPrimaryPortal().isGenericColoring()
+									 ? variant.getGenericPortal().getCrosshairTexture() :
+									 variant.getCrosshairTexture()
+						   : variant.getSecondaryPortal().isGenericColoring() ?
+									 variant.getGenericPortal().getCrosshairTexture() :
+									 variant.getCrosshairTexture();
 		}
 	}
 

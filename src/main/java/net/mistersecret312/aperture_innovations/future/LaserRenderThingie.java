@@ -9,7 +9,6 @@ import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.CollisionContext;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 
@@ -27,7 +26,7 @@ public class LaserRenderThingie
 		float yRot = 90;
 		BlockHitResult result = level.clip(new ClipContext(new Vec3(0.5d, 0.5d, 0.5d),
 				new Vec3(-100.5d, 0.5d, 0.5d).yRot((float) Math.toRadians(yRot)), ClipContext.Block.COLLIDER,
-				ClipContext.Fluid.NONE, CollisionContext.empty()));
+				ClipContext.Fluid.NONE, null));
 
 		length = (float) result.getLocation().distanceTo(new Vec3(0, 0, 0)) - 0.9f;
 		//						level.addParticle(ParticleTypes.CRIT, result.getLocation().x, result.getLocation().y, result.getLocation().z,
@@ -48,12 +47,18 @@ public class LaserRenderThingie
 			poseStack.pushPose();
 			poseStack.mulPose(Axis.XP.rotationDegrees(90 * i));
 
-			consumer.addVertex(poseStack.last().pose(), -0.5f - length, -0.09375f, 0).setUv(uMax, vMax)
-					.setColor(1f, 1f, 1f, 1f);
-			consumer.addVertex(poseStack.last().pose(), 0.5f, -0.09375f, 0).setUv(uMin, vMax).setColor(1f, 1f, 1f, 1f);
-			consumer.addVertex(poseStack.last().pose(), 0.5f, 0.09375f, 0).setUv(uMin, vMin).setColor(1f, 1f, 1f, 1f);
-			consumer.addVertex(poseStack.last().pose(), -0.5f - length, 0.09375f, 0).setUv(uMax, vMin)
-					.setColor(1f, 1f, 1f, 1f);
+			consumer.vertex(poseStack.last().pose(), -0.5f - length, -0.09375f, 0)
+					.color(1f, 1f, 1f, 1f)
+					.uv(uMax, vMax);
+			consumer.vertex(poseStack.last().pose(), 0.5f, -0.09375f, 0)
+					.color(1f, 1f, 1f, 1f)
+					.uv(uMin, vMax);
+			consumer.vertex(poseStack.last().pose(), 0.5f, 0.09375f, 0)
+					.color(1f, 1f, 1f, 1f)
+					.uv(uMin, vMin);
+			consumer.vertex(poseStack.last().pose(), -0.5f - length, 0.09375f, 0)
+					.color(1f, 1f, 1f, 1f)
+					.uv(uMax, vMin);
 
 			poseStack.popPose();
 

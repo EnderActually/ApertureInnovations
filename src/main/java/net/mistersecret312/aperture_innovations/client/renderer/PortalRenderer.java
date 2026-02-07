@@ -17,11 +17,13 @@ import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.client.ColorUtil;
 import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
+import net.mistersecret312.aperture_innovations.compat.iris.IrisCompat;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalUtilities;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.lwjgl.opengl.GL11;
 
 import java.util.HashMap;
@@ -39,7 +41,7 @@ public class PortalRenderer
 
 			if(link.isOpen())
 			{
-				renderPortalNonSee(buffer, poseStack, camera, link, true, scale);
+				//				renderPortalNonSee(buffer, poseStack, camera, link, true, scale);
 			}
 
 			Vec3 pos = link.getPrimaryPortal().getPosition();
@@ -81,7 +83,7 @@ public class PortalRenderer
 			poseStack.pushPose();
 			if(link.isOpen())
 			{
-				renderPortalNonSee(buffer, poseStack, camera, link, false, scale);
+				//				renderPortalNonSee(buffer, poseStack, camera, link, false, scale);
 			}
 			Vec3 pos = link.getSecondaryPortal().getPosition();
 			poseStack.translate(-camera.getPosition().x + pos.x,
@@ -117,6 +119,11 @@ public class PortalRenderer
 	public static void renderPortalNonSee(MultiBufferSource buffer, PoseStack poseStack, Camera camera, ClientPortalLink link, boolean isPrimary, float scale)
 	{
 		poseStack.pushPose();
+
+		Tesselator tesselator = Tesselator.getInstance();
+		BufferBuilder builder = tesselator.getBuilder();
+		Matrix4f matrix = poseStack.last().pose();
+
 		Vec3 pos = isPrimary ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
 
 		poseStack.translate((float) (pos.x-camera.getPosition().x), (float) (pos.y-camera.getPosition().y),
@@ -137,61 +144,88 @@ public class PortalRenderer
 		poseStack.translate(0,0f,0.01f);
 		poseStack.scale(scale, scale, scale);
 
-		if(ApertureInnovations.isIrisLoaded())
+		if(IrisCompat.isIrisLoaded())
+		{
+			if(IrisCompat.areShadersOn())
+			{
+				RenderSystem.setShader(GameRenderer::getPositionTexShader);
+				RenderSystem.setShaderTexture(0,
+						isPrimary ? link.getVariant().primaryPortal.getMaskTexture() : link.getVariant().secondaryPortal.getMaskTexture());
+
+				RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+
+				builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+
+				builder.vertex(matrix, -0.5f, -0.5f, 0).uv(0, 1).endVertex();
+				builder.vertex(matrix, 0.5f, -0.5f, 0).uv(1, 1).endVertex();
+				builder.vertex(matrix, 0.5f, 0.5f, 0).uv(1, 0).endVertex();
+				builder.vertex(matrix, -0.5f, 0.5f, 0).uv(0, 0).endVertex();
+
+				BufferUploader.drawWithShader(builder.end());
+				RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+
+				poseStack.popPose();
+				return;
+			}
+		}
+
+		if(IrisCompat.isIrisLoaded())
 		{
 			VertexConsumer consumerB = buffer.getBuffer(PortalRenderTypes.portalEndMask());
-			consumerB.addVertex(poseStack.last().pose(), -0.5f, -0.5f, 0);
-			consumerB.addVertex(poseStack.last().pose(), 0.5f, -0.5f, 0);
-			consumerB.addVertex(poseStack.last().pose(), 0.5f, 0.5f, 0);
-			consumerB.addVertex(poseStack.last().pose(), -0.5f, 0.5f, 0);
+			consumerB.vertex(poseStack.last().pose(), -0.5f, -0.5f, 0).endVertex();
+			consumerB.vertex(poseStack.last().pose(), 0.5f, -0.5f, 0).endVertex();
+			consumerB.vertex(poseStack.last().pose(), 0.5f, 0.5f, 0).endVertex();
+			consumerB.vertex(poseStack.last().pose(), -0.5f, 0.5f, 0).endVertex();
 		}
+
 
 		VertexConsumer consumerA = buffer.getBuffer(PortalRenderTypes.portal(isPrimary ?
-												 link.getVariant().primaryPortal().getMaskTexture() :
-												 link.getVariant().secondaryPortal().getMaskTexture()));
+												 link.getVariant().primaryPortal.getMaskTexture() :
+												 link.getVariant().secondaryPortal.getMaskTexture()));
+		consumerA.vertex(poseStack.last().pose(), -0.5f, -0.5f, 0)
+				 .color(FastColor.ABGR32.color(255, 255, 255, 255))
+				 .uv(0, 1)
+				 .endVertex();
+		consumerA.vertex(poseStack.last().pose(), 0.5f, -0.5f, 0)
+				 .color(FastColor.ABGR32.color(255, 255, 255, 255))
+				 .uv(1, 1)
+				 .endVertex();
+		consumerA.vertex(poseStack.last().pose(), 0.5f, 0.5f, 0)
+				 .color(FastColor.ABGR32.color(255, 255, 255, 255))
+				 .uv(1, 0)
+				 .endVertex();
+		consumerA.vertex(poseStack.last().pose(), -0.5f, 0.5f, 0)
+				 .color(FastColor.ABGR32.color(255, 255, 255, 255))
+				 .uv(0, 0)
+				 .endVertex();
 
-		consumerA.addVertex(poseStack.last().pose(), -0.5f, -0.5f, 0)
-				 .setUv(0, 1)
-				 .setColor(FastColor.ABGR32.color(255, 255, 255, 255));
-
-		consumerA.addVertex(poseStack.last().pose(), 0.5f, -0.5f, 0)
-				 .setUv(1, 1)
-				 .setColor(FastColor.ABGR32.color(255, 255, 255, 255));
-
-		consumerA.addVertex(poseStack.last().pose(), 0.5f, 0.5f, 0)
-				 .setUv(1, 0)
-				 .setColor(FastColor.ABGR32.color(255, 255, 255, 255));
-
-		consumerA.addVertex(poseStack.last().pose(), -0.5f, 0.5f, 0)
-				 .setUv(0, 0)
-				 .setColor(FastColor.ABGR32.color(255, 255, 255, 255));
-
-		if(!ApertureInnovations.isIrisLoaded())
+		if(!IrisCompat.isIrisLoaded())
 		{
 			VertexConsumer consumerB = buffer.getBuffer(PortalRenderTypes.portalEndMask());
-			consumerB.addVertex(poseStack.last().pose(), -0.5f, -0.5f, 0);
-			consumerB.addVertex(poseStack.last().pose(), 0.5f, -0.5f, 0);
-			consumerB.addVertex(poseStack.last().pose(), 0.5f, 0.5f, 0);
-			consumerB.addVertex(poseStack.last().pose(), -0.5f, 0.5f, 0);
+			consumerB.vertex(poseStack.last().pose(), -0.5f, -0.5f, 0).endVertex();
+			consumerB.vertex(poseStack.last().pose(), 0.5f, -0.5f, 0).endVertex();
+			consumerB.vertex(poseStack.last().pose(), 0.5f, 0.5f, 0).endVertex();
+			consumerB.vertex(poseStack.last().pose(), -0.5f, 0.5f, 0).endVertex();
 		}
+
 		poseStack.popPose();
 	}
 
 	public static void renderPortalFrame(ResourceLocation texture, ColorUtil.RGBA color, MultiBufferSource buffer, PoseStack poseStack) {
 		poseStack.pushPose();
 		VertexConsumer consumerA = buffer.getBuffer(PortalRenderTypes.portalFrame(texture));
-		consumerA.addVertex(poseStack.last().pose(), -0.5f, -0.5f, 0)
-				 .setUv(0, 1)
-				 .setColor(color.red(), color.green(), color.blue(), color.alpha());
-		consumerA.addVertex(poseStack.last().pose(), 0.5f, -0.5f, 0)
-				 .setUv(1, 1)
-				 .setColor(color.red(), color.green(), color.blue(), color.alpha());
-		consumerA.addVertex(poseStack.last().pose(), 0.5f, 0.5f, 0)
-				 .setUv(1, 0)
-				 .setColor(color.red(), color.green(), color.blue(), color.alpha());
-		consumerA.addVertex(poseStack.last().pose(), -0.5f, 0.5f, 0)
-				 .setUv(0, 0)
-				 .setColor(color.red(), color.green(), color.blue(), color.alpha());
+		consumerA.vertex(poseStack.last().pose(), -0.5f, -0.5f, 0)
+				 .color(color.red(), color.green(), color.blue(), color.alpha())
+				 .uv(0, 1).endVertex();
+		consumerA.vertex(poseStack.last().pose(), 0.5f, -0.5f, 0)
+				 .color(color.red(), color.green(), color.blue(), color.alpha())
+				 .uv(1, 1).endVertex();
+		consumerA.vertex(poseStack.last().pose(), 0.5f, 0.5f, 0)
+				 .color(color.red(), color.green(), color.blue(), color.alpha())
+				 .uv(1, 0).endVertex();
+		consumerA.vertex(poseStack.last().pose(), -0.5f, 0.5f, 0)
+				 .color(color.red(), color.green(), color.blue(), color.alpha())
+				 .uv(0, 0).endVertex();
 
 		poseStack.popPose();
 	}
@@ -200,32 +234,25 @@ public class PortalRenderer
 											 ResourceLocation texture, ColorUtil.RGBA color, boolean isPrimary) {
 		poseStack.pushPose();
 		Tesselator tesselator = Tesselator.getInstance();
+		BufferBuilder builder = tesselator.getBuilder();
 		Matrix4f matrix = poseStack.last().pose();
 
 		RenderSystem.enableDepthTest();
 		RenderSystem.depthFunc(GL11.GL_GREATER);
 
-		GL11.glEnable(GL11.GL_STENCIL_TEST);
-		RenderSystem.stencilFunc(GL11.GL_NOTEQUAL, 1, 0xFF);
-		RenderSystem.stencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_KEEP);
-
 		RenderSystem.setShader(GameRenderer::getPositionTexShader);
 		RenderSystem.setShaderTexture(0, texture);
 		RenderSystem.setShaderColor(color.red(), color.green(), color.blue(), color.alpha());
 
-		BufferBuilder builder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+		builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
 
-		builder.addVertex(matrix, -0.5f, -0.5f, 0).setUv(0.0f, 1.0f);
-		builder.addVertex(matrix,  0.5f, -0.5f, 0).setUv(1f, 1.0f);
-		builder.addVertex(matrix,  0.5f,  0.5f, 0).setUv(1f, 0.0f);
-		builder.addVertex(matrix, -0.5f,  0.5f, 0).setUv(0.0f, 0.0f);
+		builder.vertex(matrix, -0.5f, -0.5f, 0).uv(0.0f, 1.0f).endVertex();
+		builder.vertex(matrix,  0.5f, -0.5f, 0).uv(1f, 1.0f).endVertex();
+		builder.vertex(matrix,  0.5f,  0.5f, 0).uv(1f, 0.0f).endVertex();
+		builder.vertex(matrix, -0.5f,  0.5f, 0).uv(0.0f, 0.0f).endVertex();
 
-		BufferUploader.drawWithShader(builder.buildOrThrow());
+		BufferUploader.drawWithShader(builder.end());
 		RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-
-		GL11.glDisable(GL11.GL_STENCIL_TEST);
-		if(!isPrimary)
-			RenderSystem.clear(GL11.GL_STENCIL_BUFFER_BIT, Minecraft.ON_OSX);
 
 		RenderSystem.disableDepthTest();
 		RenderSystem.depthFunc(GL11.GL_LEQUAL);
@@ -255,23 +282,23 @@ public class PortalRenderer
 		float scale = ClientPortalUtilities.getPortalOpeningAnimationProgress(link.linkID(), isPrimary);
 		poseStack.scale(2f, 2f, 2f);
 		poseStack.scale(scale, scale, scale);
-		poseStack.translate(0.09375, 0f, 0.0125);
+		poseStack.translate(0, 0f, 0.0125);
 
 		ColorUtil.RGBA color = ClientPortalUtilities.getPortalColor(link, isPrimary);
 
 		VertexConsumer consumerA = buffer.getBuffer(PortalRenderTypes.portalVortex(sprite.atlasLocation()));
-		consumerA.addVertex(poseStack.last().pose(), -0.5f, -0.5f, 0)
-				 .setUv(sprite.getU0(), sprite.getV1())
-				 .setColor(color.red(), color.green(), color.blue(), color.alpha());
-		consumerA.addVertex(poseStack.last().pose(), 0.5f, -0.5f, 0)
-				 .setUv(sprite.getU1(), sprite.getV1())
-				 .setColor(color.red(), color.green(), color.blue(), color.alpha());
-		consumerA.addVertex(poseStack.last().pose(), 0.5f, 0.5f, 0)
-				 .setUv(sprite.getU1(), sprite.getV0())
-				 .setColor(color.red(), color.green(), color.blue(), color.alpha());
-		consumerA.addVertex(poseStack.last().pose(), -0.5f, 0.5f, 0)
-				 .setUv(sprite.getU0(), sprite.getV0())
-				 .setColor(color.red(), color.green(), color.blue(), color.alpha());
+		consumerA.vertex(poseStack.last().pose(), -0.5f, -0.5f, 0)
+				 .color(color.red(), color.green(), color.blue(), color.alpha())
+				 .uv(sprite.getU0(), sprite.getV1()).endVertex();
+		consumerA.vertex(poseStack.last().pose(), 0.5f, -0.5f, 0)
+				 .color(color.red(), color.green(), color.blue(), color.alpha())
+				 .uv(sprite.getU1(), sprite.getV1()).endVertex();
+		consumerA.vertex(poseStack.last().pose(), 0.5f, 0.5f, 0)
+				 .color(color.red(), color.green(), color.blue(), color.alpha())
+				 .uv(sprite.getU1(), sprite.getV0()).endVertex();
+		consumerA.vertex(poseStack.last().pose(), -0.5f, 0.5f, 0)
+				 .color(color.red(), color.green(), color.blue(), color.alpha())
+				 .uv(sprite.getU0(), sprite.getV0()).endVertex();
 
 		LocalPlayer player = Minecraft.getInstance().player;
 		if (player == null)
@@ -289,6 +316,8 @@ public class PortalRenderer
 			if(linkID != null && linkID.equals(link.linkID()))
 			{
 				ResourceLocation texture = ClientPortalUtilities.getPortalHighlightTexture(link, isPrimary);
+
+				poseStack.translate(0.09375f, 0f, 0f);
 
 				poseStack.pushPose();
 				poseStack.translate(0.16f, -0.01f, 0.01f);

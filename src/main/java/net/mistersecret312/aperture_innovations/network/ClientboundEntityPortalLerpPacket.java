@@ -1,39 +1,50 @@
 package net.mistersecret312.aperture_innovations.network;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.network.NetworkEvent;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
+
 import org.joml.Vector3f;
 
+import java.util.function.Supplier;
 
-public record ClientboundEntityPortalLerpPacket(int id, Vector3f position, float xRot, float yRot) implements CustomPacketPayload
+
+public class ClientboundEntityPortalLerpPacket
 {
-	public static final Type<ClientboundEntityPortalLerpPacket> TYPE = new Type<>(
-			ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "s2c_portal_entity_lerp"));
+	public int id;
+	public Vector3f position;
+	public float xRot;
+	public float yRot;
 
-	public static final StreamCodec<ByteBuf, ClientboundEntityPortalLerpPacket> STREAM_CODEC = StreamCodec.composite(
-			ByteBufCodecs.INT, ClientboundEntityPortalLerpPacket::id,
-			ByteBufCodecs.VECTOR3F, ClientboundEntityPortalLerpPacket::position,
-			ByteBufCodecs.FLOAT, ClientboundEntityPortalLerpPacket::xRot,
-			ByteBufCodecs.FLOAT, ClientboundEntityPortalLerpPacket::yRot,
-			ClientboundEntityPortalLerpPacket::new
-	);
-
-	@Override
-	public Type<ClientboundEntityPortalLerpPacket> type()
+	public ClientboundEntityPortalLerpPacket(int id, Vector3f position, float xRot, float yRot)
 	{
-		return TYPE;
+		this.id = id;
+		this.position = position;
+		this.xRot = xRot;
+		this.yRot = yRot;
 	}
 
-	public static void handle(ClientboundEntityPortalLerpPacket packet, IPayloadContext ctx)
+	public void encode(FriendlyByteBuf buffer)
 	{
-		ctx.enqueueWork(() ->
+		buffer.writeInt(this.id);
+		buffer.writeVector3f(position);
+		buffer.writeFloat(xRot);
+		buffer.writeFloat(yRot);
+	}
+
+	public static ClientboundEntityPortalLerpPacket decode(FriendlyByteBuf buffer)
+	{
+		return new ClientboundEntityPortalLerpPacket(buffer.readInt(), buffer.readVector3f(), buffer.readFloat(), buffer.readFloat());
+	}
+
+	public boolean handle(Supplier<NetworkEvent.Context> ctx)
+	{
+		ctx.get().enqueueWork(() ->
 			{
-				ClientPacketHandler.handleEntityPortalLerp(packet.id, packet.position, packet.xRot, packet.yRot);
+				ClientPacketHandler.handleEntityPortalLerp(this.id, this.position, this.xRot, this.yRot);
 			});
+		return true;
 	}
 }

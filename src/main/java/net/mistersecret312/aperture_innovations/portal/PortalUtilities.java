@@ -1,10 +1,8 @@
 package net.mistersecret312.aperture_innovations.portal;
 
 import com.mojang.datafixers.util.Pair;
-import mekanism.common.lib.multiblock.Structure;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Vec3i;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
