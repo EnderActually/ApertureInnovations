@@ -71,12 +71,26 @@ public interface CollisionMixin
 		AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPos, rotation.x, rotation.y);
 		AABB floorBox = PortalUtilities.getPortalFloorBox(portalPos, rotation.x, rotation.y).inflate(0d, 0.01d, 0d);
 
+		Direction direction = PortalUtilities.getPortalDirection(level, uuid, isPrimary);
+
+		Vec3 logicPos = teleportBox.getCenter();
+		logicPos = logicPos.add(direction.getOpposite().getStepX() * entity.getBbWidth() / 2f,
+				direction.getOpposite().getStepY() * entity.getBbHeight() / 1.25f,
+				direction.getOpposite().getStepZ() * entity.getBbWidth() / 2f);
+
+		Vec3 currentPos = entity.position().add(0, entity.getBbHeight() / 2f, 0);
+		Vec3 offsetFromPortal = currentPos.subtract(logicPos);
+
+		double dotProduct = offsetFromPortal.dot(new Vec3(direction.step()));
+
 		if(collisionBox.intersects(floorBox) && isOpen)
 			list.add(Shapes.create(floorBox));
 
 		List<VoxelShape> readdVoxels = PortalUtilities.getPortalVoxels(level, portalPos, rotation.x, rotation.y);
 
-		list.removeIf(shape -> !shape.isEmpty() && shape.bounds().intersects(portalBox) && isOpen && teleportBox.intersects(collisionBox));
+		list.removeIf(shape -> !shape.isEmpty() && shape.bounds().intersects(portalBox)
+									   && isOpen
+									   && dotProduct >= 0);
 
 		for(VoxelShape voxel : readdVoxels)
 		{
@@ -88,6 +102,8 @@ public interface CollisionMixin
 				if(aabb.intersects(collisionBox))
 				{
 					list.add(voxel);
+					cir.setReturnValue(list);
+					return;
 				}
 			}
 		}

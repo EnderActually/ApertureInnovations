@@ -169,10 +169,10 @@ public class PortalUtilities
 			Direction.Axis axis = direction.getAxis();
 			boolean positive = direction.getAxisDirection().equals(Direction.AxisDirection.POSITIVE);
 			if(axis.equals(Direction.Axis.X))
-				portal = new AABB(portalPos.x - (positive ? 0.25 : 1), portalPos.y - 0.95, portalPos.z - 0.45,
-						portalPos.x + (positive ? 1 : 0.25), portalPos.y + 0.95, portalPos.z + 0.45);
-			else portal = new AABB(portalPos.x - 0.45, portalPos.y - 0.95, portalPos.z - (positive ? 1 : 0.25),
-					portalPos.x + 0.45, portalPos.y + 0.95, portalPos.z + (positive ? 0.25 : 1));
+				portal = new AABB(portalPos.x - (positive ? 0.25 : 0.95), portalPos.y - 0.95, portalPos.z - 0.45,
+						portalPos.x + (positive ? 0.95 : 0.25), portalPos.y + 0.95, portalPos.z + 0.45);
+			else portal = new AABB(portalPos.x - 0.45, portalPos.y - 0.95, portalPos.z - (positive ? 0.95 : 0.25),
+					portalPos.x + 0.45, portalPos.y + 0.95, portalPos.z + (positive ? 0.25 : 0.95));
 		}
 		else
 		{

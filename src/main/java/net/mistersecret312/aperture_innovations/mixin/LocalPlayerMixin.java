@@ -59,14 +59,26 @@ public class LocalPlayerMixin
 		AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPos, rotation.x, rotation.y);
 		AABB floorBox = PortalUtilities.getPortalFloorBox(portalPos, rotation.x, rotation.y).inflate(0d, 0.01d, 0d);
 
+		Direction direction = PortalUtilities.getPortalDirection(level, uuid, isPrimary);
+
+		Vec3 logicPos = teleportBox.getCenter();
+		logicPos = logicPos.add(direction.getOpposite().getStepX() * player.getBbWidth() / 2f,
+				direction.getOpposite().getStepY() * player.getBbHeight() / 1.25f,
+				direction.getOpposite().getStepZ() * player.getBbWidth() / 2f);
+
+		Vec3 currentPos = player.position().add(0, player.getBbHeight() / 2f, 0);
+		Vec3 offsetFromPortal = currentPos.subtract(logicPos);
+
+		double dotProduct = offsetFromPortal.dot(new Vec3(direction.step()));
 		if(floorBox.intersects(playerBox) && isOpen)
 		{
 			cir.setReturnValue(false);
 		}
 
-		if(portalBox.intersects(playerBox) && teleportBox.intersects(playerBox))
+		if(portalBox.intersects(playerBox) && dotProduct >= 0)
 		{
 			cir.setReturnValue(false);
+			return;
 		}
 
 		for(VoxelShape voxel : reAddVoxels)
@@ -79,6 +91,7 @@ public class LocalPlayerMixin
 				if(aabb.intersects(playerBox))
 				{
 					cir.setReturnValue(false);
+					return;
 				}
 			}
 		}

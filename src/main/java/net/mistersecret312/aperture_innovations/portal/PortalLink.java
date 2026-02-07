@@ -462,8 +462,10 @@ public class PortalLink
 				Vector3f newSpeed = portalQ.invert(new Quaternionf()).transform(speed.toVector3f());
 				otherPortalQ.rotateZ((float) Math.toRadians(180), new Quaternionf()).transform(newSpeed);
 
-				if(otherPortal.getXRotation() == -90 && newSpeed.length() < 0.5) newSpeed.add(0, 0.05f, 0);
-				if(portal.getXRotation() == 0 && otherPortal.getXRotation() == -90) newSpeed.add(0f, 0.5f, 0f);
+				if(otherPortal.getXRotation() == -90 && newSpeed.length() < 0.5)
+					newSpeed.add(0, 0.05f, 0);
+				if(portal.getXRotation() == 0 && otherPortal.getXRotation() == -90)
+					newSpeed.add(0f, 0.5f, 0f);
 
 				Vector3f rotatedOffset = portalQ.invert(new Quaternionf()).transform(offsetPortalPlace.toVector3f());
 				otherPortalQ.rotateZ((float) Math.toRadians(180), new Quaternionf()).transform(rotatedOffset);
@@ -506,8 +508,6 @@ public class PortalLink
 				entity.teleportTo(targetLevel, targetPos.x, targetPos.y, targetPos.z, Set.of(),
 						(float) Math.toDegrees(yaw) + (direction.getAxis().isVertical() ? 180 : 0), entity.getXRot());
 				entity.setOldPosAndRot();
-//				((ServerLevel) level).sendParticles(ParticleTypes.PORTAL, targetPos.x, targetPos.y, targetPos.z, 100,
-//						0.5, 0.5, 0.5, 1d);
 
 				PacketDistributor.sendToPlayersTrackingChunk(targetLevel,
 						new ChunkPos(BlockPos.containing(otherPortal.getPosition())),
