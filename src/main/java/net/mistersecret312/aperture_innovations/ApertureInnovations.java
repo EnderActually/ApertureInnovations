@@ -1,8 +1,10 @@
 package net.mistersecret312.aperture_innovations;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -24,16 +26,14 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
-import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
-import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
-import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.client.event.*;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
@@ -43,6 +43,8 @@ import net.neoforged.neoforge.common.util.Lazy;
 import net.neoforged.neoforge.registries.*;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
+
+import java.io.IOException;
 
 import static net.neoforged.fml.loading.FMLEnvironment.dist;
 
@@ -95,12 +97,18 @@ public class ApertureInnovations
 		event.registerItem(Capabilities.EnergyStorage.ITEM, (stack, context) -> new LongFallBootsItem.Energy(stack), ItemInit.LONG_FALL_BOOTS);
 	}
 
+	public static boolean isIrisLoaded()
+	{
+		return ModList.get().isLoaded("iris");
+	}
+
 	@EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 	public static class ClientModEvents
 	{
+		public static ShaderInstance portalCorridorShaderInstance;
+
 		public static final Lazy<KeyMapping> RESET_PORTAL_GUN = Lazy.of(() -> new KeyMapping("aperture_innovations.portal_gun.reset",
 				KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.category.aperture_innovations"));
-
 
 		@SubscribeEvent
 		public static void onClientSetup(FMLClientSetupEvent event)
@@ -117,6 +125,15 @@ public class ApertureInnovations
 		{
 			event.registerItem(LongFallBootsRenderProperties.INSTANCE, ItemInit.LONG_FALL_BOOTS);
 			event.registerItem(PortalGunRenderProperties.INSTANCE, ItemInit.PORTAL_GUN);
+		}
+
+		@SubscribeEvent
+		public static void registerShaders(RegisterShadersEvent event) throws IOException
+		{
+			event.registerShader(new ShaderInstance(event.getResourceProvider(),
+					ResourceLocation.fromNamespaceAndPath(MODID, "portal_corridor"),
+					DefaultVertexFormat.POSITION_TEX_COLOR),
+					shaderInstance -> portalCorridorShaderInstance = shaderInstance);
 		}
 
 		@SubscribeEvent

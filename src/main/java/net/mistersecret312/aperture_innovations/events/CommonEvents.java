@@ -1,8 +1,6 @@
 package net.mistersecret312.aperture_innovations.events;
 
 import com.mojang.datafixers.util.Pair;
-import com.mojang.math.Axis;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceKey;
@@ -15,21 +13,17 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
 import net.mistersecret312.aperture_innovations.config.LongFallBootsConfig;
-import net.mistersecret312.aperture_innovations.init.AdvancementInit;
-import net.mistersecret312.aperture_innovations.init.AttachmentTypeInit;
-import net.mistersecret312.aperture_innovations.init.SoundInit;
-import net.mistersecret312.aperture_innovations.init.StatisticsInit;
+import net.mistersecret312.aperture_innovations.init.*;
 import net.mistersecret312.aperture_innovations.items.LongFallBootsItem;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.network.*;
+import net.mistersecret312.aperture_innovations.portal.Portal;
 import net.mistersecret312.aperture_innovations.portal.PortalLink;
 import net.mistersecret312.aperture_innovations.portal.PortalLinkData;
 import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
@@ -38,19 +32,14 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 import net.neoforged.neoforge.event.entity.EntityInvulnerabilityCheckEvent;
-import net.neoforged.neoforge.event.entity.ProjectileImpactEvent;
 import net.neoforged.neoforge.event.entity.item.ItemTossEvent;
-import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
-import net.neoforged.neoforge.event.entity.living.LivingFallEvent;
 import net.neoforged.neoforge.event.entity.living.LivingUseTotemEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
 
 import java.util.*;
 
@@ -67,13 +56,45 @@ public class CommonEvents
 			for(Map.Entry<UUID, PortalLink> entry : data.portalLinks.entrySet())
 			{
 				PortalLink link = entry.getValue();
+
+				portals:
 				for(int i = 0; i < 2; i++)
 				{
 					boolean isPrimary = i == 0;
-					Vec3 portalPos = isPrimary ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal()
-																							 .getPosition();
+					Portal portal = isPrimary ? link.getPrimaryPortal() : link.getSecondaryPortal();
+					if(portal.getPosition() == null)
+						continue;
+
+					List<Entity> entities = level.getEntitiesOfClass(Entity.class, new AABB(portal.getPosition(), portal.getPosition()).inflate(5));
+					for(Entity entity : entities)
+					{
+						ApertureCapability aperture = entity.getData(AttachmentTypeInit.APERTURE);
+						if(aperture.ignorePortalsTime != 0)
+							return;
+
+						if(link.teleportLogic(entity, aperture, link, level, isPrimary))
+							break portals;
+					}
+				}
+
+				for(int i = 0; i < 2; i++)
+				{
+					boolean isPrimary = i == 0;
+					Vec3 portalPos = isPrimary ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
+
 					if(portalPos == null)
 						continue;
+
+					PacketDistributor.sendToPlayersTrackingChunk((ServerLevel) level,
+							new ChunkPos(BlockPos.containing(portalPos)),
+							new ClientboundPortalAmbientSoundPacket(link.linkID, isPrimary, false));
+
+
+					ResourceKey<Level> portalDim = isPrimary ? link.getPrimaryPortal().getDimension() : link.getSecondaryPortal()
+																											.getDimension();
+					if(!portalDim.equals(event.getLevel().dimension()))
+						continue;
+
 
 					float xRot = isPrimary ? link.getPrimaryPortal().getXRotation() : link.getSecondaryPortal()
 																						  .getXRotation();
@@ -85,7 +106,7 @@ public class CommonEvents
 					if(xRot == 90)
 						direction = Direction.DOWN;
 
-					if(!link.checkForValidity(level, portalPos, xRot, yRot, direction, isPrimary))
+					if(!link.checkForValidity(level, portalPos, xRot, yRot, direction, link.linkID, isPrimary))
 					{
 						if(isPrimary)
 							link.resetPrimary(level);
@@ -95,27 +116,6 @@ public class CommonEvents
 
 			}
 		}
-//					entity.setDeltaMovement(new Vec3(newSpeed));
-//					entity.resetFallDistance();
-//					if(entity instanceof ServerPlayer player)
-//					{
-//						player.awardStat(StatisticsInit.TIMES_USED_PORTALS.get(), 1);
-//						PacketDistributor.sendToPlayer(player, new ClientboundTeleportMomentumPacket(newSpeed));
-//					}
-//					Vec3 mathOtherPos = otherPortalPos;
-//					ApertureCapability aperture = entity.getData(AttachmentTypeInit.APERTURE);
-//
-//					aperture.portal = new Pair<>(uuid, !isPrimary);
-//					aperture.updateDistance();
-//					aperture.setFrictionlessTime(400);
-
-//					entity.setData(AttachmentTypeInit.APERTURE, aperture);
-//					if(entity instanceof ServerPlayer player)
-//					{
-//						AdvancementInit.PORTAL_TRAVEL.get().trigger(player, dimension.location(),
-//								otherDimension.location(), portalPos.distanceToSqr(mathOtherPos),
-//								aperture.verticalDistance, aperture.horizontalDistance, otherMoonshot);
-//					}
 	}
 
 
@@ -238,11 +238,9 @@ public class CommonEvents
 	{
 		Entity entity = event.getEntity();
 		Level level = entity.level();
-		if(entity instanceof LivingEntity living)
-		{
-			ApertureCapability aperture = living.getData(AttachmentTypeInit.APERTURE);
-			aperture.tick(level, living);
-		}
+
+		ApertureCapability aperture = entity.getData(AttachmentTypeInit.APERTURE.get());
+		aperture.tick(level, entity);
 	}
 
 	@SubscribeEvent

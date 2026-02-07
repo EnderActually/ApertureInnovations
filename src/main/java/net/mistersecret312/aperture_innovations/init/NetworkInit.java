@@ -93,5 +93,10 @@ public class NetworkInit
 				ClientboundPortalSoundsPacket.ResetPortal::handle
 		);
 
+		registrar.playToClient(
+				ClientboundEntityPortalLerpPacket.TYPE,
+				ClientboundEntityPortalLerpPacket.STREAM_CODEC,
+				ClientboundEntityPortalLerpPacket::handle
+		);
 	}
 }

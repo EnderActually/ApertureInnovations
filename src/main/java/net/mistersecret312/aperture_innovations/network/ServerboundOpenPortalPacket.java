@@ -6,6 +6,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
+import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -25,6 +26,7 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
+import net.mistersecret312.aperture_innovations.client.ColorUtil;
 import net.mistersecret312.aperture_innovations.config.PortalGunConfig;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
@@ -38,6 +40,7 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 import software.bernie.geckolib.animatable.GeoItem;
 
+import java.awt.*;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.UUID;
@@ -155,15 +158,15 @@ public record ServerboundOpenPortalPacket(boolean isPrimary) implements CustomPa
 				}
 
 
-				Pair<Vec3, Vec2> portalPlacement = positionPortal(level, result.getLocation(), facing, rotation);
+				Pair<Vec3, Vec2> portalPlacement = positionPortal(level, result.getLocation(), facing, rotation, linkID, isPrimary);
 				int tries = 0;
 				boolean valid = link.checkForValidity(level, portalPlacement.getFirst(), portalPlacement.getSecond().x,
-						portalPlacement.getSecond().y, facing, isPrimary);
-				while(!valid && tries < 10)
+						portalPlacement.getSecond().y, facing, linkID, isPrimary);
+				while(!valid && tries < 4)
 				{
-					portalPlacement = positionPortal(level, portalPlacement.getFirst(), facing, rotation);
+					portalPlacement = positionPortal(level, portalPlacement.getFirst(), facing, rotation, linkID, isPrimary);
 					valid = link.checkForValidity(level, portalPlacement.getFirst(), portalPlacement.getSecond().x,
-							portalPlacement.getSecond().y, facing, isPrimary);
+							portalPlacement.getSecond().y, facing, linkID, isPrimary);
 					tries++;
 				}
 
@@ -213,7 +216,7 @@ public record ServerboundOpenPortalPacket(boolean isPrimary) implements CustomPa
 		});
 	}
 
-	public static Pair<Vec3, Vec2> positionPortal(Level level, Vec3 originalPos, Direction direction, Direction facing)
+	public static Pair<Vec3, Vec2> positionPortal(Level level, Vec3 originalPos, Direction direction, Direction facing, UUID id, boolean isPrimary)
 	{
 		Vec3 position = originalPos;
 		Vec2 rotation;
@@ -234,7 +237,26 @@ public record ServerboundOpenPortalPacket(boolean isPrimary) implements CustomPa
 		AABB placementBox = PortalUtilities.getPortalPlacementBox(position, xRot, yRot);
 		AABB portalBox = PortalUtilities.getPortalBoundingBox(position, xRot, yRot);
 
-		Pair<UUID, Boolean> closestPortalPair = PortalUtilities.getClosestPortal(level, position);
+		Portal self;
+		if(level.isClientSide())
+		{
+			ClientPortalLink link =  PortalUtilities.getPortalLinks().get(id);
+			if(isPrimary)
+				self = link.getPrimaryPortal();
+			else self = link.getSecondaryPortal();
+		}
+		else
+		{
+			PortalLink link = PortalUtilities.getPortalLinks(level).get(id);
+			if(isPrimary)
+				self = link.getPrimaryPortal();
+			else self = link.getSecondaryPortal();
+		}
+		Pair<UUID, Boolean> closestPortalPair;
+		if(self.getPosition() == null)
+			closestPortalPair = PortalUtilities.getClosestPortal(level, position, isPrimary);
+		else closestPortalPair = PortalUtilities.getClosestPortal(level, self);
+
 		Portal closestPortal;
 		if(level.isClientSide() && closestPortalPair.getFirst() != null)
 		{
@@ -262,7 +284,13 @@ public record ServerboundOpenPortalPacket(boolean isPrimary) implements CustomPa
 		if(closestPortal != null)
 		{
 			VoxelShape shape = Shapes.create(PortalUtilities.getPortalPlacementBox(closestPortal.getPosition(),
-					closestPortal.getXRotation(), closestPortal.getYRotation()));
+					closestPortal.getXRotation(), closestPortal.getYRotation()).inflate(0.05));
+
+			if(!placementShape.get().isEmpty())
+				placementShape.set(Shapes.join(placementShape.get(), shape, BooleanOp.ONLY_FIRST));
+
+			if(!bumpingAirShape.get().isEmpty())
+				bumpingAirShape.set(Shapes.join(bumpingAirShape.get(), shape, BooleanOp.ONLY_FIRST));
 
 			if(!bumpingBlockShape.get().isEmpty())
 				bumpingBlockShape.set(Shapes.join(bumpingBlockShape.get(), shape, BooleanOp.ONLY_FIRST));

@@ -38,19 +38,22 @@ public class ApertureCapability implements INBTSerializable<CompoundTag>
 	public double verticalDistance = 0;
 
 	public int frictionlessTime = 0;
+	public int ignorePortalsTime = 0;
 
-	public void tick(Level level, LivingEntity living)
+	public void tick(Level level, Entity entity)
 	{
 		if(level.isClientSide())
 			return;
 
-		if(living instanceof ServerPlayer player)
+		if(entity instanceof ServerPlayer player)
 			PacketDistributor.sendToPlayer(player, new ClientboundApertureCapabilityPacket(frictionlessTime));
 
 		if(frictionlessTime > 0)
 			frictionlessTime--;
+		if(ignorePortalsTime > 0)
+			ignorePortalsTime--;
 
-		if(living.onGround() || living.isFallFlying())
+		if(entity.onGround() || (entity instanceof LivingEntity && ((LivingEntity) entity).isFallFlying()))
 		{
 			portal = null;
 			this.distanceVec = new Vector3d();
@@ -60,7 +63,7 @@ public class ApertureCapability implements INBTSerializable<CompoundTag>
 		}
 		else if(portal != null)
 		{
-			Vec3 speed = living.getDeltaMovement();
+			Vec3 speed = entity.getDeltaMovement();
 			Vector3f movementVector = new Vector3f(speed.x > 0 ? (float) speed.x : (float) -speed.x,
 					speed.y > 0 ? (float) speed.y : (float) -speed.y, speed.z > 0 ? (float) speed.z : (float) -speed.z);
 			this.distanceVec.add(movementVector);
@@ -86,6 +89,16 @@ public class ApertureCapability implements INBTSerializable<CompoundTag>
 		this.frictionlessTime = frictionlessTime;
 	}
 
+	public void setIgnorePortalsTime(int ignorePortalsTime)
+	{
+		this.ignorePortalsTime = ignorePortalsTime;
+	}
+
+	public void setPortal(Pair<UUID, Boolean> portal)
+	{
+		this.portal = portal;
+	}
+
 	@Override
 	public CompoundTag serializeNBT(HolderLookup.Provider provider)
 	{
@@ -102,6 +115,7 @@ public class ApertureCapability implements INBTSerializable<CompoundTag>
 		tag.putDouble("vertical", verticalDistance);
 
 		tag.putInt("frictionlessTime", frictionlessTime);
+		tag.putInt("ignorePortalsTime", ignorePortalsTime);
 
 		return tag;
 	}
@@ -122,5 +136,6 @@ public class ApertureCapability implements INBTSerializable<CompoundTag>
 		this.verticalDistance = nbt.getDouble("vertical");
 
 		this.frictionlessTime = nbt.getInt("frictionlessTime");
+		this.ignorePortalsTime = nbt.getInt("ignorePortalsTime");
 	}
 }

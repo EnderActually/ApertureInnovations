@@ -16,6 +16,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.client.ColorUtil;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortalGunVariant;
+import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortalGunVariants;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalUtilities;
@@ -70,8 +71,13 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem> {
             if (stripeColor == -1) {
                 ClientPortalLink link = PortalUtilities.getPortalLinks().get(this.getAnimatable().getUUID(this.currentItemStack, false));
                 ClientPortalGunVariant variant = ClientPortalGunVariant.DEFAULT_VARIANT;
+
+                if(animatable.getVariant(currentItemStack) != null)
+                    variant = ClientPortalGunVariants.getPortalGunVariant(animatable.getVariant(currentItemStack));
+
                 if (link != null)
                     variant = link.getVariant();
+
                 ColorUtil.RGBA color = isPrimary ? variant.primaryStripeColor() : variant.secondaryStripeColor();
 
                 if (color.red() == 1F && color.green() == 1F && color.blue() == 1F && color.alpha() == 1F)

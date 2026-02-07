@@ -1,7 +1,9 @@
 package net.mistersecret312.aperture_innovations.events;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.datafixers.util.Pair;
+import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -17,13 +19,15 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.BooleanOp;
+import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
@@ -42,16 +46,13 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.*;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
-import java.text.NumberFormat;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 import static net.mistersecret312.aperture_innovations.client.renderer.PortalRenderer.*;
 
@@ -84,7 +85,7 @@ public class ClientEvents
 					float scale = ClientPortalUtilities.getPortalOpeningAnimationProgress(linkID, isPrimary);
 
 					Vec3 portalPos = isPrimary ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
-					if(link.getPrimaryPortal().isInWorld() && link.getSecondaryPortal().isInWorld())
+					if(link.getPrimaryPortal().isOpen() && link.getSecondaryPortal().isOpen())
 					{
 						if(level.isLoaded(BlockPos.containing(portalPos)))
 						{
@@ -105,193 +106,6 @@ public class ClientEvents
 				ClientPortalLink link = linkEntry.getValue();
 
 				poseStack.pushPose();
-
-				{
-					poseStack.pushPose();
-
-					Pair<UUID, Boolean> portal = PortalUtilities.getClosestPortal(Minecraft.getInstance().player);
-					UUID uuid = portal.getFirst();
-					boolean isPrimary = portal.getSecond();
-					if(uuid == null) return;
-
-					Level level = Minecraft.getInstance().level;
-
-					Vec3 portalPos = PortalUtilities.getPortalPos(level, uuid, isPrimary);
-					Vec2 rotation = PortalUtilities.getPortalRotation(level, uuid, isPrimary);
-
-					AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, rotation.x, rotation.y);
-					AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPos, rotation.x, rotation.y);
-					AABB placementBox = PortalUtilities.getPortalPlacementBox(portalPos, rotation.x, rotation.y);
-
-					AABB floorBox = PortalUtilities.getPortalFloorBox(portalPos, rotation.x, rotation.y);
-
-					List<VoxelShape> shapesIDK = PortalUtilities.getPortalVoxels(level, portalPos, rotation.x,
-							rotation.y);
-
-					Vec2 portalRotation = PortalUtilities.getPortalRotation(level, uuid, isPrimary);
-					float xRot = portalRotation.x;
-					float yRot = portalRotation.y;
-
-					Direction direction = Direction.fromYRot(yRot);
-					if(xRot == -90)
-						direction = Direction.UP;
-					if(xRot == 90)
-						direction = Direction.DOWN;
-
-					poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
-
-					AtomicReference<VoxelShape> placementShape = new AtomicReference<>(
-							Shapes.create(placementBox.inflate(0.025)));
-					AtomicReference<VoxelShape> bumpingAirShape = new AtomicReference<>(Shapes.create(placementBox.inflate(0.025)));
-					AABB blockBumpAABB = placementBox.inflate(0.025).move(direction.step().mul(0.05f));
-					AtomicReference<VoxelShape> bumpingBlockShape = new AtomicReference<>(Shapes.create(blockBumpAABB));
-					if(true)
-					{
-						BlockPos.betweenClosedStream(portalBox.inflate(0.025)).forEach(pos ->
-							{
-								BlockState state = level.getBlockState(pos);
-								if(!state.isAir())
-								{
-									VoxelShape shape = state.getCollisionShape(level, pos)
-															.move(pos.getX(), pos.getY(), pos.getZ());
-									if(!placementShape.get().isEmpty()) placementShape.set(
-											Shapes.join(placementShape.get(), shape, BooleanOp.ONLY_FIRST));
-									if(!bumpingAirShape.get().isEmpty())
-										bumpingAirShape.set(Shapes.join(bumpingAirShape.get(), shape, BooleanOp.ONLY_FIRST));
-									if(!bumpingBlockShape.get().isEmpty())
-										bumpingBlockShape.set(Shapes.join(bumpingBlockShape.get(), shape, BooleanOp.ONLY_FIRST));
-
-								}
-							});
-						List<AABB> placements = placementShape.get().toAabbs();
-						//False - to have a look at it bumping with Air, True - to have a look at it bumping with VoxelShapes of blocks
-						if(!placementShape.get().isEmpty() && true)
-						{
-							AABB placementAABB = placementBox.inflate(0.025);
-
-							boolean wall = PortalUtilities.isPortalOnWall(level, uuid, isPrimary);
-
-							if(wall)
-							{
-								if(direction.getAxis().equals(Direction.Axis.X))
-								{
-									placementAABB = placementAABB.setMinX(placementShape.get().bounds().minX);
-									placementAABB = placementAABB.setMaxX(placementShape.get().bounds().maxX);
-								}
-
-								if(direction.getAxis().equals(Direction.Axis.Z))
-								{
-									placementAABB = placementAABB.setMinZ(placementShape.get().bounds().minZ);
-									placementAABB = placementAABB.setMaxZ(placementShape.get().bounds().maxZ);
-								}
-							} else
-							{
-								placementAABB = placementAABB.setMinY(placementShape.get().bounds().minY);
-								placementAABB = placementAABB.setMaxY(placementShape.get().bounds().maxY);
-							}
-
-							bumpingAirShape.set(Shapes.join(Shapes.create(placementAABB), placementShape.get(),
-									BooleanOp.ONLY_FIRST));
-							bumpingBlockShape.set(Shapes.join(Shapes.create(placementAABB), placementShape.get(),
-									BooleanOp.ONLY_FIRST));
-						}
-
-						if(!placementShape.get().toAabbs().isEmpty())
-						{
-							AABB firstPart = placementShape.get().toAabbs().getFirst();
-
-							boolean wall = PortalUtilities.isPortalOnWall(level, uuid, isPrimary);
-							boolean ceiling = PortalUtilities.isPortalOnCeiling(level, uuid, isPrimary);
-
-							AABB placement = placementBox;
-							boolean equal = false;
-							if(!wall)
-							{
-								equal = firstPart.maxX == placement.maxX && firstPart.minX == placement.minX
-												&& firstPart.maxZ == placement.maxZ && firstPart.minZ == placement.minZ;
-							}
-							if(wall)
-							{
-								if(direction.getAxis().equals(Direction.Axis.Z))
-								{
-									equal = firstPart.maxX == placement.maxX && firstPart.minX == placement.minX
-													&& firstPart.maxY == placement.maxY && firstPart.minY == placement.minY;
-								}
-								if(direction.getAxis().equals(Direction.Axis.X))
-								{
-									equal = firstPart.maxY == placement.maxY && firstPart.minY == placement.minY
-													&& firstPart.maxZ == placement.maxZ && firstPart.minZ == placement.minZ;
-								}
-							}
-							if(!equal || placementShape.get().toAabbs().size() != 1)
-							{
-								//System.out.println("Invalid Portal Placement! - Client");
-							}
-						}
-
-//						LevelRenderer.renderVoxelShape(poseStack, buffer.getBuffer(PortalRenderTypes.lines()),
-//								placementShape.get(), 0, 2, 0, 1f, 0.2f, 0.6f, 1f, false);
-
-						List<AABB> aabbList = bumpingAirShape.get().toAabbs();
-						for(int i = 0; i < aabbList.size(); i++)
-						{
-							AABB aabb = aabbList.get(i);
-							boolean smthn = BlockPos.betweenClosedStream(aabb).anyMatch(pos ->
-								{
-									VoxelShape shape = level.getBlockState(pos).getCollisionShape(level, pos);
-									for(AABB shapeAabb : shape.toAabbs())
-									{
-										if(shapeAabb.intersects(aabb))
-											return true;
-									}
-									return false;
-								});
-
-							if(smthn || (aabb.getXsize() <= 0.05D || aabb.getZsize() <= 0.05D || aabb.getYsize() <= 0.05D))
-								continue;
-
-//							LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(RenderType.lines()), aabb,
-//									0.2f, 1f, 0.25f, 1f);
-
-							Vec3i normal = new Vec3i(direction.getNormal().getX() == 0 ? 1 : 0,
-									direction.getNormal().getY() == 0 ? 1 : 0,
-									direction.getNormal().getZ() == 0 ? 1 : 0);
-
-							Vec3 offsetToCenter = aabb.getCenter().vectorTo(portalPos).multiply(2, 2, 2);
-							offsetToCenter = offsetToCenter.multiply(normal.getX(), normal.getY(), normal.getZ());
-
-							Direction nearest = Direction.getNearest(offsetToCenter);
-							Vector3f sizes = new Vec3(aabb.getXsize(), aabb.getYsize(), aabb.getZsize()).toVector3f();
-							sizes.mul(nearest.step());
-
-							//System.out.println("================Client================");
-							//System.out.println("Direction = " + nearest.toString());
-							//System.out.println("Offset = " + sizes.toString(NumberFormat.getNumberInstance()));
-
-						}
-
-//						LevelRenderer.renderVoxelShape(poseStack, buffer.getBuffer(PortalRenderTypes.lines()),
-//								bumpingAirShape.get(), 1, 2, 0, 0.25f, 1f, 0.5f, 1f, false);
-//						LevelRenderer.renderVoxelShape(poseStack, buffer.getBuffer(PortalRenderTypes.lines()),
-//								bumpingBlockShape.get(), 1, 3, 0, 0.25f, 0.5f, 1f, 1f, false);
-
-					}
-					for(VoxelShape voxelShape : shapesIDK)
-					{
-//						LevelRenderer.renderVoxelShape(poseStack, buffer.getBuffer(PortalRenderTypes.lines()),
-//								voxelShape, 0, 0, 0, 1f, 1f, 0f, 1f, false);
-					}
-					LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(PortalRenderTypes.lines()), portalBox, 0f,
-							1f, 1f, 1f);
-//					LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(PortalRenderTypes.lines()), placementBox,
-//							0.87f, 0.25f, 0.15f, 1f);
-					LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(PortalRenderTypes.lines()), teleportBox,
-							1f, 1f, 0f, 1f);
-//					LevelRenderer.renderLineBox(poseStack, buffer.getBuffer(PortalRenderTypes.lines()), floorBox, 1f,
-//							0f, 0f, 1f);
-
-					poseStack.popPose();
-				}
 
 				ResourceLocation texturePrimary = ClientPortalUtilities.getPortalVortexTexture(link, true);
 				ResourceLocation textureSecondary = ClientPortalUtilities.getPortalVortexTexture(link, false);

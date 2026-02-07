@@ -84,6 +84,7 @@ public class Portal
 		{
 			buffer.writeBoolean(false);
 			buffer.writeBoolean(moonshot);
+			buffer.writeInt(color);
 			return;
 		}
 		buffer.writeBoolean(true);
@@ -108,6 +109,7 @@ public class Portal
 		if(!exists)
 		{
 			portal.setMoonshot(buffer.readBoolean());
+			portal.setColor(buffer.readInt());
 			return portal;
 		}
 
