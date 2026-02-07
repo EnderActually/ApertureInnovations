@@ -286,7 +286,7 @@ public class PortalLink
 
 	public void updateVariant(Level level, ResourceLocation variantKey)
 	{
-		if(this.variantKey != variantKey)
+		if(!this.variantKey.equals(variantKey))
 		{
 			this.variantKey = variantKey;
 			PortalLinkData.get(level).setDirty(linkID, true);

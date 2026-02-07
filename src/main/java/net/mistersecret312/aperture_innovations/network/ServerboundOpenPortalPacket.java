@@ -162,7 +162,7 @@ public record ServerboundOpenPortalPacket(boolean isPrimary) implements CustomPa
 				int tries = 0;
 				boolean valid = link.checkForValidity(level, portalPlacement.getFirst(), portalPlacement.getSecond().x,
 						portalPlacement.getSecond().y, facing, linkID, isPrimary);
-				while(!valid && tries < 3)
+				while(!valid && tries < 4)
 				{
 					portalPlacement = positionPortal(level, portalPlacement.getFirst(), facing, rotation, linkID, isPrimary);
 					valid = link.checkForValidity(level, portalPlacement.getFirst(), portalPlacement.getSecond().x,
