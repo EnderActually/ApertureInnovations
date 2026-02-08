@@ -404,7 +404,7 @@ public class PortalLink
 		Portal otherPortal = isPrimary ? link.getSecondaryPortal() : link.getPrimaryPortal();
 
 		double distance = portal.getPosition().distanceTo(entity.position());
-		if(distance < 6 && otherPortal.isMoonshot())
+		if(distance < 6 && otherPortal.isMoonshot() && !(entity instanceof ServerPlayer && ((ServerPlayer) entity).getAbilities().instabuild))
 		{
 			Direction direction = PortalUtilities.getPortalDirection(level, linkID, isPrimary);
 
