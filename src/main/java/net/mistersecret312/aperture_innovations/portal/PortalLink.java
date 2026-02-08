@@ -527,8 +527,8 @@ public class PortalLink
 						? otherPortal.getXRotation() : entity.getXRot());
 				entity.setOldPosAndRot();
 
-				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(
-								BlockPos.containing(otherPortal.getPosition()))),
+				BlockPos targetBlock = BlockPos.containing(targetPos);
+				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(targetBlock)),
 						new ClientboundPortalSoundsPacket.EnterPortal(link.linkID, isPrimary));
 
 				if(entity instanceof ServerPlayer player)
