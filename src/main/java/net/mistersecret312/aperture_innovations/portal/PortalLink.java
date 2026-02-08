@@ -526,7 +526,7 @@ public class PortalLink
 				entity.setOldPosAndRot();
 
 				PacketDistributor.sendToPlayersTrackingChunk(targetLevel,
-						new ChunkPos(BlockPos.containing(otherPortal.getPosition())),
+						new ChunkPos(BlockPos.containing(targetPos)),
 						new ClientboundPortalSoundsPacket.EnterPortal(link.linkID, !isPrimary));
 				if(entity instanceof ServerPlayer player)
 				{
