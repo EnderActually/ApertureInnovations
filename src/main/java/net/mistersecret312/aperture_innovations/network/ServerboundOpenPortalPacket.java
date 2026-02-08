@@ -254,7 +254,7 @@ public record ServerboundOpenPortalPacket(boolean isPrimary) implements CustomPa
 		}
 		Pair<UUID, Boolean> closestPortalPair;
 		if(self.getPosition() == null)
-			closestPortalPair = PortalUtilities.getClosestPortal(level, position, isPrimary);
+			closestPortalPair = PortalUtilities.getClosestPortal(level, position, id, isPrimary);
 		else closestPortalPair = PortalUtilities.getClosestPortal(level, self);
 
 		Portal closestPortal;
