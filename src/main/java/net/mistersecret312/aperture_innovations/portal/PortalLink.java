@@ -15,6 +15,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
@@ -478,6 +479,13 @@ public class PortalLink
 				targetPos = targetPos.add(otherDirection.getStepX() * 0.05, otherDirection.getStepY() * 0.05,
 						otherDirection.getStepZ() * 0.05);
 
+				if(!otherPortal.isOnWall() && (entity instanceof LivingEntity && ((LivingEntity) entity).isFallFlying()))
+				{
+					newSpeed.add(otherPortal.getXRotation() == 90 ?
+										 Direction.DOWN.step().mul(1f) :
+										 Direction.UP.step().mul(1f));
+				}
+
 				if(!portal.isOnWall())
 				{
 					targetPos = targetPos.add(otherDirection.getStepX() * 0.25f,
@@ -501,6 +509,7 @@ public class PortalLink
 
 				float yaw = (float) Math.atan2(-(rot.x * rot.z + rot.y * rot.w) * 2,
 						2 * (rot.y * rot.y + rot.z * rot.z) - 1);
+
 				entity.setPos(targetPos);
 
 				Vec2 portalRot = PortalUtilities.getPortalRotation(level, linkID, isPrimary);
@@ -514,7 +523,8 @@ public class PortalLink
 						new ClientboundPortalSoundsPacket.EnterPortal(link.linkID, isPrimary));
 
 				entity.teleportTo(targetLevel, targetPos.x, targetPos.y, targetPos.z, Set.of(),
-						(float) Math.toDegrees(yaw) + (direction.getAxis().isVertical() ? 180 : 0), entity.getXRot());
+						(float) Math.toDegrees(yaw) + (direction.getAxis().isVertical() ? 180 : 0), entity instanceof LivingEntity && ((LivingEntity) entity).isFallFlying()
+						? otherPortal.getXRotation() : entity.getXRot());
 				entity.setOldPosAndRot();
 
 				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(
