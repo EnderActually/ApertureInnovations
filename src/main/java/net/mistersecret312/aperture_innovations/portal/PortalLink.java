@@ -13,6 +13,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
@@ -477,6 +478,13 @@ public class PortalLink
 				targetPos = targetPos.add(otherDirection.getStepX() * 0.05, otherDirection.getStepY() * 0.05,
 						otherDirection.getStepZ() * 0.05);
 
+				if(!otherPortal.isOnWall() && (entity instanceof LivingEntity && ((LivingEntity) entity).isFallFlying()))
+				{
+					newSpeed.add(otherPortal.getXRotation() == 90 ?
+										 Direction.DOWN.step().mul(1f) :
+										 Direction.UP.step().mul(1f));
+				}
+
 				if(!portal.isOnWall())
 				{
 					targetPos = targetPos.add(otherDirection.getStepX() * 0.1f,
@@ -512,7 +520,9 @@ public class PortalLink
 						new ClientboundPortalSoundsPacket.EnterPortal(link.linkID, isPrimary));
 
 				entity.teleportTo(targetLevel, targetPos.x, targetPos.y, targetPos.z, Set.of(),
-						(float) Math.toDegrees(yaw) + (direction.getAxis().isVertical() ? 180 : 0), entity.getXRot());
+						(float) Math.toDegrees(yaw) + (direction.getAxis().isVertical() ? 180 : 0),
+						entity instanceof LivingEntity && ((LivingEntity) entity).isFallFlying()
+								  ? otherPortal.getXRotation() : entity.getXRot());
 				entity.setOldPosAndRot();
 
 				PacketDistributor.sendToPlayersTrackingChunk(targetLevel,
