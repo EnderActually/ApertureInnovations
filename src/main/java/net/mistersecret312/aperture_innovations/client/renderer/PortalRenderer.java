@@ -213,19 +213,35 @@ public class PortalRenderer
 
 	public static void renderPortalFrame(ResourceLocation texture, ColorUtil.RGBA color, MultiBufferSource buffer, PoseStack poseStack) {
 		poseStack.pushPose();
-		VertexConsumer consumerA = buffer.getBuffer(PortalRenderTypes.portalFrame(texture));
-		consumerA.vertex(poseStack.last().pose(), -0.5f, -0.5f, 0)
-				 .color(color.red(), color.green(), color.blue(), color.alpha())
-				 .uv(0, 1).endVertex();
-		consumerA.vertex(poseStack.last().pose(), 0.5f, -0.5f, 0)
-				 .color(color.red(), color.green(), color.blue(), color.alpha())
-				 .uv(1, 1).endVertex();
-		consumerA.vertex(poseStack.last().pose(), 0.5f, 0.5f, 0)
-				 .color(color.red(), color.green(), color.blue(), color.alpha())
-				 .uv(1, 0).endVertex();
-		consumerA.vertex(poseStack.last().pose(), -0.5f, 0.5f, 0)
-				 .color(color.red(), color.green(), color.blue(), color.alpha())
-				 .uv(0, 0).endVertex();
+
+		Tesselator tesselator = Tesselator.getInstance();
+		BufferBuilder builder = tesselator.getBuilder();
+		Matrix4f matrix = poseStack.last().pose();
+
+		RenderSystem.setShader(GameRenderer::getPositionTexShader);
+		RenderSystem.setShaderTexture(0, texture);
+		RenderSystem.enableDepthTest();
+		RenderSystem.depthFunc(GL11.GL_LEQUAL);
+		RenderSystem.setShaderColor(color.red(), color.green(), color.blue(), color.alpha());
+
+		builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+
+		builder.vertex(matrix,-0.5f, -0.5f, 0)
+			   .uv(0, 1)
+			   .endVertex();
+		builder.vertex(matrix,0.5f, -0.5f, 0)
+			   .uv(1, 1)
+			   .endVertex();
+		builder.vertex(matrix,0.5f, 0.5f, 0)
+			   .uv(1, 0)
+			   .endVertex();
+		builder.vertex(matrix,-0.5f, 0.5f, 0)
+			   .uv(0, 0)
+			   .endVertex();
+
+		BufferUploader.drawWithShader(builder.end());
+		RenderSystem.disableDepthTest();
+		RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
 
 		poseStack.popPose();
 	}
