@@ -170,9 +170,9 @@ public class PortalLink
 		}
 		Pair<UUID, Boolean> closestPortalPair;
 		if(self.getPosition() == null)
-			closestPortalPair = PortalUtilities.getClosestPortal(level, position, isPrimary);
-
+			closestPortalPair = PortalUtilities.getClosestPortal(level, position, id, isPrimary);
 		else closestPortalPair = PortalUtilities.getClosestPortal(level, self);
+
 		Portal closestPortal;
 		if(level.isClientSide() && closestPortalPair.getFirst() != null)
 		{
@@ -446,7 +446,10 @@ public class PortalLink
 			boolean slow = portalPos.closerThan(currentPos, 0.4f) && relativePos > 0;
 			boolean fast = relativePos > 0 && nextRelativePos <= 0;
 
-			if(slow || fast)
+			AABB boundingBox = PortalUtilities.getPortalBoundingBox(portal.getPosition(), portal.getXRotation(), portal.getYRotation());
+			boolean full = portal.getXRotation() == -90 && boundingBox.contains(entity.getBoundingBox().getCenter().add(0, entity.getBbHeight()/2f, 0));
+
+			if(slow || fast || full)
 			{
 				Quaternionf portalQ = new Quaternionf().rotationYXZ((float) (Math.PI - Math.toRadians(
 								portal.getYRotation() + (direction.getAxis().isHorizontal() ? 180 : 0))),
