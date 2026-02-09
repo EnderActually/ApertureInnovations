@@ -6,6 +6,7 @@ import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.TheEndPortalRenderer;
 import net.minecraft.resources.ResourceLocation;
+import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import org.lwjgl.opengl.GL11;
 
 public class PortalRenderTypes extends RenderType
@@ -46,6 +47,20 @@ public class PortalRenderTypes extends RenderType
 		);
 	}
 
+	public static RenderType portalCorridor(ResourceLocation texture) {
+		return RenderType.create("portal_corridor",
+				DefaultVertexFormat.POSITION_TEX_COLOR,
+				VertexFormat.Mode.QUADS,
+				1536, false, false,
+				RenderType.CompositeState.builder()
+										 .setShaderState(new RenderStateShard.ShaderStateShard(() -> ApertureInnovations.ClientModEvents.portalCorridorShaderInstance))
+										 .setTextureState(new RenderStateShard.TextureStateShard(texture, false, false))
+										 .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
+										 .setCullState(RenderStateShard.NO_CULL)
+										 .setDepthTestState(new DepthTestStateShard("==", GL11.GL_EQUAL))
+										 .createCompositeState(false));
+	}
+
 	public static RenderType portalFrame(ResourceLocation location)
 	{
 		return create("portal_frame", DefaultVertexFormat.POSITION_COLOR_TEX,
@@ -56,6 +71,18 @@ public class PortalRenderTypes extends RenderType
 										 .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
 										 .createCompositeState(true)
 		);
+	}
+
+	public static RenderType laserTest(ResourceLocation location)
+	{
+		return create("laser_test", DefaultVertexFormat.POSITION_TEX_COLOR,
+				VertexFormat.Mode.QUADS, 256, true, true,
+				CompositeState.builder()
+						.setShaderState(POSITION_COLOR_TEX_SHADER)
+						.setTextureState(new TextureStateShard(location, false, false))
+						.setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
+						.setCullState(CULL)
+						.createCompositeState(true));
 	}
 
 	public static RenderType portalVortex(ResourceLocation location)

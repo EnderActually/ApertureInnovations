@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.*;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.TextureAtlas;
@@ -18,17 +18,22 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraft.world.phys.shapes.BooleanOp;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
-import net.mistersecret312.aperture_innovations.items.LongFallBootsItem;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.network.ServerboundOpenPortalPacket;
 import net.mistersecret312.aperture_innovations.network.ServerboundResetPortalLinkPacket;
@@ -36,22 +41,18 @@ import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalUtilities;
 import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
 import net.mistersecret312.aperture_innovations.sounds.PortalSoundWrapper;
+import org.joml.Matrix4f;
 
-import java.awt.*;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static net.mistersecret312.aperture_innovations.client.renderer.PortalRenderer.*;
 
 @Mod.EventBusSubscriber(modid = ApertureInnovations.MODID, value = Dist.CLIENT)
 public class ClientEvents
 {
-	public static final ResourceLocation TEXTURE_PRIMARY_VORTEX = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
-			"block/portal/portal_blue_vortex");
-
-	public static final ResourceLocation TEXTURE_SECONDARY_VORTEX = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
-			"block/portal/portal_orange_vortex");
-
 	@SubscribeEvent
 	public static void renderPortals(RenderLevelStageEvent event) {
 		MultiBufferSource.BufferSource buffer = Minecraft.getInstance().renderBuffers().bufferSource();
@@ -66,23 +67,20 @@ public class ClientEvents
 
 				for(int i = 0; i < 2; i++)
 				{
-					ResourceKey<Level> dimension = i == 0 ? link.dimensionPrimary() : link.dimensionSecondary();
+					boolean isPrimary = i == 0;
+					ResourceKey<Level> dimension = isPrimary ? link.getPrimaryPortal().getDimension() :
+														   link.getSecondaryPortal().getDimension();
 					if(level.dimension() != dimension)
 						continue;
 
 					poseStack.pushPose();
 
-					float scale = ClientPortalUtilities.getPortalOpeningAnimationProgress(linkID, i == 0);
+					float scale = ClientPortalUtilities.getPortalOpeningAnimationProgress(linkID, isPrimary);
 
-					BlockPos portalPos = i == 0 ? link.posPrimary() : link.posSecondary();
-					BlockPos otherPortalPos = i == 0 ? link.posSecondary() : link.posPrimary();
-
-					boolean moonshot = i == 0 ? link.moonshotPrimary() : link.moonshotSecondary();
-					boolean otherMoonshot = i == 0 ? link.moonshotSecondary() : link.moonshotPrimary();
-
-					if((portalPos != null || moonshot) && (otherPortalPos != null || otherMoonshot))
+					Vec3 portalPos = isPrimary ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
+					if(link.getPrimaryPortal().isOpen() && link.getSecondaryPortal().isOpen())
 					{
-						if(level.isLoaded(portalPos))
+						if(level.isLoaded(BlockPos.containing(portalPos)))
 						{
 							renderPortalNonSee(buffer, poseStack, camera, link, i == 0, scale);
 						}
@@ -113,32 +111,27 @@ public class ClientEvents
 
 				for(int i = 0; i < 2; i++)
 				{
-					ResourceKey<Level> dimension = i == 0 ? link.dimensionPrimary() : link.dimensionSecondary();
+					boolean isPrimary = i == 0;
+					ResourceKey<Level> dimension = isPrimary ? link.getPrimaryPortal().getDimension() : link.getSecondaryPortal().getDimension();
 					if(Minecraft.getInstance().level.dimension() != dimension) continue;
 
-					poseStack.pushPose();
+					float scale = ClientPortalUtilities.getPortalOpeningAnimationProgress(link.linkID(), isPrimary);
 
-					float scale = ClientPortalUtilities.getPortalOpeningAnimationProgress(link.linkID(), i == 0);
+					Vec3 portalPos = isPrimary ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
 
-					BlockPos portalPos = i == 0 ? link.posPrimary() : link.posSecondary();
-					BlockPos otherPortalPos = i == 0 ? link.posSecondary() : link.posPrimary();
-
-					poseStack.popPose();
-
-					if(portalPos != null && Minecraft.getInstance().level.isLoaded(
-							portalPos) && event.getLevelRenderer().getFrustum()
-											   .isVisible(new AABB(portalPos).inflate(1)))
+					if(portalPos != null
+							   && Minecraft.getInstance().level.isLoaded(BlockPos.containing(portalPos))
+							   && event.getLevelRenderer().getFrustum().isVisible(new AABB(portalPos, portalPos).inflate(1)))
 					{
-						if(i == 0)
-						{
+						if(isPrimary)
 							primaryRender(link, buffer, poseStack, camera, scale);
-						} else secondaryRender(link, buffer, poseStack, camera, scale);
+						else
+							secondaryRender(link, buffer, poseStack, camera, scale);
 					}
 
-
-					if(i == 0 && link.posPrimary() != null)
+					if(isPrimary && link.getPrimaryPortal().isInWorld())
 						renderPortalVortex(link, camera, primary, buffer, poseStack, true);
-					else if(link.posSecondary() != null)
+					else if(link.getSecondaryPortal().isInWorld())
 						renderPortalVortex(link, camera, secondary, buffer, poseStack, false);
 				}
 
@@ -153,7 +146,6 @@ public class ClientEvents
 	{
 		Player player = event.getPlayer();
 		Level level = player.level();
-		BlockPos pos = event.getBlockPos();
 
 		if(event.getOverlayType().equals(RenderBlockScreenEffectEvent.OverlayType.BLOCK))
 		{
@@ -164,11 +156,9 @@ public class ClientEvents
 				return;
 
 			Vec3 portalPos = PortalUtilities.getPortalPos(level, uuid, isPrimary);
-			Direction portalDirection = PortalUtilities.getPortalDirection(level, uuid, isPrimary);
-			boolean isOnWall = PortalUtilities.isPortalOnWall(level, uuid, isPrimary);
-			boolean isOnCeiling = PortalUtilities.isPortalOnCeiling(level, uuid, isPrimary);
+			Vec2 rotation = PortalUtilities.getPortalRotation(level, uuid, isPrimary);
 
-			AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, portalDirection, isOnWall, isOnCeiling);
+			AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, rotation.x, rotation.y);
 			if(portalBox.contains(player.getEyePosition()))
 				event.setCanceled(true);
 		}
@@ -210,7 +200,7 @@ public class ClientEvents
 	@SubscribeEvent
 	public static void clientTick(TickEvent.ClientTickEvent event)
 	{
-		if (event.phase == TickEvent.Phase.END)
+		if(event.phase == TickEvent.Phase.END)
 		{
 			Minecraft mc = Minecraft.getInstance();
 			if(mc.level != null && mc.player != null)
@@ -220,36 +210,35 @@ public class ClientEvents
 						for(int i = 0; i < 2; i++)
 						{
 							boolean isPrimary = i == 0;
-							BlockPos portalPos = isPrimary ? link.posPrimary() : link.posSecondary();
+							Vec3 portalPos = isPrimary ? link.getPrimaryPortal()
+															 .getPosition() : link.getSecondaryPortal().getPosition();
 
 							if(portalPos != null)
 							{
-								float progress = ClientPortalUtilities.getPortalOpeningAnimationProgress(linkID, isPrimary);
+								float progress = ClientPortalUtilities.getPortalOpeningAnimationProgress(linkID,
+										isPrimary);
 								if(progress < 1F)
 								{
-									progress += 0.25F;
-									ClientPortalUtilities.setPortalOpeningAnimationProgress(progress, linkID, isPrimary);
+									progress += 0.25f;
+									ClientPortalUtilities.setPortalOpeningAnimationProgress(progress, linkID,
+											isPrimary);
 								}
 							}
 
 							if(!link.isOpen())
 							{
-								PortalSoundWrapper.PortalAmbient ambient = ClientPortalUtilities.getAmbientSound(linkID, isPrimary);
-								if(ambient != null)
-									ambient.stopSound();
+								PortalSoundWrapper.PortalAmbient ambient = ClientPortalUtilities.getAmbientSound(linkID,
+										isPrimary);
+								if(ambient != null) ambient.stopSound();
 							}
 						}
 					});
-			}
-		}
 
-		if(event.phase == TickEvent.Phase.END)
-		{
-			while(ApertureInnovations.ClientModEvents.RESET_PORTAL_GUN.get().consumeClick())
-			{
-				NetworkInit.INSTANCE.sendToServer(new ServerboundResetPortalLinkPacket());
+				while(ApertureInnovations.ClientModEvents.RESET_PORTAL_GUN.get().consumeClick())
+				{
+					NetworkInit.INSTANCE.sendToServer(new ServerboundResetPortalLinkPacket());
+				}
 			}
 		}
 	}
-
 }

@@ -109,7 +109,7 @@ dependencies {
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
     compileOnly fg.deobf("curse.maven:oculus-581495:6020952")
-    runtimeOnly fg.deobf("curse.maven:embeddium-908741:5681725")
+    compileOnly fg.deobf("curse.maven:embeddium-908741:5681725")
     runtimeOnly fg.deobf("curse.maven:mekanism-268560:6552911")
 
     compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.4.1"))

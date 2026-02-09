@@ -1,12 +1,14 @@
 package net.mistersecret312.aperture_innovations.mixin;
 
 import com.mojang.datafixers.util.Pair;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.BlockCollisions;
 import net.minecraft.world.level.CollisionGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.Shapes;
@@ -15,6 +17,10 @@ import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -31,119 +37,79 @@ public interface CollisionMixin
 	@Overwrite
 	default Iterable<VoxelShape> getBlockCollisions(Entity entity, AABB entityBox)
 	{
-		List<VoxelShape> list = new ArrayList<>();
-
 		CollisionGetter getter = ((CollisionGetter) (Object) this);
 
-		Iterable<VoxelShape> iterable =
+		Iterable<VoxelShape> shapes =
 				() -> new BlockCollisions<>(getter, entity, entityBox, false,
 						(pos, shape) -> shape);
 
-		for(VoxelShape voxelShape : iterable) list.add(voxelShape);
+		List<VoxelShape> list = new ArrayList<>();
+		shapes.forEach(list::add);
 
 		if(entity == null)
-			return list;
-
+		{
+			return shapes;
+		}
 		Level level = entity.level();
 		if(level == null)
-			return list;
+		{
+			return shapes;
+		}
 
 		Pair<UUID, Boolean> portal = PortalUtilities.getClosestPortal(entity);
 
 		UUID uuid = portal.getFirst();
 		boolean isPrimary = portal.getSecond();
 		if(uuid == null)
-			return list;
+		{
+			return shapes;
+		}
 
 		boolean isOpen = PortalUtilities.isPortalOpen(level, uuid);
 
 		Vec3 portalPos = PortalUtilities.getPortalPos(level, uuid, isPrimary);
-		Direction portalDirection = PortalUtilities.getPortalDirection(level, uuid, isPrimary);
-		boolean isOnWall = PortalUtilities.isPortalOnWall(level, uuid, isPrimary);
-		boolean isOnCeiling = PortalUtilities.isPortalOnCeiling(level, uuid, isPrimary);
 
-		AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, portalDirection, isOnWall, isOnCeiling);
-		AABB floorBox = PortalUtilities.getPortalFloorBox(portalPos, portalDirection, isOnWall).inflate(0d, 0.01d, 0d);
+		Vec2 rotation = PortalUtilities.getPortalRotation(level, uuid, isPrimary);
 
-		list.removeIf(shape -> shape.bounds().intersects(portalBox) && isOpen);
+		AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, rotation.x, rotation.y);
+		AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPos, rotation.x, rotation.y);
+		AABB floorBox = PortalUtilities.getPortalFloorBox(portalPos, rotation.x, rotation.y).inflate(0d, 0.01d, 0d);
+
+		Direction direction = PortalUtilities.getPortalDirection(level, uuid, isPrimary);
+
+		Vec3 logicPos = teleportBox.getCenter();
+		logicPos = logicPos.add(direction.getOpposite().getStepX() * entity.getBbWidth() / 2f,
+				direction.getOpposite().getStepY() * entity.getBbHeight() / 1.25f,
+				direction.getOpposite().getStepZ() * entity.getBbWidth() / 2f);
+
+		Vec3 currentPos = entity.position().add(0, entity.getBbHeight() / 2f, 0);
+		Vec3 offsetFromPortal = currentPos.subtract(logicPos);
+
+		double dotProduct = offsetFromPortal.dot(new Vec3(direction.step()));
+
 		if(entityBox.intersects(floorBox) && isOpen)
 			list.add(Shapes.create(floorBox));
 
-		return list;
-	}
+		List<VoxelShape> readdVoxels = PortalUtilities.getPortalVoxels(level, portalPos, rotation.x, rotation.y);
 
-	/**
-	 * @author mistersecret312
-	 * @reason Required to actually be able to enter the portal without getting pushed out.
-	 */
-	@Overwrite
-	default boolean collidesWithSuffocatingBlock(Entity entity, AABB entityBox)
-	{
-		CollisionGetter getter = ((CollisionGetter) (Object) this);
+		list.removeIf(shape -> !shape.isEmpty() && shape.bounds().intersects(portalBox)
+									   && isOpen
+									   && dotProduct >= 0);
 
-		BlockCollisions<VoxelShape> blockcollisions =
-				new BlockCollisions<>(getter, entity, entityBox, true, (pos, shape) -> {
-			return shape;
-		});
-
-		if(entity == null)
-			return original(blockcollisions);
-
-		Level level = entity.level();
-		if(level == null)
-			return original(blockcollisions);
-
-		Pair<UUID, Boolean> portal = PortalUtilities.getClosestPortal(entity);
-
-		UUID uuid = portal.getFirst();
-		boolean isPrimary = portal.getSecond();
-		if(uuid == null)
-			return original(blockcollisions);
-
-		boolean isOpen = PortalUtilities.isPortalOpen(level, uuid);
-
-		Vec3 portalPos = PortalUtilities.getPortalPos(level, uuid, isPrimary);
-		Direction portalDirection = PortalUtilities.getPortalDirection(level, uuid, isPrimary);
-		boolean isOnWall = PortalUtilities.isPortalOnWall(level, uuid, isPrimary);
-		boolean isOnCeiling = PortalUtilities.isPortalOnCeiling(level, uuid, isPrimary);
-
-		AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, portalDirection, isOnWall, isOnCeiling);
-		AABB floorBox = PortalUtilities.getPortalFloorBox(portalPos, portalDirection, isOnWall).inflate(0d, 0.01d, 0d);
-
-		if(!isOpen)
+		for(VoxelShape voxel : readdVoxels)
 		{
-			portalBox = new AABB(0D,0D,0D,0D,0D,0D);
-			floorBox = new AABB(0D,0D,0D,0D,0D,0D);
-		}
+			if(voxel.isEmpty() || !isOpen)
+				continue;
 
-		List<VoxelShape> list = new ArrayList<>();
-		blockcollisions.forEachRemaining(list::add);
-		if(entityBox.intersects(floorBox))
-			list.add(Shapes.create(floorBox));
-
-		Iterator<VoxelShape> iterator = list.iterator();
-		while(iterator.hasNext()) {
-			VoxelShape shape = iterator.next();
-			if(!shape.isEmpty() && shape.bounds() == floorBox)
-				return true;
-
-			if (!shape.isEmpty() && !shape.bounds().intersects(portalBox)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	@Unique
-	default boolean original(Iterator<VoxelShape> blockcollisions)
-	{
-		while(blockcollisions.hasNext()) {
-			VoxelShape shape = blockcollisions.next();
-			if (!shape.isEmpty()) {
-				return true;
+			for(AABB aabb : voxel.toAabbs())
+			{
+				if(aabb.intersects(entityBox))
+				{
+					list.add(voxel);
+				}
 			}
 		}
 
-		return false;
+		return list;
 	}
 }

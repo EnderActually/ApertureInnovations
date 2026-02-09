@@ -1,6 +1,5 @@
 package net.mistersecret312.aperture_innovations.portal;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
@@ -15,7 +14,7 @@ import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
-import net.mistersecret312.aperture_innovations.network.ClientBoundPortalLinkSyncPacket;
+import net.mistersecret312.aperture_innovations.network.ClientBoundPortalSyncPacket;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -84,7 +83,8 @@ public class PortalLinkData extends SavedData
 											.location();
 
 		this.portalLinks.put(uuid, new PortalLink(uuid, location));
-		this.setDirty();
+		this.setDirty(uuid, true);
+		this.setDirty(uuid, false);
 	}
 	
 	public PortalLink getLink(UUID uuid)
@@ -102,12 +102,23 @@ public class PortalLinkData extends SavedData
 		else return null;
 	}
 
+	public void setDirty(UUID uuid, boolean isPrimary)
+	{
+		PortalLink link = portalLinks.get(uuid);
+		if(isPrimary)
+			NetworkInit.INSTANCE.send(PacketDistributor.ALL.noArg(), new ClientBoundPortalSyncPacket(uuid, true,
+					link.getPrimaryPortal(), link.variantKey));
+		else
+			NetworkInit.INSTANCE.send(PacketDistributor.ALL.noArg(), new ClientBoundPortalSyncPacket(uuid, false,
+					link.getSecondaryPortal(), link.variantKey));
+
+		this.setDirty();
+	}
+
 	@Override
 	public void setDirty()
 	{
 		super.setDirty();
-		NetworkInit.INSTANCE.send(
-				PacketDistributor.ALL.noArg(), new ClientBoundPortalLinkSyncPacket(portalLinks, new HashMap<>()));
 	}
 
 	public PortalLinkData(MinecraftServer server)

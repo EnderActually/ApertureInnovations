@@ -42,5 +42,5 @@ versionRange = "[4.8.2, 4.9)"
 ordering = "NONE"
 side = "BOTH"
 
-["radium-reforged:options"]
+["lithium:options"]
 "mixin.entity.collisions.movement"=false

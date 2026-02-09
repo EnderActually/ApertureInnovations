@@ -1,5 +1,7 @@
 package net.mistersecret312.aperture_innovations.portal;
 
+import com.mojang.datafixers.util.Pair;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
@@ -8,286 +10,571 @@ import net.minecraft.nbt.NbtUtils;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.FastColor;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.world.ForgeChunkManager;
 import net.minecraftforge.network.PacketDistributor;
+import net.minecraft.world.phys.shapes.BooleanOp;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.advancements.PortalTravelCriterion;
+import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
 import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
+import net.mistersecret312.aperture_innovations.init.AdvancementInit;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
+import net.mistersecret312.aperture_innovations.init.StatisticsInit;
+import net.mistersecret312.aperture_innovations.network.ClientboundEntityPortalLerpPacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalAmbientSoundPacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalSoundsPacket;
+import net.mistersecret312.aperture_innovations.network.ClientboundTeleportMomentumPacket;
+import org.joml.Matrix4f;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class PortalLink
 {
 	public UUID linkID;
 
-	public BlockPos posPrimary;
-	public BlockPos posSecondary;
-
-	public boolean wallPrimary;
-	public boolean wallSecondary;
-
-	public boolean ceilingPrimary;
-	public boolean ceilingSecondary;
-
-	public ResourceKey<Level> dimensionPrimary;
-	public ResourceKey<Level> dimensionSecondary;
-
-	public Direction directionPrimary;
-	public Direction directionSecondary;
-
-	public boolean moonshotPrimary = false;
-	public boolean moonshotSecondary = false;
-
-	public int openingPrimary = 0;
-	public int openingSecondary = 0;
+	private Portal primaryPortal;
+	private Portal secondaryPortal;
 
 	public ResourceLocation variantKey = null;
-
-	public int primaryPortalColor = -1;
-	public int secondaryPortalColor = -1;
 
 	public PortalLink(UUID linkID, ResourceLocation variantKey)
 	{
 		this.linkID = linkID;
 		this.variantKey = variantKey;
+
+		this.primaryPortal = new Portal();
+		this.secondaryPortal = new Portal();
 	}
 
-	public PortalLink(UUID linkID, BlockPos posPrimary, BlockPos posSecondary,
-					  boolean wallPrimary, boolean wallSecondary,
-					  boolean ceilingPrimary, boolean ceilingSecondary,
-					  ResourceKey<Level> dimensionPrimary, ResourceKey<Level> dimensionSecondary,
-					  Direction directionPrimary, Direction directionSecondary,
-					  ResourceLocation variantKey, int primaryPortalColor, int secondaryPortalColor)
+	public PortalLink(UUID linkID, Portal primaryPortal, Portal secondaryPortal,
+					  ResourceLocation variantKey)
 	{
 		this.linkID = linkID;
 
-		this.posPrimary = posPrimary;
-		this.posSecondary = posSecondary;
-
-		this.wallPrimary = wallPrimary;
-		this.wallSecondary = wallSecondary;
-
-		this.ceilingPrimary = ceilingPrimary;
-		this.ceilingSecondary = ceilingSecondary;
-
-		this.dimensionPrimary = dimensionPrimary;
-		this.dimensionSecondary = dimensionSecondary;
-
-		this.directionPrimary = directionPrimary;
-		this.directionSecondary = directionSecondary;
-
-		this.primaryPortalColor = primaryPortalColor;
-		this.secondaryPortalColor = secondaryPortalColor;
+		this.primaryPortal = primaryPortal;
+		this.secondaryPortal = secondaryPortal;
 
 		this.variantKey = variantKey;
 	}
 
-	public void createPrimaryPortal(Level level, BlockPos pos, ResourceKey<Level> dimension, Direction direction, Direction facing)
+	public void createPrimaryPortal(Level level, Vec3 pos, ResourceKey<Level> dimension, Direction direction, Direction facing)
 	{
-		this.posPrimary = pos;
-		this.dimensionPrimary = dimension;
-		this.directionPrimary = facing.equals(Direction.UP) ? direction : facing;
-		this.wallPrimary = facing.equals(Direction.UP);
-		this.ceilingPrimary = direction.equals(Direction.DOWN);
-		this.moonshotPrimary = false;
-		this.openingPrimary = 0;
+		float xRot = 0;
+		float yRot = direction.toYRot();
+		if(direction.equals(Direction.UP))
+		{
+			xRot = -90;
+			yRot = facing.toYRot()+(facing.getAxis().equals(Direction.Axis.X) ? 0 : 180);
+		}
+		if(direction.equals(Direction.DOWN))
+		{
+			xRot = 90;
+			yRot = facing.toYRot();
+		}
 
-		Level portalLevel = level.getServer().getLevel(dimensionPrimary);
+		this.primaryPortal.setPosition(pos);
+		this.primaryPortal.setYRotation(yRot);
+		this.primaryPortal.setXRotation(xRot);
+		this.primaryPortal.setDimension(dimension);
+		this.primaryPortal.setMoonshot(false);
+
+		ServerLevel portalLevel = level.getServer().getLevel(dimension);
+
 		if(portalLevel != null)
 		{
-			NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(
-							() -> portalLevel.getChunkAt(pos)),
+			NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(
+							BlockPos.containing(pos))),
 					new ClientboundPortalSoundsPacket.OpenPortal(linkID, true));
 		}
-		PortalLinkData.get(level).setDirty();
+
+		PortalLinkData.get(level).setDirty(linkID, true);
 	}
 
-	public void createSecondaryPortal(Level level, BlockPos pos, ResourceKey<Level> dimension, Direction direction, Direction facing)
+	public void createSecondaryPortal(Level level, Vec3 pos, ResourceKey<Level> dimension,
+									  Direction direction, Direction facing)
 	{
-		this.posSecondary = pos;
-		this.dimensionSecondary = dimension;
-		this.directionSecondary = facing.equals(Direction.UP) ? direction : facing;
-		this.wallSecondary = facing.equals(Direction.UP);
-		this.ceilingSecondary = direction.equals(Direction.DOWN);
-		this.moonshotSecondary = false;
-		this.openingSecondary = 0;
+		float xRot = 0;
+		float yRot = direction.toYRot();
+		if(direction.equals(Direction.UP))
+		{
+			xRot = -90;
+			yRot = facing.toYRot()+(facing.getAxis().equals(Direction.Axis.X) ? 0 : 180);
+		}
+		if(direction.equals(Direction.DOWN))
+		{
+			xRot = 90;
+			yRot = facing.toYRot();
+		}
 
-		Level portalLevel = level.getServer().getLevel(dimensionSecondary);
+		this.secondaryPortal.setPosition(pos);
+		this.secondaryPortal.setYRotation(yRot);
+		this.secondaryPortal.setXRotation(xRot);
+		this.secondaryPortal.setDimension(dimension);
+		this.secondaryPortal.setMoonshot(false);
+
+		ServerLevel portalLevel = level.getServer().getLevel(dimension);
+
 		if(portalLevel != null)
 		{
-			NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(
-							() -> portalLevel.getChunkAt(pos)),
+			NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(
+							BlockPos.containing(pos))),
 					new ClientboundPortalSoundsPacket.OpenPortal(linkID, false));
 		}
 
-		PortalLinkData.get(level).setDirty();
+		PortalLinkData.get(level).setDirty(linkID, false);
+	}
+
+	public boolean checkForValidity(Level level, Vec3 position, float xRot, float yRot, Direction direction, UUID id, boolean isPrimary)
+	{
+		AABB portalBox = PortalUtilities.getPortalBoundingBox(position, xRot, yRot).inflate(0.025);
+		AABB placementBox = PortalUtilities.getPortalPlacementBox(position, xRot, yRot).inflate(0.025);
+
+		Portal self;
+		if(level.isClientSide())
+		{
+			ClientPortalLink link =  PortalUtilities.getPortalLinks().get(id);
+			if(isPrimary)
+				self = link.getPrimaryPortal();
+			else self = link.getSecondaryPortal();
+		}
+		else
+		{
+			PortalLink link = PortalUtilities.getPortalLinks(level).get(id);
+			if(isPrimary)
+				self = link.getPrimaryPortal();
+			else self = link.getSecondaryPortal();
+		}
+		Pair<UUID, Boolean> closestPortalPair;
+		if(self.getPosition() == null)
+			closestPortalPair = PortalUtilities.getClosestPortal(level, position, id, isPrimary);
+		else closestPortalPair = PortalUtilities.getClosestPortal(level, self);
+
+		Portal closestPortal;
+		if(level.isClientSide() && closestPortalPair.getFirst() != null)
+		{
+			ClientPortalLink link = PortalUtilities.getPortalLinks().get(closestPortalPair.getFirst());
+			if(closestPortalPair.getSecond())
+				closestPortal = link.getPrimaryPortal();
+			else closestPortal = link.getSecondaryPortal();
+		}
+		else if(closestPortalPair.getFirst() != null)
+		{
+			PortalLink link = PortalUtilities.getPortalLinks(level).get(closestPortalPair.getFirst());
+			if(closestPortalPair.getSecond())
+				closestPortal = link.getPrimaryPortal();
+			else closestPortal = link.getSecondaryPortal();
+		}
+		else
+			closestPortal = null;
+
+		if(self.equals(closestPortal))
+			closestPortal = null;
+
+		VoxelShape placementShape = Shapes.create(placementBox);
+
+		AABB portalBoxCopy = PortalUtilities.getPortalPlacementBox(position, xRot, yRot).inflate(0.025).deflate(0.025)
+											.move(Vec3.directionFromRotation(xRot+(direction.getAxis().isVertical() ? 180 : 0), yRot+180)
+													  .multiply(0.15, 0.15, 0.15));
+
+		AtomicBoolean hasAir = new AtomicBoolean();
+		BlockPos.betweenClosedStream(portalBoxCopy).forEach(pos ->
+			{
+				BlockState state = level.getBlockState(pos);
+				if(state.isAir())
+					hasAir.set(true);
+			});
+
+		if(hasAir.get())
+			return false;
+
+		AtomicReference<VoxelShape> placementReference = new AtomicReference<>(placementShape);
+		Portal finalClosestPortal = closestPortal;
+		BlockPos.betweenClosedStream(portalBox).forEach(pos ->
+			{
+				BlockState state = level.getBlockState(pos);
+				if(finalClosestPortal != null)
+				{
+					VoxelShape shape = Shapes.create(PortalUtilities.getPortalPlacementBox(finalClosestPortal.getPosition(),
+							finalClosestPortal.getXRotation(), finalClosestPortal.getYRotation()).inflate(0.05));
+
+					if(!placementReference.get().isEmpty())
+						placementReference.set(Shapes.join(placementReference.get(), shape, BooleanOp.ONLY_FIRST));
+				}
+				if(!state.isAir())
+				{
+					VoxelShape shape = state.getCollisionShape(level, pos)
+											.move(pos.getX(), pos.getY(), pos.getZ());
+
+					if(state.is(ApertureInnovations.IMPORTALABLE))
+						shape = Shapes.create(shape.bounds().inflate(0.025));
+
+					if(!placementReference.get().isEmpty())
+						placementReference.set(Shapes.join(placementReference.get(), shape, BooleanOp.ONLY_FIRST));
+				}
+			});
+
+		placementShape = placementReference.get();
+		List<AABB> shapeList = placementShape.toAabbs();
+
+		if(!shapeList.isEmpty())
+		{
+			AABB firstPart = shapeList.get(0);
+
+			boolean wall = direction.getAxis().isHorizontal();
+
+			boolean equal = false;
+			if(!wall)
+			{
+				equal = firstPart.maxX == placementBox.maxX && firstPart.minX == placementBox.minX
+								&& firstPart.maxZ == placementBox.maxZ && firstPart.minZ == placementBox.minZ;
+			}
+			if(wall)
+			{
+				if(direction.getAxis().equals(Direction.Axis.Z))
+				{
+					equal = firstPart.maxX == placementBox.maxX && firstPart.minX == placementBox.minX
+									&& firstPart.maxY == placementBox.maxY && firstPart.minY == placementBox.minY;
+
+				}
+				if(direction.getAxis().equals(Direction.Axis.X))
+				{
+					equal = firstPart.maxY == placementBox.maxY && firstPart.minY == placementBox.minY
+									&& firstPart.maxZ == placementBox.maxZ && firstPart.minZ == placementBox.minZ;
+				}
+			}
+
+			return equal && shapeList.size() == 1;
+		}
+
+		return false;
 	}
 
 	public void updateColors(Level level, int primaryPortalColor, int secondaryPortalColor)
 	{
-		if(this.primaryPortalColor != primaryPortalColor || this.secondaryPortalColor != secondaryPortalColor)
+		if(this.primaryPortal.getColor() != primaryPortalColor)
 		{
-			this.primaryPortalColor = primaryPortalColor;
-			this.secondaryPortalColor = secondaryPortalColor;
+			this.primaryPortal.setColor(primaryPortalColor);
+			PortalLinkData.get(level).setDirty(linkID, true);
+		}
 
-			PortalLinkData.get(level).setDirty();
+		if(this.secondaryPortal.getColor() != secondaryPortalColor)
+		{
+			this.secondaryPortal.setColor(secondaryPortalColor);
+			PortalLinkData.get(level).setDirty(linkID, false);
 		}
 	}
 
 	public void updateVariant(Level level, ResourceLocation variantKey)
 	{
-		if(this.variantKey != variantKey)
+		if(!this.variantKey.equals(variantKey))
 		{
 			this.variantKey = variantKey;
-			PortalLinkData.get(level).setDirty();
+			PortalLinkData.get(level).setDirty(linkID, true);
+			PortalLinkData.get(level).setDirty(linkID, false);
 		}
 	}
 
 	public void reset(Level level)
 	{
-		if(posPrimary != null || moonshotPrimary)
+		if(primaryPortal.isOpen())
 			resetPrimary(level);
 
-		if(posSecondary != null || moonshotSecondary)
+		if(secondaryPortal.isOpen())
 			resetSecondary(level);
 	}
 
 	public void resetPrimary(Level level)
 	{
-		if(posPrimary != null)
+		if(primaryPortal.isInWorld())
 		{
-			Level portalLevel = level.getServer().getLevel(dimensionPrimary);
+			ServerLevel portalLevel = level.getServer().getLevel(primaryPortal.getDimension());
 			if(portalLevel != null)
 			{
-				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(
-								() -> portalLevel.getChunkAt(posPrimary)),
+				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(
+								BlockPos.containing(primaryPortal.getPosition()))),
 						new ClientboundPortalSoundsPacket.FizzlePortal(linkID, true));
 			}
 		}
+		int color = primaryPortal.getColor();
 
-		this.posPrimary = null;
-		this.wallPrimary = false;
-		this.ceilingPrimary = false;
-		this.dimensionPrimary = null;
-		this.directionPrimary = null;
-		this.openingPrimary = 0;
-		this.moonshotPrimary = false;
+		this.primaryPortal = new Portal();
+		this.primaryPortal.setColor(color);
 
-		PortalLinkData.get(level).setDirty();
+		PortalLinkData.get(level).setDirty(linkID, true);
 	}
 
 	public void resetSecondary(Level level)
 	{
-		if(posSecondary != null)
+		if(secondaryPortal.isInWorld())
 		{
-			Level portalLevel = level.getServer().getLevel(dimensionSecondary);
+			ServerLevel portalLevel = level.getServer().getLevel(secondaryPortal.getDimension());
 			if(portalLevel != null)
 			{
-				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(
-								() -> portalLevel.getChunkAt(posSecondary)),
-						new ClientboundPortalSoundsPacket.FizzlePortal(linkID, false));
+				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(
+								BlockPos.containing(secondaryPortal.getPosition()))),
+						new ClientboundPortalSoundsPacket.FizzlePortal(linkID, true));
 			}
 		}
+		int color = secondaryPortal.getColor();
 
-		this.posSecondary = null;
-		this.wallSecondary = false;
-		this.ceilingSecondary = false;
-		this.dimensionSecondary = null;
-		this.directionSecondary = null;
-		this.openingSecondary = 0;
-		this.moonshotSecondary = false;
+		this.secondaryPortal = new Portal();
+		this.secondaryPortal.setColor(color);
 
-		PortalLinkData.get(level).setDirty();
+		PortalLinkData.get(level).setDirty(linkID, false);
 	}
 
 	public void setMoonshot(boolean isPrimary, boolean moonshot, Level level)
 	{
 		if(isPrimary)
 		{
-			posPrimary = null;
-			moonshotPrimary = moonshot;
+			primaryPortal.setPosition(null);
+			primaryPortal.setMoonshot(moonshot);
 		}
 		else
 		{
-			posSecondary = null;
-			moonshotSecondary = moonshot;
-		};
+			secondaryPortal.setPosition(null);
+			secondaryPortal.setMoonshot(moonshot);
+		}
 
-		PortalLinkData.get(level).setDirty();
+		PortalLinkData.get(level).setDirty(linkID, isPrimary);
 	}
 
 	public boolean isOpen()
 	{
-		return (posPrimary != null || moonshotPrimary) && (posSecondary != null || moonshotSecondary);
+		return primaryPortal.isOpen() && secondaryPortal.isOpen();
+	}
+
+	public boolean isInWorld()
+	{
+		return primaryPortal.isInWorld() && secondaryPortal.isInWorld();
 	}
 
 	public boolean isInterdimensionalLink()
 	{
-		if(posPrimary == null || posSecondary == null)
+		if(isOpen())
+		{
+			return !primaryPortal.getDimension().equals(secondaryPortal.getDimension());
+		}
+		return false;
+	}
+
+	public boolean teleportLogic(Entity entity, ApertureCapability aperture,
+								 PortalLink link, Level level, boolean isPrimary)
+	{
+		UUID linkID = link.linkID;
+		if(level.isClientSide())
+			return false;
+		if(aperture.ignorePortalsTime != 0)
 			return false;
 
-		return dimensionPrimary != dimensionSecondary;
+		Vec3 currentPos = entity.position().add(0, entity.getBbHeight() / 2f, 0);
+
+		Vec3 speed = entity.getDeltaMovement();
+		Vec3 nextPos = currentPos.add(speed.multiply(2f, 2f, 2f));
+
+		AABB movementBox = entity.getBoundingBox().expandTowards(speed);
+		if(link == null || !link.isOpen())
+			return false;
+
+		Portal portal = isPrimary ? link.getPrimaryPortal() : link.getSecondaryPortal();
+		Portal otherPortal = isPrimary ? link.getSecondaryPortal() : link.getPrimaryPortal();
+
+		double distance = portal.getPosition().distanceTo(entity.position());
+		if(distance < 6 && otherPortal.isMoonshot() && !(entity instanceof ServerPlayer && ((ServerPlayer) entity).getAbilities().instabuild))
+		{
+			Direction direction = PortalUtilities.getPortalDirection(level, linkID, isPrimary);
+
+			Vec3 portalPos = PortalUtilities.getPortalTeleportBox(portal.getPosition(), portal.getXRotation(),
+					portal.getYRotation()).getCenter();
+			portalPos = portalPos.add(direction.getOpposite().getStepX() * entity.getBbWidth() / 2f,
+					direction.getOpposite().getStepY() * entity.getBbHeight() / 1.25f,
+					direction.getOpposite().getStepZ() * entity.getBbWidth() / 2f);
+
+			Vec3 pushVector = portalPos.subtract(entity.position()).multiply(0.08, 0.08, 0.08);
+			entity.push(pushVector.x, pushVector.y, pushVector.z);
+			if(entity instanceof ServerPlayer player)
+				NetworkInit.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player),
+					new ClientboundTeleportMomentumPacket(player.getDeltaMovement()));
+		}
+
+		AABB teleportBox = PortalUtilities.getPortalTeleportBox(portal.getPosition(), portal.getXRotation(),
+				portal.getYRotation());
+
+		if(movementBox.intersects(teleportBox))
+		{
+			Direction direction = PortalUtilities.getPortalDirection(level, linkID, isPrimary);
+			Direction otherDirection = PortalUtilities.getPortalDirection(level, linkID, !isPrimary);
+			Vector3f normal = direction.step();
+
+			Vec3 portalPos = PortalUtilities.getPortalTeleportBox(portal.getPosition(), portal.getXRotation(),
+					portal.getYRotation()).getCenter();
+			portalPos = portalPos.add(direction.getOpposite().getStepX() * entity.getBbWidth() / 2f,
+					direction.getOpposite().getStepY() * entity.getBbHeight() / 1.25f,
+					direction.getOpposite().getStepZ() * entity.getBbWidth() / 2f);
+
+			Vec3 offsetFromPortal = currentPos.subtract(portalPos);
+			Vec3 offsetPortalPlace = currentPos.subtract(portal.getPosition());
+			Vec3 nextOffsetFromPortal = nextPos.subtract(portalPos);
+
+			double relativePos = offsetFromPortal.dot(new Vec3(normal));
+			double nextRelativePos = nextOffsetFromPortal.dot(new Vec3(normal));
+
+			boolean slow = portalPos.closerThan(currentPos, 0.4f) && relativePos > 0;
+			boolean fast = relativePos > 0 && nextRelativePos <= 0;
+
+			AABB boundingBox = PortalUtilities.getPortalBoundingBox(portal.getPosition(), portal.getXRotation(), portal.getYRotation());
+			boolean full = portal.getXRotation() == -90 && boundingBox.contains(entity.getBoundingBox().getCenter().add(0, entity.getBbHeight()/2f, 0));
+
+			if(slow || fast || full)
+			{
+				Quaternionf portalQ = new Quaternionf().rotationYXZ((float) (Math.PI - Math.toRadians(
+								portal.getYRotation() + (direction.getAxis().isHorizontal() ? 180 : 0))),
+						(float) Math.toRadians(-portal.getXRotation() - 90), 0);
+
+				Quaternionf otherPortalQ = new Quaternionf().rotationYXZ((float) (Math.PI - Math.toRadians(
+								otherPortal.getYRotation() + (direction.getAxis().isHorizontal() ? 180 : 0))),
+						(float) Math.toRadians(-otherPortal.getXRotation() - 90), 0);
+
+				if(direction.getAxis().isHorizontal())
+					aperture.setIgnorePortalsTime(5);
+				if(link.isInWorld() && link.isInterdimensionalLink())
+					aperture.setIgnorePortalsTime(20);
+
+				Vector3f newSpeed = portalQ.invert(new Quaternionf()).transform(speed.toVector3f());
+				otherPortalQ.rotateZ((float) Math.toRadians(180), new Quaternionf()).transform(newSpeed);
+
+				if(otherPortal.getXRotation() == -90 && newSpeed.length() < 0.5)
+					newSpeed.add(0, 0.05f, 0);
+				if(portal.getXRotation() == 0 && otherPortal.getXRotation() == -90)
+					newSpeed.add(0f, 0.5f, 0f);
+
+				Vector3f rotatedOffset = portalQ.invert(new Quaternionf()).transform(offsetPortalPlace.toVector3f());
+				otherPortalQ.rotateZ((float) Math.toRadians(180), new Quaternionf()).transform(rotatedOffset);
+
+				Vec3 targetPos;
+				if(otherPortal.isMoonshot()) targetPos = portalPos.add(0, 1000, 0);
+				else targetPos = otherPortal.getPosition().subtract(0, entity.getBbHeight() / 2, 0);
+
+				targetPos = targetPos.add(otherDirection.getStepX() * 0.05, otherDirection.getStepY() * 0.05,
+						otherDirection.getStepZ() * 0.05);
+
+				if(!otherPortal.isOnWall() && (entity instanceof LivingEntity && ((LivingEntity) entity).isFallFlying()))
+				{
+					newSpeed.add(otherPortal.getXRotation() == 90 ?
+										 Direction.DOWN.step().mul(1f) :
+										 Direction.UP.step().mul(1f));
+				}
+
+				if(!portal.isOnWall())
+				{
+					targetPos = targetPos.add(otherDirection.getStepX() * 0.25f,
+							otherDirection.getStepY() * 0.25f, otherDirection.getStepZ() * 0.25f);
+				}
+
+				entity.setDeltaMovement(new Vec3(newSpeed));
+				entity.hasImpulse = true;
+				entity.resetFallDistance();
+
+				Quaternionf rot = new Quaternionf().rotationYXZ((180 - entity.getYRot()) * Mth.DEG_TO_RAD,
+														   -entity.getXRot() * Mth.DEG_TO_RAD, 0).premul(portalQ.invert(new Quaternionf()))
+												   .premul(otherPortalQ.rotateZ((float) Math.toRadians(180),
+														   new Quaternionf())).conjugate();
+
+				ServerLevel targetLevel;
+				if(otherPortal.isMoonshot()) targetLevel = (ServerLevel) level;
+				else targetLevel = level.getServer().getLevel(otherPortal.getDimension());
+				if(targetLevel == null)
+					return false;
+
+				float yaw = (float) Math.atan2(-(rot.x * rot.z + rot.y * rot.w) * 2,
+						2 * (rot.y * rot.y + rot.z * rot.z) - 1);
+
+				entity.setPos(targetPos);
+
+				Vec2 portalRot = PortalUtilities.getPortalRotation(level, linkID, isPrimary);
+				Vec2 otherPortalRot = PortalUtilities.getPortalRotation(level, linkID, !isPrimary);
+
+				if(portalRot.y - otherPortalRot.y == 180 && portalRot.x == -90)
+					yaw += (float) Math.toRadians(180);
+
+				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(
+						BlockPos.containing(portal.getPosition()))),
+						new ClientboundPortalSoundsPacket.EnterPortal(link.linkID, isPrimary));
+
+				entity.teleportTo(targetLevel, targetPos.x, targetPos.y, targetPos.z, Set.of(),
+						(float) Math.toDegrees(yaw) + (direction.getAxis().isVertical() ? 180 : 0), entity instanceof LivingEntity && ((LivingEntity) entity).isFallFlying()
+						? otherPortal.getXRotation() : entity.getXRot());
+				entity.setOldPosAndRot();
+
+				BlockPos targetBlock = BlockPos.containing(targetPos);
+				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(targetBlock)),
+						new ClientboundPortalSoundsPacket.EnterPortal(link.linkID, isPrimary));
+
+				if(entity instanceof ServerPlayer player)
+				{
+					player.awardStat(StatisticsInit.TIMES_USED_PORTALS.get(), 1);
+					NetworkInit.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player),
+							new ClientboundTeleportMomentumPacket(new Vec3(newSpeed)));
+
+					aperture.setPortal(Pair.of(linkID, isPrimary));
+					aperture.updateDistance();
+					aperture.setFrictionlessTime(100 * 20);
+					PortalTravelCriterion.INSTANCE.trigger(player, portal.getDimension().location(),
+							targetLevel.dimension().location(), (long) portal.getPosition().distanceToSqr(targetPos),
+							(long) aperture.verticalDistance, (long) aperture.horizontalDistance, otherPortal.isMoonshot());
+				}
+				else
+				{
+					NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_ENTITY.with(() -> entity),
+							new ClientboundEntityPortalLerpPacket(entity.getId(), targetPos.toVector3f(),
+									(float) Math.toDegrees(yaw) + (direction.getAxis().isVertical() ? 180 : 0),
+									entity.getXRot()));
+				}
+
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public static PortalLink load(CompoundTag tag)
 	{
 		UUID linkID = tag.getUUID("link");
+		Portal primaryPortal = new Portal();
+		Portal secondaryPortal = new Portal();
 
-		BlockPos posPrimary = null;
-		boolean wallPrimary = false;
-		boolean ceilingPrimary = false;
-		ResourceKey<Level> dimensionPrimary = null;
-		Direction directionPrimary = null;
-		int openingPrimary = 0;
-
-		if(tag.contains("posPrimary"))
-		{
-			posPrimary = NbtUtils.readBlockPos(tag.getCompound("posPrimary"));
-			wallPrimary = tag.getBoolean("wallPrimary");
-			ceilingPrimary = tag.getBoolean("ceilingPrimary");
-			dimensionPrimary = stringToDimension(tag.getString("dimensionPrimary"));
-			directionPrimary = Direction.from3DDataValue(tag.getInt("directionPrimary"));
-			openingPrimary = tag.getInt("openingPrimary");
-		}
-
-		BlockPos posSecondary = null;
-		boolean wallSecondary = false;
-		boolean ceilingSecondary = false;
-		ResourceKey<Level> dimensionSecondary = null;
-		Direction directionSecondary = null;
-		int openingSecondary = 0;
-
-		if(tag.contains("posSecondary"))
-		{
-			posSecondary = NbtUtils.readBlockPos(tag.getCompound("posSecondary"));
-			wallSecondary = tag.getBoolean("wallSecondary");
-			ceilingSecondary = tag.getBoolean("ceilingSecondary");
-			dimensionSecondary = stringToDimension(tag.getString("dimensionSecondary"));
-			directionSecondary = Direction.from3DDataValue(tag.getInt("directionSecondary"));
-			openingSecondary = tag.getInt("openingSecondary");
-		}
+		primaryPortal.load(tag.getCompound("primaryPortal"));
+		secondaryPortal.load(tag.getCompound("secondaryPortal"));
 
 		ResourceLocation variantKey = ResourceLocation.parse(tag.getString("variantKey"));
-		int primaryPortalColor = tag.getInt("primaryPortalColor");
-		int secondaryPortalColor = tag.getInt("secondaryPortalColor");
 
-		PortalLink link = new PortalLink(linkID, posPrimary, posSecondary,
-				wallPrimary, wallSecondary,
-				ceilingPrimary, ceilingSecondary,
-				dimensionPrimary, dimensionSecondary,
-				directionPrimary, directionSecondary,
-				variantKey, primaryPortalColor, secondaryPortalColor);
-
-		link.openingPrimary = openingPrimary;
-		link.openingSecondary = openingSecondary;
+		PortalLink link = new PortalLink(linkID, variantKey);
+		link.setPrimaryPortal(primaryPortal);
+		link.setSecondaryPortal(secondaryPortal);
 
 		return link;
 	}
@@ -298,32 +585,12 @@ public class PortalLink
 
 		tag.putUUID("link", linkID);
 
-		if(posPrimary != null)
-		{
-			tag.put("posPrimary", NbtUtils.writeBlockPos(posPrimary));
-			tag.putBoolean("wallPrimary", wallPrimary);
-			tag.putBoolean("ceilingPrimary", ceilingPrimary);
-			tag.putString("dimensionPrimary", dimensionPrimary.location().toString());
-			tag.putInt("directionPrimary", directionPrimary.get3DDataValue());
-			tag.putInt("openingPrimary", openingPrimary);
-		}
-
-		if(posSecondary != null)
-		{
-			tag.put("posSecondary", NbtUtils.writeBlockPos(posSecondary));
-			tag.putBoolean("wallSecondary", wallSecondary);
-			tag.putBoolean("ceilingSecondary", ceilingSecondary);
-			tag.putString("dimensionSecondary", dimensionSecondary.location().toString());
-			tag.putInt("directionSecondary", directionSecondary.get3DDataValue());
-			tag.putInt("openingSecondary", openingSecondary);
-		}
+		tag.put("primaryPortal", this.primaryPortal.save());
+		tag.put("secondaryPortal", this.secondaryPortal.save());
 
 		if(variantKey == null)
 			variantKey = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "chell");
 		tag.putString("variantKey", variantKey.toString());
-
-		tag.putInt("primaryPortalColor", primaryPortalColor);
-		tag.putInt("secondaryPortalColor", secondaryPortalColor);
 
 		return tag;
 	}
@@ -335,13 +602,23 @@ public class PortalLink
 		return registry.get(variantKey);
 	}
 
-	public static ResourceKey<Level> stringToDimension(String dimensionString)
+	public Portal getSecondaryPortal()
 	{
-		String[] split = dimensionString.split(":");
+		return secondaryPortal;
+	}
 
-		if(split.length > 1)
-			return ResourceKey.create(ResourceKey.createRegistryKey(new ResourceLocation("minecraft", "dimension")), new ResourceLocation(split[0], split[1]));
+	public void setSecondaryPortal(Portal secondaryPortal)
+	{
+		this.secondaryPortal = secondaryPortal;
+	}
 
-		return null;
+	public Portal getPrimaryPortal()
+	{
+		return primaryPortal;
+	}
+
+	public void setPrimaryPortal(Portal primaryPortal)
+	{
+		this.primaryPortal = primaryPortal;
 	}
 }

@@ -1,17 +1,16 @@
 package net.mistersecret312.aperture_innovations;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
-import net.minecraftforge.client.event.RegisterColorHandlersEvent;
-import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
-import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.common.MinecraftForge;
@@ -40,6 +39,8 @@ import net.mistersecret312.aperture_innovations.items.ColorfulGelItem;
 import net.mistersecret312.aperture_innovations.items.ColorfulGelItemProperty;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
+
+import java.io.IOException;
 
 @Mod(ApertureInnovations.MODID)
 public class ApertureInnovations
@@ -90,6 +91,8 @@ public class ApertureInnovations
 	@Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 	public static class ClientModEvents
 	{
+		public static ShaderInstance portalCorridorShaderInstance;
+
 		public static final Lazy<KeyMapping> RESET_PORTAL_GUN = Lazy.of(() -> new KeyMapping("aperture_innovations.portal_gun.reset",
 				KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.category.aperture_innovations"));
 
@@ -101,6 +104,15 @@ public class ApertureInnovations
 			-> {
 					ItemProperties.register(ItemInit.COLORFUL_GEL.get(), new ResourceLocation(MODID, "colored"), new ColorfulGelItemProperty());
 				});
+		}
+
+		@SubscribeEvent
+		public static void registerShaders(RegisterShadersEvent event) throws IOException
+		{
+			event.registerShader(new ShaderInstance(event.getResourceProvider(),
+							ResourceLocation.fromNamespaceAndPath(MODID, "portal_corridor"),
+							DefaultVertexFormat.POSITION_TEX_COLOR),
+					shaderInstance -> portalCorridorShaderInstance = shaderInstance);
 		}
 
 		@SubscribeEvent

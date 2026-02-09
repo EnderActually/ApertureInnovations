@@ -3,6 +3,7 @@ package net.mistersecret312.aperture_innovations.sounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 
 public class GenericGunSound extends PortalSound<ClientPortalLink>
@@ -12,7 +13,7 @@ public class GenericGunSound extends PortalSound<ClientPortalLink>
 						   int maxDistance, float maxVolume)
 	{
 		super(link, isPrimary, soundEvent, SoundSource.PLAYERS, fullDistance, maxDistance);
-		this.portalPos = pos;
+		this.portalPos = Vec3.atLowerCornerOf(pos);
 		this.volume = maxVolume;
 	}
 

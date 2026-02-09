@@ -24,10 +24,10 @@ public class NetworkInit
 	{
 		int index = 0;
 
-		INSTANCE.messageBuilder(ClientBoundPortalLinkSyncPacket.class, index++, NetworkDirection.PLAY_TO_CLIENT)
-				.encoder(ClientBoundPortalLinkSyncPacket::encode)
-				.decoder(ClientBoundPortalLinkSyncPacket::decode)
-				.consumerMainThread(ClientBoundPortalLinkSyncPacket::handle).add();
+		INSTANCE.messageBuilder(ClientBoundPortalSyncPacket.class, index++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(ClientBoundPortalSyncPacket::encode)
+				.decoder(ClientBoundPortalSyncPacket::decode)
+				.consumerMainThread(ClientBoundPortalSyncPacket::handle).add();
 
 		INSTANCE.messageBuilder(ServerboundOpenPortalPacket.class, index++, NetworkDirection.PLAY_TO_SERVER)
 				.encoder(ServerboundOpenPortalPacket::encode)
@@ -91,5 +91,9 @@ public class NetworkInit
 				.decoder(ClientboundPortalSoundsPacket.GunActivate::new)
 				.consumerMainThread(ClientboundPortalSoundsPacket.GunActivate::handle).add();
 
+		INSTANCE.messageBuilder(ClientboundEntityPortalLerpPacket.class, index++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(ClientboundEntityPortalLerpPacket::encode)
+				.decoder(ClientboundEntityPortalLerpPacket::decode)
+				.consumerMainThread(ClientboundEntityPortalLerpPacket::handle).add();
 	}
 }

@@ -3,19 +3,17 @@ package net.mistersecret312.aperture_innovations.portal;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Vec3i;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
-import net.mistersecret312.aperture_innovations.client.ColorUtil;
-import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortalGunVariant;
-import net.mistersecret312.aperture_innovations.sounds.PortalAmbientSound;
-import net.mistersecret312.aperture_innovations.sounds.PortalSoundWrapper;
+import net.minecraft.world.phys.shapes.BooleanOp;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
-import java.awt.*;
 import java.util.*;
 
 import static net.mistersecret312.aperture_innovations.client.renderer.PortalRenderer.LINKS;
@@ -41,63 +39,59 @@ public class PortalUtilities
 		if(level.isClientSide())
 		{
 			ClientPortalLink link = getPortalLinks().get(uuid);
-			BlockPos portalPos;
-			Direction direction;
+			Vec3 portalPos;
 			if(isPrimary)
-			{
-				portalPos = link.posPrimary();
-				direction = link.directionPrimary();
-			}
+				portalPos = link.getPrimaryPortal().getPosition();
 			else
-			{
-				portalPos = link.posSecondary();
-				direction = link.directionSecondary();
-			}
+				portalPos = link.getSecondaryPortal().getPosition();
 
-			if(portalPos == null)
-				return null;
-
-			return portalPos.getCenter().add(Vec3.atLowerCornerOf(direction.getNormal())
-														  .multiply(0.5f, 0.5f, 0.5f)
-														  .add(0f, 0.5f, 0f));
+			return portalPos;
 		}
 		else
 		{
 			PortalLink link = getPortalLinks(level).get(uuid);
-			BlockPos portalPos;
-			Direction direction;
+			Vec3 portalPos;
 			if(isPrimary)
-			{
-				portalPos = link.posPrimary;
-				direction = link.directionPrimary;
-			}
+				portalPos = link.getPrimaryPortal().getPosition();
 			else
-			{
-				portalPos = link.posSecondary;
-				direction = link.directionSecondary;
-			}
+				portalPos = link.getSecondaryPortal().getPosition();
 
-			if(portalPos == null)
-				return null;
+			return portalPos;
+		}
+	}
 
-			return portalPos.getCenter().add(Vec3.atLowerCornerOf(direction.getNormal())
-										   .multiply(0.5f, 0.5f, 0.5f)
-										   .add(0f, 0.5f, 0f));
+	public static Vec2 getPortalRotation(Level level, UUID uuid, boolean isPrimary)
+	{
+		if(level.isClientSide())
+		{
+			ClientPortalLink link = getPortalLinks().get(uuid);
+			if(isPrimary)
+				return new Vec2(link.getPrimaryPortal().getXRotation(), link.getPrimaryPortal().getYRotation());
+			else return new Vec2(link.getSecondaryPortal().getXRotation(), link.getSecondaryPortal().getYRotation());
+
+		}
+		else
+		{
+			PortalLink link = getPortalLinks(level).get(uuid);
+			if(isPrimary)
+				return new Vec2(link.getPrimaryPortal().getXRotation(), link.getPrimaryPortal().getYRotation());
+			else return new Vec2(link.getSecondaryPortal().getXRotation(), link.getSecondaryPortal().getYRotation());
 		}
 	}
 
 	public static Direction getPortalDirection(Level level, UUID uuid, boolean isPrimary)
 	{
-		if(level.isClientSide())
-		{
-			ClientPortalLink link = getPortalLinks().get(uuid);
-			return isPrimary ? link.directionPrimary() : link.directionSecondary();
-		}
-		else
-		{
-			PortalLink link = getPortalLinks(level).get(uuid);
-			return isPrimary ? link.directionPrimary : link.directionSecondary;
-		}
+		Vec2 portalRotation = getPortalRotation(level, uuid, isPrimary);
+		float xRot = portalRotation.x;
+		float yRot = portalRotation.y;
+
+		Direction direction = Direction.fromYRot(yRot);
+		if(xRot == -90)
+			direction = Direction.UP;
+		if(xRot == 90)
+			direction = Direction.DOWN;
+
+		return direction;
 	}
 
 	public static boolean isPortalOnWall(Level level, UUID uuid, boolean isPrimary)
@@ -105,12 +99,12 @@ public class PortalUtilities
 		if(level.isClientSide())
 		{
 			ClientPortalLink link = getPortalLinks().get(uuid);
-			return isPrimary ? link.wallPrimary() : link.wallSecondary();
+			return isPrimary ? link.getPrimaryPortal().isOnWall() : link.getSecondaryPortal().isOnWall();
 		}
 		else
 		{
 			PortalLink link = getPortalLinks(level).get(uuid);
-			return isPrimary ? link.wallPrimary : link.wallSecondary;
+			return isPrimary ? link.getPrimaryPortal().isOnWall() : link.getSecondaryPortal().isOnWall();
 		}
 	}
 
@@ -133,12 +127,12 @@ public class PortalUtilities
 		if(level.isClientSide())
 		{
 			ClientPortalLink link = getPortalLinks().get(uuid);
-			return isPrimary ? link.ceilingPrimary() : link.ceilingSecondary();
+			return isPrimary ? link.getPrimaryPortal().isOnCeiling() : link.getSecondaryPortal().isOnCeiling();
 		}
 		else
 		{
 			PortalLink link = getPortalLinks(level).get(uuid);
-			return isPrimary ? link.ceilingPrimary : link.ceilingSecondary;
+			return isPrimary ? link.getPrimaryPortal().isOnCeiling() : link.getSecondaryPortal().isOnCeiling();
 		}
 	}
 
@@ -147,92 +141,166 @@ public class PortalUtilities
 		if(level.isClientSide())
 		{
 			ClientPortalLink link = getPortalLinks().get(uuid);
-			return isPrimary ? link.dimensionPrimary() : link.dimensionSecondary();
+			return isPrimary ? link.getPrimaryPortal().getDimension() : link.getSecondaryPortal().getDimension();
 		}
 		else
 		{
 			PortalLink link = getPortalLinks(level).get(uuid);
-			return isPrimary ? link.dimensionPrimary : link.dimensionSecondary;
+			return isPrimary ? link.getPrimaryPortal().getDimension() : link.getSecondaryPortal().getDimension();
 		}
 	}
 	
-	public static AABB getPortalBoundingBox(Vec3 portalPos, Direction portalDirection, boolean isOnWall, boolean isOnCeiling)
+	public static AABB getPortalBoundingBox(Vec3 portalPos, float xRot, float yRot)
 	{
-		AABB portal = new AABB(0D,0D,0D,0D,0D,0D);
-		if(isOnWall)
+		AABB portal = new AABB(0D, 0D, 0D, 0D, 0D, 0D);
+		Direction direction = Direction.fromYRot(yRot);
+		Direction facing = Direction.fromYRot(yRot);
+		if(xRot == -90)
+			direction = Direction.UP;
+		else if(xRot == 90)
+			direction = Direction.DOWN;
+		if(direction.getAxis().equals(Direction.Axis.X))
+			direction = direction.getOpposite();
+
+		if(direction.getAxis().isHorizontal())
 		{
-			Direction.Axis axis = portalDirection.getAxis();
+			Direction.Axis axis = direction.getAxis();
+			boolean positive = direction.getAxisDirection().equals(Direction.AxisDirection.POSITIVE);
 			if(axis.equals(Direction.Axis.X))
-				portal = new AABB(portalPos.x-0.25, portalPos.y-1, portalPos.z-0.25,
-						portalPos.x+0.25, portalPos.y+1, portalPos.z+0.5);
-			else
-				portal = new AABB(portalPos.x-0.25, portalPos.y-1, portalPos.z-0.25,
-						portalPos.x+0.25, portalPos.y+1, portalPos.z+0.25);
+				portal = new AABB(portalPos.x - (positive ? 0.25 : 0.95), portalPos.y - 0.95, portalPos.z - 0.45,
+						portalPos.x + (positive ? 0.95 : 0.25), portalPos.y + 0.95, portalPos.z + 0.45);
+			else portal = new AABB(portalPos.x - 0.45, portalPos.y - 0.95, portalPos.z - (positive ? 0.95 : 0.25),
+					portalPos.x + 0.45, portalPos.y + 0.95, portalPos.z + (positive ? 0.25 : 0.95));
 		}
 		else
 		{
-			portalPos = portalPos.subtract(
-					Vec3.atLowerCornerOf(isOnCeiling ? portalDirection.getNormal() : Vec3i.ZERO));
-			portalPos = portalPos.subtract(0, isOnCeiling ? 1 : 0, 0);
-			Direction.Axis axis = portalDirection.getAxis();
+			Direction.Axis axis = facing.getAxis();
+			boolean positive = direction.getAxisDirection().equals(Direction.AxisDirection.POSITIVE);
 			if(axis.equals(Direction.Axis.X))
-				portal = new AABB(portalPos.x - 1, portalPos.y - 0.25, portalPos.z - 0.25, portalPos.x + 1,
-						portalPos.y + 0.25, portalPos.z + 0.5);
+				portal = new AABB(portalPos.x - 0.9, portalPos.y - (positive ? 2 : 0.01), portalPos.z - 0.45,
+						portalPos.x + 0.9, portalPos.y + (positive ? 0.01 : 2), portalPos.z + 0.45);
 			else if(axis.equals(Direction.Axis.Z))
-				portal = new AABB(portalPos.x - 0.25, portalPos.y - 0.25, portalPos.z - 1, portalPos.x + 0.25,
-						portalPos.y + 0.25, portalPos.z + 1);
+				portal = new AABB(portalPos.x - 0.45, portalPos.y - (positive ? 2 : 0.01), portalPos.z - 0.9,
+						portalPos.x + 0.45, portalPos.y + (positive ? 0.01 : 2), portalPos.z + 0.9);
 
-			if(isOnCeiling)
-				portal = portal.expandTowards(0, 1,0);
-			else
-				portal = portal.expandTowards(0, -1, 0);
+			return portal;
 		}
-
 		return portal;
 	}
 
-	public static AABB getPortalTeleportBox(Vec3 portalPos, Direction portalDirection,
-											boolean isOnWall, boolean isOnCeiling)
+	public static List<VoxelShape> getPortalVoxels(Level level, Vec3 portalPos, float xRot, float yRot)
 	{
-		AABB portal = new AABB(0D,0D,0D,0D,0D,0D);
-		if(isOnWall)
+		List<VoxelShape> shapes = new ArrayList<>();
+		AABB portalBox = getPortalBoundingBox(portalPos, xRot, yRot);
+		BlockPos.betweenClosedStream(portalBox).forEach(pos ->
+			{
+				BlockState state = level.getBlockState(pos);
+				if(!state.isAir())
+				{
+					VoxelShape collisionShape = state.getCollisionShape(level, pos).move(pos.getX(),
+							pos.getY(), pos.getZ());
+					if(!collisionShape.isEmpty())
+					{
+						VoxelShape shape = Shapes.join(Shapes.create(portalBox), collisionShape, BooleanOp.ONLY_SECOND);
+						shapes.add(shape);
+					}
+				}
+			});
+
+		return shapes;
+	}
+
+	public static AABB getPortalTeleportBox(Vec3 portalPos, float xRot, float yRot)
+	{
+		AABB portal = new AABB(0D, 0D, 0D, 0D, 0D, 0D);
+		Direction direction = Direction.fromYRot(yRot);
+		Direction facing = Direction.fromYRot(yRot);
+		if(xRot == -90)
+			direction = Direction.UP;
+		else if(xRot == 90)
+			direction = Direction.DOWN;
+		if(direction.getAxis().equals(Direction.Axis.X))
+			direction = direction.getOpposite();
+
+		if(direction.getAxis().isHorizontal())
 		{
-			Direction.Axis axis = portalDirection.getAxis();
+			Direction.Axis axis = direction.getAxis();
+			boolean positive = direction.getAxisDirection().equals(Direction.AxisDirection.POSITIVE);
 			if(axis.equals(Direction.Axis.X))
-				portal = new AABB(portalPos.x-0.01, portalPos.y-1, portalPos.z-0.5,
-						portalPos.x+0.01, portalPos.y+1, portalPos.z+0.5);
-			else
-				portal = new AABB(portalPos.x-0.5, portalPos.y-1, portalPos.z-0.01,
-						portalPos.x+0.5, portalPos.y+1, portalPos.z+0.01);
+				portal = new AABB(portalPos.x - (positive ? 0.1 : -0.1), portalPos.y - 0.95, portalPos.z - 0.45,
+						portalPos.x + (positive ? 0.2 : -0.2), portalPos.y + 0.95, portalPos.z + 0.45);
+			else portal = new AABB(portalPos.x - 0.45, portalPos.y - 0.95, portalPos.z - (positive ? 0.2 : -0.2),
+					portalPos.x + 0.45, portalPos.y + 0.95, portalPos.z + (positive ? 0.1 : -0.1));
 		}
 		else
 		{
-				portalPos = portalPos.subtract(
-						Vec3.atLowerCornerOf(isOnCeiling ? portalDirection.getNormal() : Vec3i.ZERO));
-			portalPos = portalPos.subtract(0, isOnCeiling ? 1 : 0, 0);
-			Direction.Axis axis = portalDirection.getAxis();
+			Direction.Axis axis = facing.getAxis();
 			if(axis.equals(Direction.Axis.X))
-				portal = new AABB(portalPos.x-0.95, portalPos.y-0.01, portalPos.z-0.5,
-						portalPos.x+0.95, portalPos.y+0.01, portalPos.z+0.5);
+				portal = new AABB(portalPos.x - 0.9, portalPos.y - 0.1, portalPos.z - 0.5,
+						portalPos.x + 0.9, portalPos.y + 0.1, portalPos.z + 0.5);
 			else if(axis.equals(Direction.Axis.Z))
-				portal = new AABB(portalPos.x-0.5, portalPos.y-0.01, portalPos.z-0.95,
-						portalPos.x+0.5, portalPos.y+0.01, portalPos.z+0.95);
+				portal = new AABB(portalPos.x - 0.5, portalPos.y - 0.1, portalPos.z - 0.9,
+						portalPos.x + 0.5, portalPos.y + 0.1, portalPos.z + 0.9);
 
-			if(isOnCeiling)
-				portal = portal.expandTowards(0, 1,0);
-			else
-				portal = portal.expandTowards(0, -1, 0);
+			return portal;
 		}
-
 		return portal;
 	}
 
-	public static AABB getPortalFloorBox(Vec3 portalPos, Direction direction, boolean isOnWall)
+	public static AABB getPortalPlacementBox(Vec3 portalPos, float xRot, float yRot)
 	{
-		if(isOnWall)
+		AABB portal = new AABB(0D, 0D, 0D, 0D, 0D, 0D);
+		if(portalPos == null)
+			return portal;
+
+		Direction direction = Direction.fromYRot(yRot);
+		Direction facing = Direction.fromYRot(yRot);
+		if(xRot == -90)
+			direction = Direction.UP;
+		else if(xRot == 90)
+			direction = Direction.DOWN;
+
+		if(direction.getAxis().equals(Direction.Axis.X))
+			direction = direction.getOpposite();
+
+		if(direction.getAxis().isHorizontal())
 		{
-			return new AABB(portalPos.x-0.25, portalPos.y-1, portalPos.z-0.25,
-					portalPos.x+0.25, portalPos.y-1, portalPos.z+0.25);
+			Direction.Axis axis = direction.getAxis();
+			boolean positive = direction.getAxisDirection().equals(Direction.AxisDirection.POSITIVE);
+			if(axis.equals(Direction.Axis.X))
+				portal = new AABB(portalPos.x - (positive ? -0.01 : 0.2), portalPos.y - 0.95, portalPos.z - 0.45,
+						portalPos.x - (positive ? -0.2 : 0.01), portalPos.y + 0.95, portalPos.z + 0.45);
+			else portal = new AABB(portalPos.x - 0.45, portalPos.y - 0.95, portalPos.z - (positive ? 0.01 : -0.2),
+					portalPos.x + 0.45, portalPos.y + 0.95, portalPos.z - (positive ? 0.2 : -0.01));
+		}
+		else
+		{
+			Direction.Axis axis = facing.getAxis();
+			boolean ceiling = direction.equals(Direction.DOWN);
+			if(axis.equals(Direction.Axis.X))
+				portal = new AABB(portalPos.x - 0.9, portalPos.y - (ceiling ? -0.1 : 0.1), portalPos.z - 0.45,
+						portalPos.x + 0.9, portalPos.y - (ceiling ? -0.01 : 0.01), portalPos.z + 0.45);
+			else if(axis.equals(Direction.Axis.Z))
+				portal = new AABB(portalPos.x - 0.45, portalPos.y - (ceiling ? -0.1 : 0.1), portalPos.z - 0.9,
+						portalPos.x + 0.45, portalPos.y - (ceiling ? -0.01 : 0.01), portalPos.z + 0.9);
+
+			return portal;
+		}
+		return portal;
+	}
+
+	public static AABB getPortalFloorBox(Vec3 portalPos, float xRot, float yRot)
+	{
+		Direction direction = Direction.fromYRot(yRot);
+		if(xRot == -90)
+			direction = Direction.UP;
+		else if(xRot == 90)
+			direction = Direction.DOWN;
+
+		if(direction.getAxis().isHorizontal())
+		{
+			return new AABB(portalPos.x-0.25, portalPos.y-1.1, portalPos.z-0.25,
+					portalPos.x+0.25, portalPos.y-1.1, portalPos.z+0.25);
 		}
 		else return new AABB(0D,0D,0D,0D,0D,0D);
 	}
@@ -246,14 +314,14 @@ public class PortalUtilities
 			return Pair.of(uuid, isPrimary);
 
 		Level level = entity.level();
-
-		if(level.isClientSide() && entity != null)
+		if(level.isClientSide())
 		{
 			for(Map.Entry<UUID, ClientPortalLink> entry : getPortalLinks().entrySet())
 			{
+				ClientPortalLink link = entry.getValue();
 				for(int i = 0; i < 2; i++)
 				{
-					Vec3 pos = PortalUtilities.getPortalPos(entity.level(), entry.getKey(), i == 0);
+					Vec3 pos = i == 0 ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
 					if(pos == null)
 						continue;
 
@@ -272,9 +340,10 @@ public class PortalUtilities
 		{
 			for(Map.Entry<UUID, PortalLink> entry : getPortalLinks(level).entrySet())
 			{
+				PortalLink link = entry.getValue();
 				for(int i = 0; i < 2; i++)
 				{
-					Vec3 pos = PortalUtilities.getPortalPos(entity.level(), entry.getKey(), i == 0);
+					Vec3 pos = i == 0 ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
 					if(pos == null)
 						continue;
 
@@ -289,5 +358,185 @@ public class PortalUtilities
 			}
 			return Pair.of(uuid, isPrimary);
 		}
+	}
+
+	public static Pair<UUID, Boolean> getClosestPortal(Level level, Vec3 position, UUID id, boolean primary)
+	{
+		UUID uuid = null;
+		boolean isPrimary = false;
+		double closestDistance = Double.MAX_VALUE;
+		if(position == null)
+			return Pair.of(uuid, isPrimary);
+
+		if(level.isClientSide())
+		{
+			for(Map.Entry<UUID, ClientPortalLink> entry : getPortalLinks().entrySet())
+			{
+				ClientPortalLink link = entry.getValue();
+				for(int i = 0; i < 2; i++)
+				{
+					boolean linkPrimary = i == 0;
+					Vec3 pos = linkPrimary ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
+					if(pos == null)
+						continue;
+					if(pos.equals(position) && link.linkID.equals(id) && isPrimary == primary)
+						continue;
+
+					double distance = position.distanceTo(pos);
+					if(closestDistance > distance)
+					{
+						closestDistance = distance;
+						uuid = entry.getKey();
+						isPrimary = i == 0;
+					}
+				}
+			}
+			return Pair.of(uuid, isPrimary);
+		}
+		else
+		{
+			for(Map.Entry<UUID, PortalLink> entry : getPortalLinks(level).entrySet())
+			{
+				PortalLink link = entry.getValue();
+				for(int i = 0; i < 2; i++)
+				{
+					boolean linkPrimary = i == 0;
+					Vec3 pos = linkPrimary ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
+					if(pos == null)
+						continue;
+					if(pos.equals(position) && link.linkID.equals(id) && isPrimary == primary)
+						continue;
+
+					double distance = position.distanceTo(pos);
+					if(closestDistance > distance)
+					{
+						closestDistance = distance;
+						uuid = entry.getKey();
+						isPrimary = i == 0;
+					}
+				}
+			}
+			return Pair.of(uuid, isPrimary);
+		}
+	}
+
+	public static Pair<UUID, Boolean> getClosestPortal(Level level, Portal portal)
+	{
+		UUID uuid = null;
+		boolean isPrimary = false;
+		double closestDistance = Double.MAX_VALUE;
+		if(portal == null || portal.getPosition() == null)
+			return Pair.of(uuid, isPrimary);
+
+		if(level.isClientSide())
+		{
+			for(Map.Entry<UUID, ClientPortalLink> entry : getPortalLinks().entrySet())
+			{
+				ClientPortalLink link = entry.getValue();
+				for(int i = 0; i < 2; i++)
+				{
+					Portal linkPortal = i == 0 ? link.getPrimaryPortal() : link.getSecondaryPortal();
+					Vec3 pos = i == 0 ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
+					float xRot = i == 0 ? link.getPrimaryPortal().getXRotation() : link.getSecondaryPortal().getXRotation();
+					float yRot = i == 0 ? link.getPrimaryPortal().getYRotation() : link.getSecondaryPortal().getYRotation();
+					AABB portalBox = PortalUtilities.getPortalPlacementBox(pos, xRot, yRot).inflate(0.05f);
+					if(pos == null)
+						continue;
+					if(portalBox.contains(portal.getPosition()) && portal.equals(linkPortal))
+						continue;
+
+					double distance = portal.getPosition().distanceTo(pos);
+					if(closestDistance > distance)
+					{
+						closestDistance = distance;
+						uuid = entry.getKey();
+						isPrimary = i == 0;
+					}
+				}
+			}
+			return Pair.of(uuid, isPrimary);
+		}
+		else
+		{
+			for(Map.Entry<UUID, PortalLink> entry : getPortalLinks(level).entrySet())
+			{
+				PortalLink link = entry.getValue();
+				for(int i = 0; i < 2; i++)
+				{
+					Portal linkPortal = i == 0 ? link.getPrimaryPortal() : link.getSecondaryPortal();
+					Vec3 pos = i == 0 ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
+					float xRot = i == 0 ? link.getPrimaryPortal().getXRotation() : link.getSecondaryPortal().getXRotation();
+					float yRot = i == 0 ? link.getPrimaryPortal().getYRotation() : link.getSecondaryPortal().getYRotation();
+					AABB portalBox = PortalUtilities.getPortalPlacementBox(pos, xRot, yRot).inflate(0.05f);
+					if(pos == null)
+						continue;
+					if(portalBox.contains(portal.getPosition()) && linkPortal.equals(portal))
+						continue;
+
+					double distance = portal.getPosition().distanceTo(pos);
+					if(closestDistance > distance)
+					{
+						closestDistance = distance;
+						uuid = entry.getKey();
+						isPrimary = i == 0;
+					}
+				}
+			}
+			return Pair.of(uuid, isPrimary);
+		}
+	}
+
+	public static Pair<Portal, Boolean> getPortalByPosition(Level level, Vec3 position)
+	{
+		Portal portal = null;
+		boolean isPrimary = false;
+		if(level.isClientSide())
+		{
+			HashMap<UUID, ClientPortalLink> links = getPortalLinks();
+			for(Map.Entry<UUID, ClientPortalLink> entry : links.entrySet())
+			{
+				ClientPortalLink link = entry.getValue();
+				for(int i = 0; i < 2; i++)
+				{
+					isPrimary = i == 0;
+					if(isPrimary && position.equals(link.getPrimaryPortal().getPosition()))
+					{
+						portal = link.getPrimaryPortal();
+						return Pair.of(portal, true);
+					}
+
+					if(!isPrimary && position.equals(link.getSecondaryPortal().getPosition()))
+					{
+						portal = link.getSecondaryPortal();
+						return Pair.of(portal, false);
+					}
+				}
+			}
+		}
+		else
+		{
+			HashMap<UUID, PortalLink> links = getPortalLinks(level);
+			for(Map.Entry<UUID, PortalLink> entry : links.entrySet())
+			{
+				PortalLink link = entry.getValue();
+				for(int i = 0; i < 2; i++)
+				{
+					isPrimary = i == 0;
+					if(isPrimary && position.equals(link.getPrimaryPortal().getPosition()))
+					{
+						portal = link.getPrimaryPortal();
+						return Pair.of(portal, true);
+					}
+
+					if(!isPrimary && position.equals(link.getSecondaryPortal().getPosition()))
+					{
+						portal = link.getSecondaryPortal();
+						return Pair.of(portal, false);
+					}
+				}
+			}
+		}
+
+		return Pair.of(portal, isPrimary);
 	}
 }
