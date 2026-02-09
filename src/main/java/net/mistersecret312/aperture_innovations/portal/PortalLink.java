@@ -424,7 +424,7 @@ public class PortalLink
 		AABB teleportBox = PortalUtilities.getPortalTeleportBox(portal.getPosition(), portal.getXRotation(),
 				portal.getYRotation());
 
-		if(movementBox.intersects(teleportBox))
+		if(movementBox.inflate(0.05f).intersects(teleportBox))
 		{
 			Direction direction = PortalUtilities.getPortalDirection(level, linkID, isPrimary);
 			Direction otherDirection = PortalUtilities.getPortalDirection(level, linkID, !isPrimary);
