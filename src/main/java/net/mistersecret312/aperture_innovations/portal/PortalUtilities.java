@@ -381,7 +381,7 @@ public class PortalUtilities
 					Vec3 pos = linkPrimary ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
 					if(pos == null)
 						continue;
-					if(pos.equals(position) && link.linkID.equals(id) && linkPrimary == checkPrimary)
+					if(link.linkID.equals(id) && linkPrimary == checkPrimary)
 						continue;
 
 					double distance = position.distanceTo(pos);
@@ -406,7 +406,7 @@ public class PortalUtilities
 					Vec3 pos = linkPrimary ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
 					if(pos == null)
 						continue;
-					if(pos.equals(position) && link.linkID.equals(id) && linkPrimary == checkPrimary)
+					if(link.linkID.equals(id) && linkPrimary == checkPrimary)
 						continue;
 
 					double distance = position.distanceTo(pos);
@@ -444,7 +444,7 @@ public class PortalUtilities
 					AABB portalBox = PortalUtilities.getPortalPlacementBox(pos, xRot, yRot).inflate(0.05f);
 					if(pos == null)
 						continue;
-					if(portalBox.contains(portal.getPosition()) && linkPortal.equals(portal))
+					if(linkPortal.equals(portal))
 						continue;
 
 					double distance = portal.getPosition().distanceTo(pos);
@@ -465,13 +465,14 @@ public class PortalUtilities
 				PortalLink link = entry.getValue();
 				for(int i = 0; i < 2; i++)
 				{
+					Portal linkPortal = i == 0 ? link.getPrimaryPortal() : link.getSecondaryPortal();
 					Vec3 pos = i == 0 ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
 					float xRot = i == 0 ? link.getPrimaryPortal().getXRotation() : link.getSecondaryPortal().getXRotation();
 					float yRot = i == 0 ? link.getPrimaryPortal().getYRotation() : link.getSecondaryPortal().getYRotation();
 					AABB portalBox = PortalUtilities.getPortalPlacementBox(pos, xRot, yRot).inflate(0.05f);
 					if(pos == null)
 						continue;
-					if(portalBox.contains(portal.getPosition()))
+					if(linkPortal.equals(portal))
 						continue;
 
 					double distance = portal.getPosition().distanceTo(pos);

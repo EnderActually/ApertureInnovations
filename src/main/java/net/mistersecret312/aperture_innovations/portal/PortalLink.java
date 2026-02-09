@@ -168,8 +168,8 @@ public class PortalLink
 		Pair<UUID, Boolean> closestPortalPair;
 		if(self.getPosition() == null)
 			closestPortalPair = PortalUtilities.getClosestPortal(level, position, id, isPrimary);
-
 		else closestPortalPair = PortalUtilities.getClosestPortal(level, self);
+
 		Portal closestPortal;
 		if(level.isClientSide() && closestPortalPair.getFirst() != null)
 		{
@@ -423,7 +423,7 @@ public class PortalLink
 		AABB teleportBox = PortalUtilities.getPortalTeleportBox(portal.getPosition(), portal.getXRotation(),
 				portal.getYRotation());
 
-		if(movementBox.intersects(teleportBox))
+		if(movementBox.inflate(0.05f).intersects(teleportBox))
 		{
 			Direction direction = PortalUtilities.getPortalDirection(level, linkID, isPrimary);
 			Direction otherDirection = PortalUtilities.getPortalDirection(level, linkID, !isPrimary);
@@ -442,13 +442,13 @@ public class PortalLink
 			double relativePos = offsetFromPortal.dot(new Vec3(normal));
 			double nextRelativePos = nextOffsetFromPortal.dot(new Vec3(normal));
 
-			boolean slow = portalPos.closerThan(currentPos, 0.5f) && relativePos > 0;
+			boolean slow = portalPos.closerThan(currentPos, 0.45f) && relativePos > 0;
 			boolean fast = relativePos > 0 && nextRelativePos <= 0;
 
 			AABB boundingBox = PortalUtilities.getPortalBoundingBox(portal.getPosition(), portal.getXRotation(), portal.getYRotation());
 			boolean full = portal.getXRotation() == -90 && boundingBox.contains(entity.getBoundingBox().getCenter().add(0, entity.getBbHeight()/2f, 0));
 
-			if(slow || fast || full)
+ 			if(slow || fast || full)
 			{
 				Quaternionf portalQ = new Quaternionf().rotationYXZ((float) (Math.PI - Math.toRadians(
 								portal.getYRotation() + (direction.getAxis().isHorizontal() ? 180 : 0))),
