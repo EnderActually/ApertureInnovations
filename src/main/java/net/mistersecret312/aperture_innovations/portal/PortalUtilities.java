@@ -228,6 +228,7 @@ public class PortalUtilities
 					portal.setReplaceShapes(freshList);
 					return freshList;
 				}
+				else return list;
 			}
 		}
 		else
@@ -243,6 +244,7 @@ public class PortalUtilities
 					portal.setReplaceShapes(freshList);
 					return freshList;
 				}
+				else return list;
 			}
 		}
 

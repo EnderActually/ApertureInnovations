@@ -53,22 +53,7 @@ public record ClientBoundPortalSyncPacket(UUID linkID, boolean isPrimary, Portal
 	{
 		ctx.enqueueWork(() ->
 			{
-				ClientPortalLink link = PortalRenderer.LINKS.getOrDefault(packet.linkID, new ClientPortalLink());
-				link.variantKey = packet.variant;
-				link.linkID = packet.linkID;
-				if(packet.isPrimary)
-				{
-					if(packet.portal.getPosition() != null && !packet.portal.getPosition().equals(link.getPrimaryPortal().getPosition()))
-						ClientPortalUtilities.setPortalOpeningAnimationProgress(0F, packet.linkID, true);
-					link.setPrimaryPortal(packet.portal);
-				}
-				else
-				{
-					if(packet.portal.getPosition() != null && !packet.portal.getPosition().equals(link.getPrimaryPortal().getPosition()))
-						ClientPortalUtilities.setPortalOpeningAnimationProgress(0F, packet.linkID, false);
-					link.setSecondaryPortal(packet.portal);
-				}
-				PortalRenderer.LINKS.put(packet.linkID, link);
+				ClientPacketHandler.syncPortalData(packet.linkID, packet.isPrimary, packet.portal, packet.variant);
 			});
 	}
 }
