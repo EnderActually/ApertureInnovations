@@ -65,6 +65,11 @@ public class CommonEvents
 					if(portal.getPosition() == null)
 						continue;
 
+					ResourceKey<Level> portalDim = isPrimary ? link.getPrimaryPortal().getDimension() : link.getSecondaryPortal()
+																											.getDimension();
+					if(!portalDim.equals(event.getLevel().dimension()))
+						continue;
+
 					List<Entity> entities = level.getEntitiesOfClass(Entity.class, new AABB(portal.getPosition(), portal.getPosition()).inflate(5));
 					for(Entity entity : entities)
 					{
@@ -84,11 +89,6 @@ public class CommonEvents
 
 					if(portalPos == null)
 						continue;
-
-					PacketDistributor.sendToPlayersTrackingChunk((ServerLevel) level,
-							new ChunkPos(BlockPos.containing(portalPos)),
-							new ClientboundPortalAmbientSoundPacket(link.linkID, isPrimary, false));
-
 
 					ResourceKey<Level> portalDim = isPrimary ? link.getPrimaryPortal().getDimension() : link.getSecondaryPortal()
 																											.getDimension();
@@ -111,6 +111,13 @@ public class CommonEvents
 						if(isPrimary)
 							link.resetPrimary(level);
 						else link.resetSecondary(level);
+					}
+
+					if(link.isOpen())
+					{
+						PacketDistributor.sendToPlayersTrackingChunk((ServerLevel) level,
+								new ChunkPos(BlockPos.containing(portalPos)),
+								new ClientboundPortalAmbientSoundPacket(link.linkID, isPrimary, false));
 					}
 				}
 

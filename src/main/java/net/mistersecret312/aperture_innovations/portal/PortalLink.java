@@ -40,6 +40,7 @@ import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -95,6 +96,7 @@ public class PortalLink
 		this.primaryPortal.setXRotation(xRot);
 		this.primaryPortal.setDimension(dimension);
 		this.primaryPortal.setMoonshot(false);
+		this.primaryPortal.setReplaceShapes(PortalUtilities.calculatePortalVoxels(level, pos, xRot, yRot));
 
 		ServerLevel portalLevel = level.getServer().getLevel(dimension);
 
@@ -131,6 +133,7 @@ public class PortalLink
 		this.secondaryPortal.setXRotation(xRot);
 		this.secondaryPortal.setDimension(dimension);
 		this.secondaryPortal.setMoonshot(false);
+		this.secondaryPortal.setReplaceShapes(PortalUtilities.calculatePortalVoxels(level, pos, xRot, yRot));
 
 		ServerLevel portalLevel = level.getServer().getLevel(dimension);
 
@@ -321,6 +324,7 @@ public class PortalLink
 
 		this.primaryPortal = new Portal();
 		this.primaryPortal.setColor(color);
+		this.primaryPortal.setReplaceShapes(new ArrayList<>());
 
 		PortalLinkData.get(level).setDirty(linkID, true);
 	}
@@ -343,6 +347,7 @@ public class PortalLink
 
 		this.secondaryPortal = new Portal();
 		this.secondaryPortal.setColor(color);
+		this.secondaryPortal.setReplaceShapes(new ArrayList<>());
 
 		PortalLinkData.get(level).setDirty(linkID, false);
 	}
