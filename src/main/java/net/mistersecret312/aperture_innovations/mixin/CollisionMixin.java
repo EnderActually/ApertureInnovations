@@ -90,7 +90,8 @@ public interface CollisionMixin
 		if(entityBox.intersects(floorBox) && isOpen)
 			list.add(Shapes.create(floorBox));
 
-		List<VoxelShape> readdVoxels = PortalUtilities.getPortalVoxels(level, portalPos, rotation.x, rotation.y);
+		List<VoxelShape> readdVoxels = PortalUtilities.getPortalVoxels(level, uuid, isPrimary,
+				portalPos, rotation.x, rotation.y);
 
 		list.removeIf(shape -> !shape.isEmpty() && shape.bounds().intersects(portalBox)
 									   && isOpen

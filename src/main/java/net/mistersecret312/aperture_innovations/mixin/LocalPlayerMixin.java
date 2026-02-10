@@ -53,7 +53,8 @@ public class LocalPlayerMixin
 
 		Vec2 rotation = PortalUtilities.getPortalRotation(level, uuid, isPrimary);
 
-		List<VoxelShape> reAddVoxels = PortalUtilities.getPortalVoxels(level, portalPos, rotation.x, rotation.y);
+		List<VoxelShape> reAddVoxels = PortalUtilities.getPortalVoxels(level, uuid, isPrimary,
+				portalPos, rotation.x, rotation.y);
 
 		AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPos, rotation.x, rotation.y);
 		AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPos, rotation.x, rotation.y);

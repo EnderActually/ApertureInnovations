@@ -79,6 +79,11 @@ public class CommonEvents
 					if(portal.getPosition() == null)
 						continue;
 
+					ResourceKey<Level> portalDim = isPrimary ? link.getPrimaryPortal().getDimension() : link.getSecondaryPortal()
+																											.getDimension();
+					if(!portalDim.equals(level.dimension()))
+						continue;
+
 					List<Entity> entities = level.getEntitiesOfClass(Entity.class, new AABB(portal.getPosition(), portal.getPosition()).inflate(5));
 					for(Entity entity : entities)
 					{
@@ -106,10 +111,6 @@ public class CommonEvents
 					if(portalPos == null)
 						continue;
 
-					NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(
-									BlockPos.containing(portalPos))),
-							new ClientboundPortalAmbientSoundPacket(link.linkID, isPrimary, false));
-
 					ResourceKey<Level> portalDim = isPrimary ? link.getPrimaryPortal().getDimension() : link.getSecondaryPortal()
 																											.getDimension();
 					if(!portalDim.equals(level.dimension()))
@@ -131,6 +132,14 @@ public class CommonEvents
 						if(isPrimary)
 							link.resetPrimary(level);
 						else link.resetSecondary(level);
+					}
+
+					if(link.isOpen())
+					{
+						NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(
+										BlockPos.containing(portalPos))),
+								new ClientboundPortalAmbientSoundPacket(link.linkID, isPrimary, false));
+
 					}
 				}
 

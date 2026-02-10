@@ -7,6 +7,10 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Portal
 {
@@ -18,6 +22,8 @@ public class Portal
 
 	private boolean moonshot = false;
 	private int color = -1;
+
+	private List<VoxelShape> replaceShapes = new ArrayList<>();
 
 	public Portal()
 	{}
@@ -216,6 +222,16 @@ public class Portal
 	public void setYRotation(float yRot)
 	{
 		this.yRot = yRot;
+	}
+
+	public void setReplaceShapes(List<VoxelShape> replaceShapes)
+	{
+		this.replaceShapes = replaceShapes;
+	}
+
+	public List<VoxelShape> getReplaceShapes()
+	{
+		return replaceShapes;
 	}
 
 	public static ResourceKey<Level> stringToDimension(String dimensionString)

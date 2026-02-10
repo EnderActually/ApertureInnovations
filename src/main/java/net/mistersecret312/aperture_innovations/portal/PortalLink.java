@@ -102,6 +102,8 @@ public class PortalLink
 		this.primaryPortal.setDimension(dimension);
 		this.primaryPortal.setMoonshot(false);
 
+		this.primaryPortal.setReplaceShapes(PortalUtilities.calculatePortalVoxels(level, pos, xRot, yRot));
+
 		ServerLevel portalLevel = level.getServer().getLevel(dimension);
 
 		if(portalLevel != null)
@@ -135,6 +137,8 @@ public class PortalLink
 		this.secondaryPortal.setXRotation(xRot);
 		this.secondaryPortal.setDimension(dimension);
 		this.secondaryPortal.setMoonshot(false);
+
+		this.secondaryPortal.setReplaceShapes(PortalUtilities.calculatePortalVoxels(level, pos, xRot, yRot));
 
 		ServerLevel portalLevel = level.getServer().getLevel(dimension);
 
@@ -323,6 +327,7 @@ public class PortalLink
 
 		this.primaryPortal = new Portal();
 		this.primaryPortal.setColor(color);
+		this.primaryPortal.setReplaceShapes(new ArrayList<>());
 
 		PortalLinkData.get(level).setDirty(linkID, true);
 	}
@@ -343,6 +348,7 @@ public class PortalLink
 
 		this.secondaryPortal = new Portal();
 		this.secondaryPortal.setColor(color);
+		this.secondaryPortal.setReplaceShapes(new ArrayList<>());
 
 		PortalLinkData.get(level).setDirty(linkID, false);
 	}

@@ -188,7 +188,7 @@ public class PortalUtilities
 		return portal;
 	}
 
-	public static List<VoxelShape> getPortalVoxels(Level level, Vec3 portalPos, float xRot, float yRot)
+	public static List<VoxelShape> calculatePortalVoxels(Level level, Vec3 portalPos, float xRot, float yRot)
 	{
 		List<VoxelShape> shapes = new ArrayList<>();
 		AABB portalBox = getPortalBoundingBox(portalPos, xRot, yRot);
@@ -484,6 +484,63 @@ public class PortalUtilities
 			}
 			return Pair.of(uuid, isPrimary);
 		}
+	}
+
+	public static List<VoxelShape> getPortalVoxels(Level level, UUID linkID, boolean isPrimary)
+	{
+		if(level.isClientSide())
+		{
+			ClientPortalLink link = getPortalLinks().get(linkID);
+			if(link != null)
+				return isPrimary ? link.getPrimaryPortal().getReplaceShapes() : link.getSecondaryPortal()
+																					.getReplaceShapes();
+		}
+		else
+		{
+			PortalLink link = getPortalLinks(level).get(linkID);
+			if(link != null)
+				return isPrimary ? link.getPrimaryPortal().getReplaceShapes() : link.getSecondaryPortal()
+																					.getReplaceShapes();
+		}
+
+		return new ArrayList<>();
+	}
+
+	public static List<VoxelShape> getPortalVoxels(Level level, UUID linkID, boolean isPrimary,
+												   Vec3 pos, float xRot, float yRot)
+	{
+		if(level.isClientSide())
+		{
+			ClientPortalLink link = getPortalLinks().get(linkID);
+			if(link != null)
+			{
+				Portal portal = isPrimary ? link.getPrimaryPortal() : link.getSecondaryPortal();
+				List<VoxelShape> list = portal.getReplaceShapes();
+				if(list.isEmpty())
+				{
+					List<VoxelShape> freshList = PortalUtilities.calculatePortalVoxels(level, pos, xRot, yRot);
+					portal.setReplaceShapes(freshList);
+					return freshList;
+				}
+			}
+		}
+		else
+		{
+			PortalLink link = getPortalLinks(level).get(linkID);
+			if(link != null)
+			{
+				Portal portal = isPrimary ? link.getPrimaryPortal() : link.getSecondaryPortal();
+				List<VoxelShape> list = portal.getReplaceShapes();
+				if(list.isEmpty())
+				{
+					List<VoxelShape> freshList = PortalUtilities.calculatePortalVoxels(level, pos, xRot, yRot);
+					portal.setReplaceShapes(freshList);
+					return freshList;
+				}
+			}
+		}
+
+		return new ArrayList<>();
 	}
 
 	public static Pair<Portal, Boolean> getPortalByPosition(Level level, Vec3 position)
