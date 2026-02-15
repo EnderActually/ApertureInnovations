@@ -6,15 +6,17 @@ import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.GrassColor;
+import net.minecraft.world.level.block.GrassBlock;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.client.ColorUtil;
@@ -40,10 +42,9 @@ public class PortalRenderer
 		if (link.getPrimaryPortal().isInWorld())
 		{
 			poseStack.pushPose();
-
 			if(link.isOpen())
 			{
-//				renderPortalNonSee(buffer, poseStack, camera, link, true, scale);
+				renderPortalNonSee(buffer, poseStack, camera, link, true, scale);
 			}
 
 			Vec3 pos = link.getPrimaryPortal().getPosition();
@@ -85,7 +86,7 @@ public class PortalRenderer
 			poseStack.pushPose();
 			if(link.isOpen())
 			{
-//				renderPortalNonSee(buffer, poseStack, camera, link, false, scale);
+				renderPortalNonSee(buffer, poseStack, camera, link, false, scale);
 			}
 			Vec3 pos = link.getSecondaryPortal().getPosition();
 			poseStack.translate(-camera.getPosition().x + pos.x,
@@ -123,7 +124,6 @@ public class PortalRenderer
 		poseStack.pushPose();
 		Vec3 pos = isPrimary ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
 
-		poseStack.mulPose(camera.rotation().invert(new Quaternionf()));
 		poseStack.translate((float) (pos.x-camera.getPosition().x), (float) (pos.y-camera.getPosition().y),
 				(float) (pos.z-camera.getPosition().z));
 
@@ -210,10 +210,6 @@ public class PortalRenderer
 		RenderSystem.enableDepthTest();
 		RenderSystem.depthFunc(GL11.GL_GREATER);
 
-		GL11.glEnable(GL11.GL_STENCIL_TEST);
-		RenderSystem.stencilFunc(GL11.GL_NOTEQUAL, 1, 0xFF);
-		RenderSystem.stencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_KEEP);
-
 		RenderSystem.setShader(GameRenderer::getPositionTexShader);
 		RenderSystem.setShaderTexture(0, texture);
 		RenderSystem.setShaderColor(color.red(), color.green(), color.blue(), color.alpha());
@@ -227,10 +223,6 @@ public class PortalRenderer
 
 		BufferUploader.drawWithShader(builder.buildOrThrow());
 		RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-
-		GL11.glDisable(GL11.GL_STENCIL_TEST);
-		if(!isPrimary)
-			RenderSystem.clear(GL11.GL_STENCIL_BUFFER_BIT, Minecraft.ON_OSX);
 
 		RenderSystem.disableDepthTest();
 		RenderSystem.depthFunc(GL11.GL_LEQUAL);

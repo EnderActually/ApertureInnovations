@@ -5,6 +5,7 @@ import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
@@ -45,40 +46,7 @@ public class ClientEvents
 		Camera camera = event.getCamera();
 		PoseStack poseStack = event.getPoseStack();
 
-		if(event.getStage() == RenderLevelStageEvent.Stage.AFTER_SKY)
-		{
-			Level level = Minecraft.getInstance().level;
-			LINKS.forEach((linkID, link) -> {
-				poseStack.pushPose();
-
-				for(int i = 0; i < 2; i++)
-				{
-					boolean isPrimary = i == 0;
-					ResourceKey<Level> dimension = isPrimary ? link.getPrimaryPortal().getDimension() :
-														   link.getSecondaryPortal().getDimension();
-					if(level.dimension() != dimension)
-						continue;
-
-					poseStack.pushPose();
-
-					float scale = ClientPortalUtilities.getPortalOpeningAnimationProgress(linkID, isPrimary);
-
-					Vec3 portalPos = isPrimary ? link.getPrimaryPortal().getPosition() : link.getSecondaryPortal().getPosition();
-					if(link.getPrimaryPortal().isOpen() && link.getSecondaryPortal().isOpen())
-					{
-						if(level.isLoaded(BlockPos.containing(portalPos)))
-						{
-							renderPortalNonSee(buffer, poseStack, camera, link, i == 0, scale);
-						}
-					}
-					poseStack.popPose();
-					buffer.endBatch();
-				}
-				poseStack.popPose();
-			});
-		}
-
-		if(event.getStage() == RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS)
+		if(event.getStage() == RenderLevelStageEvent.Stage.AFTER_ENTITIES)
 		{
 			for(Map.Entry<UUID, ClientPortalLink> linkEntry : LINKS.entrySet())
 			{
