@@ -1,10 +1,8 @@
-package net.mistersecret312.aperture_innovations.portal;
+package net.mistersecret312.aperture_innovations.utilities;
 
 import com.mojang.datafixers.util.Pair;
-import mekanism.common.lib.multiblock.Structure;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Vec3i;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
@@ -15,6 +13,10 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.mistersecret312.aperture_innovations.data.PortalLinkData;
+import net.mistersecret312.aperture_innovations.data.portal.ClientPortalLink;
+import net.mistersecret312.aperture_innovations.data.portal.Portal;
+import net.mistersecret312.aperture_innovations.data.portal.PortalLink;
 
 import java.util.*;
 

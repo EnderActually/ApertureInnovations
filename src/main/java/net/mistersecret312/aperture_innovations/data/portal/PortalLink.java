@@ -1,11 +1,9 @@
-package net.mistersecret312.aperture_innovations.portal;
+package net.mistersecret312.aperture_innovations.data.portal;
 
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
-import net.minecraft.core.SectionPos;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -14,12 +12,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
@@ -28,15 +23,16 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
+import net.mistersecret312.aperture_innovations.data.PortalLinkData;
 import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
 import net.mistersecret312.aperture_innovations.init.AdvancementInit;
 import net.mistersecret312.aperture_innovations.init.StatisticsInit;
+import net.mistersecret312.aperture_innovations.init.TagInit;
 import net.mistersecret312.aperture_innovations.network.ClientboundEntityPortalLerpPacket;
-import net.mistersecret312.aperture_innovations.network.ClientboundPortalAmbientSoundPacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalSoundsPacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundTeleportMomentumPacket;
+import net.mistersecret312.aperture_innovations.utilities.PortalUtilities;
 import net.neoforged.neoforge.network.PacketDistributor;
-import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
@@ -229,7 +225,7 @@ public class PortalLink
 					VoxelShape shape = state.getCollisionShape(level, pos)
 											   .move(pos.getX(), pos.getY(), pos.getZ());
 
-					if(state.is(ApertureInnovations.IMPORTALABLE))
+					if(state.is(TagInit.Blocks.IMPORTALABLE))
 						shape = Shapes.create(shape.bounds().inflate(0.025));
 
 					if(!placementReference.get().isEmpty())

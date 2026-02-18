@@ -98,5 +98,11 @@ public class NetworkInit
 				ClientboundEntityPortalLerpPacket.STREAM_CODEC,
 				ClientboundEntityPortalLerpPacket::handle
 		);
+
+		registrar.playToClient(
+				ClientboundAntlineUpdatePacket.TYPE,
+				ClientboundAntlineUpdatePacket.STREAM_CODEC,
+				ClientboundAntlineUpdatePacket::handle
+		);
 	}
 }

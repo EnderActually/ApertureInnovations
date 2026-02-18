@@ -53,6 +53,13 @@ public class ApertureCapability implements INBTSerializable<CompoundTag>
 		if(ignorePortalsTime > 0)
 			ignorePortalsTime--;
 
+		if(entity.onGround())
+			reset();
+		if(entity instanceof LivingEntity && ((LivingEntity) entity).isFallFlying())
+			reset();
+		if(entity instanceof ServerPlayer && ((ServerPlayer) entity).getAbilities().flying)
+			reset();
+
 		if(entity.onGround() || (entity instanceof LivingEntity && ((LivingEntity) entity).isFallFlying()))
 		{
 			portal = null;
@@ -68,6 +75,15 @@ public class ApertureCapability implements INBTSerializable<CompoundTag>
 					speed.y > 0 ? (float) speed.y : (float) -speed.y, speed.z > 0 ? (float) speed.z : (float) -speed.z);
 			this.distanceVec.add(movementVector);
 		}
+	}
+
+	public void reset()
+	{
+		portal = null;
+		this.distanceVec = new Vector3d();
+		this.horizontalDistance = 0;
+		this.verticalDistance = 0;
+		this.frictionlessTime = 0;
 	}
 
 	public void updateDistance()

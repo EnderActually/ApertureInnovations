@@ -1,14 +1,13 @@
 package net.mistersecret312.aperture_innovations.sounds;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.WinScreen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortalGunVariant;
-import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
-import net.mistersecret312.aperture_innovations.portal.ClientPortalUtilities;
-import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
+import net.mistersecret312.aperture_innovations.data.portal.ClientPortalLink;
+import net.mistersecret312.aperture_innovations.utilities.ClientPortalUtilities;
+import net.mistersecret312.aperture_innovations.utilities.PortalUtilities;
 
 import java.util.UUID;
 

@@ -101,4 +101,14 @@ public class PortalRenderTypes extends RenderType
 										 .createCompositeState(true)
 		);
 	}
+
+	public static RenderType antline(ResourceLocation location)
+	{
+		return create("antline", DefaultVertexFormat.POSITION_TEX_COLOR,
+				VertexFormat.Mode.QUADS, 256, true, true,
+				CompositeState.builder()
+						.setShaderState(POSITION_TEX_COLOR_SHADER)
+						.setTextureState(new TextureStateShard(location, false, false))
+						.createCompositeState(true));
+	}
 }

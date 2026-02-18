@@ -1,9 +1,10 @@
-package net.mistersecret312.aperture_innovations.portal;
+package net.mistersecret312.aperture_innovations.utilities;
 
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.resources.ResourceLocation;
 import net.mistersecret312.aperture_innovations.client.ColorUtil;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortalGunVariant;
+import net.mistersecret312.aperture_innovations.data.portal.ClientPortalLink;
 import net.mistersecret312.aperture_innovations.sounds.PortalSoundWrapper;
 
 import java.awt.*;

@@ -7,10 +7,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
-import net.mistersecret312.aperture_innovations.client.renderer.PortalRenderer;
-import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
-import net.mistersecret312.aperture_innovations.portal.ClientPortalUtilities;
-import net.mistersecret312.aperture_innovations.portal.Portal;
+import net.mistersecret312.aperture_innovations.data.portal.Portal;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.UUID;

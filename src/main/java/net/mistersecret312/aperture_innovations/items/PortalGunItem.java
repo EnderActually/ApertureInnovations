@@ -33,10 +33,11 @@ import net.mistersecret312.aperture_innovations.config.PortalGunConfig;
 import net.mistersecret312.aperture_innovations.init.AdvancementInit;
 import net.mistersecret312.aperture_innovations.init.DataComponentInit;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
+import net.mistersecret312.aperture_innovations.init.TagInit;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalSoundsPacket;
-import net.mistersecret312.aperture_innovations.portal.PortalLink;
-import net.mistersecret312.aperture_innovations.portal.PortalLinkData;
-import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
+import net.mistersecret312.aperture_innovations.data.portal.PortalLink;
+import net.mistersecret312.aperture_innovations.data.PortalLinkData;
+import net.mistersecret312.aperture_innovations.utilities.PortalUtilities;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -265,7 +266,7 @@ public class PortalGunItem extends Item implements GeoItem
 			@Override
 			public VoxelShape getBlockShape(BlockState state, BlockGetter level, BlockPos pos)
 			{
-				if(state.is(ApertureInnovations.SHOOT_THROUGH))
+				if(state.is(TagInit.Blocks.SHOOT_THROUGH))
 					return Shapes.empty();
 
 				return super.getBlockShape(state, level, pos);

@@ -11,8 +11,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.mistersecret312.aperture_innovations.client.Layers;
 import net.mistersecret312.aperture_innovations.client.overlay.CrosshairOverlay;
+import net.mistersecret312.aperture_innovations.client.renderer.AntlineRenderer;
 import net.mistersecret312.aperture_innovations.client.renderer.LongFallBootsRenderProperties;
 import net.mistersecret312.aperture_innovations.client.renderer.PortalGunRenderProperties;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ResourcePackReloadListener;
@@ -54,13 +56,6 @@ public class ApertureInnovations
 	public static final String MODID = "aperture_innovations";
 	public static final Logger LOGGER = LogUtils.getLogger();
 
-	public static final TagKey<Block> SHOOT_THROUGH = TagKey.create(
-			BuiltInRegistries.BLOCK.key(), ResourceLocation.fromNamespaceAndPath(MODID, "shoot_through"));
-	public static final TagKey<Block> IMPORTALABLE = TagKey.create(
-			BuiltInRegistries.BLOCK.key(), ResourceLocation.fromNamespaceAndPath(MODID, "importalable"));
-	public static final TagKey<Block> PORTALABLE = TagKey.create(
-			BuiltInRegistries.BLOCK.key(), ResourceLocation.fromNamespaceAndPath(MODID, "portalable"));
-
 	public static ResourceLocation of(String path) {
 		return ResourceLocation.fromNamespaceAndPath(MODID, path);
 	}
@@ -69,6 +64,7 @@ public class ApertureInnovations
 	{
 		ItemInit.register(modEventBus);
 		BlockInit.register(modEventBus);
+		BlockEntityInit.register(modEventBus);
 		ItemTabInit.register(modEventBus);
 		SoundInit.register(modEventBus);
 		StatisticsInit.register(modEventBus);
@@ -118,6 +114,12 @@ public class ApertureInnovations
 					ItemProperties.register(ItemInit.COLORFUL_GEL.get(),
 							ResourceLocation.fromNamespaceAndPath(MODID, "colored"), new ColorfulGelItemProperty());
 				});
+		}
+
+		@SubscribeEvent
+		public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event)
+		{
+			event.registerBlockEntityRenderer(BlockEntityInit.ANTLINE.get(), AntlineRenderer::new);
 		}
 
 		@SubscribeEvent

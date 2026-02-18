@@ -1,8 +1,6 @@
 package net.mistersecret312.aperture_innovations.network;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -13,16 +11,14 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
-import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
-import net.mistersecret312.aperture_innovations.portal.PortalLink;
-import net.mistersecret312.aperture_innovations.portal.PortalLinkData;
+import net.mistersecret312.aperture_innovations.data.portal.PortalLink;
+import net.mistersecret312.aperture_innovations.data.PortalLinkData;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import software.bernie.geckolib.animatable.GeoItem;
 
 import java.util.UUID;
-import java.util.function.Supplier;
 
 public record ServerboundResetPortalLinkPacket() implements CustomPacketPayload
 {

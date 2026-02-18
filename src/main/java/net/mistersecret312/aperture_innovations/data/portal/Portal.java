@@ -1,9 +1,8 @@
-package net.mistersecret312.aperture_innovations.portal;
+package net.mistersecret312.aperture_innovations.data.portal;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.Utf8String;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;

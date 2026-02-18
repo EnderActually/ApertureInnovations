@@ -1,4 +1,4 @@
-package net.mistersecret312.aperture_innovations.portal;
+package net.mistersecret312.aperture_innovations.data;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.Registry;
@@ -12,9 +12,9 @@ import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.storage.DimensionDataStorage;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
-import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.network.ClientBoundPortalSyncPacket;
+import net.mistersecret312.aperture_innovations.data.portal.PortalLink;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import javax.annotation.Nonnull;

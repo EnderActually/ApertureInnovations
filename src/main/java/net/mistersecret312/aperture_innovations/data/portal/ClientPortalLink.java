@@ -1,16 +1,11 @@
-package net.mistersecret312.aperture_innovations.portal;
+package net.mistersecret312.aperture_innovations.data.portal;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.Level;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortalGunVariant;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortalGunVariants;
 import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
-import net.mistersecret312.aperture_innovations.sounds.PortalSoundWrapper;
 
 import java.util.UUID;
 

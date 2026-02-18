@@ -1,19 +1,20 @@
 package net.mistersecret312.aperture_innovations.network;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.Arrow;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
+import net.mistersecret312.aperture_innovations.block_entities.AntlineBlockEntity;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
 import net.mistersecret312.aperture_innovations.client.renderer.PortalRenderer;
 import net.mistersecret312.aperture_innovations.init.AttachmentTypeInit;
-import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
-import net.mistersecret312.aperture_innovations.portal.ClientPortalUtilities;
-import net.mistersecret312.aperture_innovations.portal.Portal;
-import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
+import net.mistersecret312.aperture_innovations.data.portal.ClientPortalLink;
+import net.mistersecret312.aperture_innovations.utilities.ClientPortalUtilities;
+import net.mistersecret312.aperture_innovations.data.portal.Portal;
+import net.mistersecret312.aperture_innovations.utilities.PortalUtilities;
 import org.joml.Vector3f;
 
 import java.util.UUID;
@@ -54,6 +55,20 @@ public class ClientPacketHandler
 		if(player != null)
 		{
 			player.setDeltaMovement(new Vec3(speed));
+		}
+	}
+
+	public static void handleAntlineUpdate(BlockPos pos)
+	{
+		BlockEntity blockEntity = Minecraft.getInstance().level.getBlockEntity(pos);
+		if(blockEntity != null)
+		{
+			if(blockEntity instanceof AntlineBlockEntity antlineBlockEntity)
+			{
+				antlineBlockEntity.updateConnections();
+				antlineBlockEntity.trimConnections();
+				antlineBlockEntity.setChanged();
+			}
 		}
 	}
 

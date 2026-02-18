@@ -6,8 +6,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
-import net.minecraft.core.particles.DustParticleOptions;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -26,12 +24,15 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
-import net.mistersecret312.aperture_innovations.client.ColorUtil;
 import net.mistersecret312.aperture_innovations.config.PortalGunConfig;
+import net.mistersecret312.aperture_innovations.data.PortalLinkData;
+import net.mistersecret312.aperture_innovations.data.portal.ClientPortalLink;
+import net.mistersecret312.aperture_innovations.data.portal.Portal;
+import net.mistersecret312.aperture_innovations.data.portal.PortalLink;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
-import net.mistersecret312.aperture_innovations.init.NetworkInit;
+import net.mistersecret312.aperture_innovations.init.TagInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
-import net.mistersecret312.aperture_innovations.portal.*;
+import net.mistersecret312.aperture_innovations.utilities.PortalUtilities;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -40,8 +41,6 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 import software.bernie.geckolib.animatable.GeoItem;
 
-import java.awt.*;
-import java.text.NumberFormat;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
@@ -122,10 +121,10 @@ public record ServerboundOpenPortalPacket(boolean isPrimary) implements CustomPa
 			{
 				UUID linkID = portalGun.getUUID(gunStack, false);
 
-				if(linkID != null && !level.getBlockState(result.getBlockPos()).is(ApertureInnovations.SHOOT_THROUGH) &&
-						   (level.getBlockState(result.getBlockPos()).is(ApertureInnovations.IMPORTALABLE)
+				if(linkID != null && !level.getBlockState(result.getBlockPos()).is(TagInit.Blocks.SHOOT_THROUGH) &&
+						   (level.getBlockState(result.getBlockPos()).is(TagInit.Blocks.IMPORTALABLE)
 				|| !level.getFluidState(result.getBlockPos()).isEmpty() ||
-									(PortalGunConfig.use_portalable_tag.get() && !level.getBlockState(result.getBlockPos()).is(ApertureInnovations.PORTALABLE))))
+									(PortalGunConfig.use_portalable_tag.get() && !level.getBlockState(result.getBlockPos()).is(TagInit.Blocks.PORTALABLE))))
 				{
 					if(!PortalGunConfig.portal_gun_consume_on_shot.get() && PortalGunConfig.portal_gun_uses_energy.get())
 						if(!consumeEnergy(gunStack, player))
@@ -304,7 +303,7 @@ public record ServerboundOpenPortalPacket(boolean isPrimary) implements CustomPa
 					VoxelShape shape = state.getCollisionShape(level, pos)
 											.move(pos.getX(), pos.getY(), pos.getZ());
 
-					if(state.is(ApertureInnovations.IMPORTALABLE))
+					if(state.is(TagInit.Blocks.IMPORTALABLE))
 						shape = Shapes.create(shape.bounds().inflate(0.025));
 
 					if(!placementShape.get().isEmpty())
