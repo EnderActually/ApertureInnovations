@@ -93,14 +93,26 @@ public class AntlineBlock extends BaseEntityBlock
 	}
 
 	@Override
-	protected boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
-		BlockPos blockpos = pos.relative(state.getValue(NORMAL).getOpposite());
-		BlockState blockstate = level.getBlockState(blockpos);
-		return this.canSurviveOn(level, blockpos, blockstate);
+	protected BlockState updateShape(BlockState state, Direction direction, BlockState neighborState,
+									 LevelAccessor level, BlockPos pos, BlockPos neighborPos)
+	{
+		if(!canSurvive(state, level, pos))
+		{
+			return Blocks.AIR.defaultBlockState();
+		}
+
+		return super.updateShape(state, direction, neighborState, level, pos, neighborPos);
 	}
 
-	private boolean canSurviveOn(BlockGetter level, BlockPos pos, BlockState state) {
-		return state.isFaceSturdy(level, pos, Direction.UP) || state.is(Blocks.HOPPER);
+	@Override
+	public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
+		BlockPos blockpos = pos.relative(state.getValue(NORMAL).getOpposite());
+		BlockState blockstate = level.getBlockState(blockpos);
+		return this.canSurviveOn(level, blockpos, blockstate, state.getValue(NORMAL));
+	}
+
+	private boolean canSurviveOn(BlockGetter level, BlockPos pos, BlockState state, Direction direction) {
+		return state.isFaceSturdy(level, pos, direction);
 	}
 	@Override
 	public @Nullable BlockState getStateForPlacement(BlockPlaceContext context)

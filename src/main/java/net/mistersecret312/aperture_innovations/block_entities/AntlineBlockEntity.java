@@ -137,8 +137,7 @@ public class AntlineBlockEntity extends BlockEntity
 		for(Direction direction : Direction.values())
 		{
 			ConnectionState state = getState(direction);
-			if(!state.equals(ConnectionState.NONE))
-				connections.add(direction);
+			if(!state.equals(ConnectionState.NONE)) connections.add(direction);
 		}
 
 		return connections;
@@ -149,8 +148,7 @@ public class AntlineBlockEntity extends BlockEntity
 		for(Direction direction : Direction.values())
 		{
 			ConnectionState state = getState(direction);
-			if(state.equals(filter))
-				return true;
+			if(state.equals(filter)) return true;
 		}
 
 		return false;
@@ -186,11 +184,9 @@ public class AntlineBlockEntity extends BlockEntity
 
 	public Antline getAntline()
 	{
-		if(antline != null)
-			return antline;
+		if(antline != null) return antline;
 
-		if(networkId == 0)
-			return null;
+		if(networkId == 0) return null;
 
 		antline = AntlineData.get(getLevel()).getLine(networkId);
 		return antline;
@@ -210,23 +206,18 @@ public class AntlineBlockEntity extends BlockEntity
 			for(Direction direction : Direction.values())
 			{
 				ConnectionState state = ConnectionState.NONE;
-
 				BlockPos relativePos = centerPos.relative(direction);
 				if(direction.getAxis().equals(normal.getAxis()))
-					relativePos = getBlockPos().relative(direction);
+					continue;
 
 				BlockState blockState = level.getBlockState(relativePos);
 				BlockEntity blockEntity = level.getBlockEntity(relativePos);
 
 				if(blockState.is(TagInit.Blocks.CONNECTS_TO_ANTLINE))
-				{
 					state = ConnectionState.LINK;
-				}
 
 				if(blockState.canRedstoneConnectTo(level, relativePos, direction.getOpposite()))
-				{
 					state = ConnectionState.LINK;
-				}
 
 				if(blockEntity instanceof AntlineBlockEntity antline)
 				{
@@ -236,7 +227,7 @@ public class AntlineBlockEntity extends BlockEntity
 
 					if(i == -1)
 						state = ConnectionState.DOWN;
-					if(i == 1 || direction.equals(Direction.UP))
+					if(i == 1)
 						state = ConnectionState.UP;
 				}
 
@@ -268,8 +259,10 @@ public class AntlineBlockEntity extends BlockEntity
 			{
 				BlockPos relativePos = pos.relative(direction);
 				BlockState blockState = level.getBlockState(relativePos);
+
 				if(blockState.is(TagInit.Blocks.CONNECTS_TO_ANTLINE))
 					valid = true;
+
 				if(blockState.canRedstoneConnectTo(level, relativePos, direction.getOpposite()))
 					valid = true;
 
@@ -287,8 +280,10 @@ public class AntlineBlockEntity extends BlockEntity
 					relativePos = pos.relative(normal);
 
 				BlockState blockState = level.getBlockState(relativePos);
+
 				if(blockState.is(TagInit.Blocks.CONNECTS_TO_ANTLINE))
 					valid = true;
+
 				if(blockState.canRedstoneConnectTo(level, relativePos, direction.getOpposite()))
 					valid = true;
 
@@ -304,8 +299,10 @@ public class AntlineBlockEntity extends BlockEntity
 				BlockPos relativePos = pos.relative(direction).relative(normal.getOpposite());
 
 				BlockState blockState = level.getBlockState(relativePos);
+
 				if(blockState.is(TagInit.Blocks.CONNECTS_TO_ANTLINE))
 					valid = true;
+
 				if(blockState.canRedstoneConnectTo(level, relativePos, direction.getOpposite()))
 					valid = true;
 
@@ -320,5 +317,4 @@ public class AntlineBlockEntity extends BlockEntity
 				setState(direction, ConnectionState.NONE);
 		}
 	}
-
 }
