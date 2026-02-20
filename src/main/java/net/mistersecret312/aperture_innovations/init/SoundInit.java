@@ -1,15 +1,12 @@
 package net.mistersecret312.aperture_innovations.init;
 
-import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 public class SoundInit
 {
@@ -28,6 +25,13 @@ public class SoundInit
     public static DeferredHolder<SoundEvent, SoundEvent> PORTAL_GUN_RESET = registerSoundEvent("portal_gun_reset");
 
     public static DeferredHolder<SoundEvent, SoundEvent> LONG_FALL_BOOTS_LAND = registerSoundEvent("long_fall_boots_land");
+
+	public static DeferredHolder<SoundEvent, SoundEvent> CUBE_IMPACT = registerSoundEvent("cube_impact");
+
+	public static DeferredHolder<SoundEvent, SoundEvent> PEDESTAL_BUTTON_DOWN = registerSoundEvent("pedestal_button_down");
+	public static DeferredHolder<SoundEvent, SoundEvent> PEDESTAL_BUTTON_UP = registerSoundEvent("pedestal_button_up");
+	public static DeferredHolder<SoundEvent, SoundEvent> LARGE_BUTTON_DOWN = registerSoundEvent("large_button_down");
+	public static DeferredHolder<SoundEvent, SoundEvent> LARGE_BUTTON_UP = registerSoundEvent("large_button_up");
 
     private static DeferredHolder<SoundEvent, SoundEvent> registerSoundEvent(String sound)
     {

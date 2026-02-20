@@ -77,5 +77,39 @@
       "aperture_innovations:longfall_boots_land_2",
       "aperture_innovations:longfall_boots_land_3"
     ]
+  },
+  "cube_impact": {
+    "subtitle": "sound.aperture_innovations.cube_impact",
+    "sounds": [
+      "aperture_innovations:cube_impact_1",
+      "aperture_innovations:cube_impact_2",
+      "aperture_innovations:cube_impact_3",
+      "aperture_innovations:cube_impact_4",
+      "aperture_innovations:cube_impact_5"
+    ]
+  },
+  "pedestal_button_down": {
+    "subtitle": "sound.aperture_innovations.pedestal_button_down",
+    "sounds": [
+      "aperture_innovations:pedestal_button_down"
+    ]
+  },
+  "pedestal_button_up": {
+    "subtitle": "sound.aperture_innovations.pedestal_button_up",
+    "sounds": [
+      "aperture_innovations:pedestal_button_up"
+    ]
+  },
+  "large_button_down": {
+    "subtitle": "sound.aperture_innovations.large_button_down",
+    "sounds": [
+      "aperture_innovations:large_button_down"
+    ]
+  },
+  "large_button_up": {
+    "subtitle": "sound.aperture_innovations.large_button_up",
+    "sounds": [
+      "aperture_innovations:large_button_up"
+    ]
   }
 }
