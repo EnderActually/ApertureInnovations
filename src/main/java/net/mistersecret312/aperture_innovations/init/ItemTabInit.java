@@ -37,6 +37,8 @@ public class ItemTabInit
 							  output.accept(BlockInit.METAL_SURFACE_BLOCK.get());
 							  output.accept(BlockInit.METAL_SURFACE_TILE_BLOCK.get());
 							  output.accept(BlockInit.METAL_SURFACE_1x2_BLOCK.get());
+
+							  output.accept(BlockInit.ANTLINE.get());
 						  }
 						  ).build());
 

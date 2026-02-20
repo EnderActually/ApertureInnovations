@@ -139,7 +139,8 @@ public class AntlineBlockEntity extends BlockEntity
 		for(Direction direction : Direction.values())
 		{
 			ConnectionState state = getState(direction);
-			if(!state.equals(ConnectionState.NONE)) connections.add(direction);
+			if(!state.equals(ConnectionState.NONE))
+				connections.add(direction);
 		}
 
 		return connections;
@@ -242,6 +243,7 @@ public class AntlineBlockEntity extends BlockEntity
 						}
 					}
 				}
+				else state = ConnectionState.DOWN;
 			}
 
 			this.setState(direction, state);
@@ -264,10 +266,24 @@ public class AntlineBlockEntity extends BlockEntity
 		if(blockState.is(TagInit.Blocks.CONNECTS_TO_ANTLINE))
 			return ConnectionState.LINK;
 
-		if(blockState.canRedstoneConnectTo(level, relativePos, direction.getOpposite()))
+		if(blockState.canRedstoneConnectTo(level, relativePos, direction))
 			return ConnectionState.LINK;
 
 		return ConnectionState.NONE;
+	}
+
+	public boolean checkValidBlock(Level level, BlockPos relativePos, Direction direction)
+	{
+		BlockState blockState = level.getBlockState(relativePos);
+		BlockEntity blockEntity = level.getBlockEntity(relativePos);
+
+		if(blockEntity instanceof AntlineBlockEntity antline)
+			return antline.color == this.color && antline.activeColor == this.activeColor;
+
+		if(blockState.is(TagInit.Blocks.CONNECTS_TO_ANTLINE))
+			return true;
+
+		return blockState.canRedstoneConnectTo(level, relativePos, direction);
 	}
 
 	public void trimConnections()
@@ -279,73 +295,22 @@ public class AntlineBlockEntity extends BlockEntity
 		if(level == null)
 			return;
 
-		if(true)
-			return;
-
-		for(Direction direction : Direction.values())
+		for(Direction direction : getConnectedSides())
 		{
 			boolean valid = false;
 			ConnectionState state = getState(direction);
-			if(state.equals(ConnectionState.NONE))
-				continue;
 
 			if(state.equals(ConnectionState.SIDE) || state.equals(ConnectionState.LINK))
-			{
-				BlockPos relativePos = pos.relative(direction);
-				BlockState blockState = level.getBlockState(relativePos);
+				valid = checkValidBlock(level, pos.relative(direction), direction);
 
-				if(blockState.is(TagInit.Blocks.CONNECTS_TO_ANTLINE))
-					valid = true;
-
-				if(blockState.canRedstoneConnectTo(level, relativePos, direction.getOpposite()))
-					valid = true;
-
-				if(level.getBlockEntity(relativePos) instanceof AntlineBlockEntity antline)
-				{
-					if(antline.color == this.color && antline.activeColor == this.activeColor)
-						valid = true;
-				}
-			}
+			if(state.equals(ConnectionState.SIDE_UP))
+				valid = checkValidBlock(level, pos.relative(direction).relative(normal), direction);
 
 			if(state.equals(ConnectionState.UP))
-			{
-				BlockPos relativePos = pos.relative(direction).relative(normal);
-				if(direction.getAxis() == normal.getAxis())
-					relativePos = pos.relative(normal);
-
-				BlockState blockState = level.getBlockState(relativePos);
-
-				if(blockState.is(TagInit.Blocks.CONNECTS_TO_ANTLINE))
-					valid = true;
-
-				if(blockState.canRedstoneConnectTo(level, relativePos, direction.getOpposite()))
-					valid = true;
-
-				if(level.getBlockEntity(relativePos) instanceof AntlineBlockEntity antline)
-				{
-					if(antline.color == this.color && antline.activeColor == this.activeColor)
-						valid = true;
-				}
-			}
+				valid = checkValidBlock(level, pos.relative(normal), direction);
 
 			if(state.equals(ConnectionState.DOWN))
-			{
-				BlockPos relativePos = pos.relative(direction).relative(normal.getOpposite());
-
-				BlockState blockState = level.getBlockState(relativePos);
-
-				if(blockState.is(TagInit.Blocks.CONNECTS_TO_ANTLINE))
-					valid = true;
-
-				if(blockState.canRedstoneConnectTo(level, relativePos, direction.getOpposite()))
-					valid = true;
-
-				if(level.getBlockEntity(relativePos) instanceof AntlineBlockEntity antline)
-				{
-					if(antline.color == this.color && antline.activeColor == this.activeColor)
-						valid = true;
-				}
-			}
+				valid = checkValidBlock(level, pos.relative(direction).relative(normal.getOpposite()), direction);
 
 			if(!valid)
 				setState(direction, ConnectionState.NONE);

@@ -9,6 +9,8 @@
   "block.aperture_innovations.metal_surface_1x2_block": "Metal Surface 1x2 Block",
   "block.aperture_innovations.metal_surface_2x2_block": "Metal Surface 2x2 Block",
 
+  "block.aperture_innovations.antline": "Antline",
+
   "item.aperture_innovations.portal_gun": "Aperture Science Handheld Portal Device",
   "item.aperture_innovations.portal_gun.duality_primary": "Single Portal - Primary",
   "item.aperture_innovations.portal_gun.duality_secondary": "Single Portal - Secondary",

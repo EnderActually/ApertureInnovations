@@ -73,7 +73,7 @@ public class AntlineRenderer implements BlockEntityRenderer<AntlineBlockEntity>
 			if(direction.getAxis().equals(blockEntity.getNormal().getAxis()))
 				continue;
 
-			if(blockEntity.getState(direction) == ConnectionState.NONE)
+			if(blockEntity.getState(direction).equals(ConnectionState.NONE))
 				continue;
 
 			poseStack.pushPose();
@@ -85,7 +85,7 @@ public class AntlineRenderer implements BlockEntityRenderer<AntlineBlockEntity>
 				poseStack.mulPose(Axis.ZP.rotationDegrees(180));
 
 			poseStack.translate(1.33f*direction.getNormal().getX(), (positive ? -1f : 1f) * 1.33f*direction.getNormal().getZ(), 0);
-			renderDot(bufferSource, poseStack, relayTexture, -1);
+			renderDot(bufferSource, poseStack, blockEntity.getState(direction).equals(ConnectionState.LINK) ? connectionTexture : relayTexture, -1);
 
 			if(blockEntity.getState(direction) == ConnectionState.UP
 					   || blockEntity.getState(direction) == ConnectionState.SIDE_UP)
@@ -128,6 +128,7 @@ public class AntlineRenderer implements BlockEntityRenderer<AntlineBlockEntity>
 							{
 								poseStack.translate(-4f, 0f, 0f);
 							}
+
 							poseStack.translate(0.66f, 0f, 0.66f + i * 1.33f);
 							poseStack.mulPose(Axis.YP.rotationDegrees(-90));
 						}
@@ -167,6 +168,12 @@ public class AntlineRenderer implements BlockEntityRenderer<AntlineBlockEntity>
 							poseStack.mulPose(Axis.XP.rotationDegrees(dirPos ? -90 : 90));
 							poseStack.translate(0f, i * (dirPos ? -1.33f : 1.33f) + (dirPos ? 0.66f : -0.66f),
 									i * 1.33f - 0.66f);
+						}
+
+						if(normal.equals(Direction.WEST))
+						{
+							poseStack.translate(0f, 0f, -2*i*1.33f-6.7f);
+							poseStack.mulPose(Axis.XP.rotationDegrees(180));
 						}
 					}
 

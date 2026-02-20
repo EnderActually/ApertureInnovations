@@ -176,17 +176,25 @@ public class AntlineData extends SavedData
 				&& startingAntline.activeColor == antline.activeColor)
 					antlines.add(antline);
 
-				for(int j = -1; j <= 1; j++)
+				Direction normal = antline.getNormal();
+				for(Direction side : antline.getConnectedSides())
 				{
-					Direction normal = startingAntline.getNormal();
-					BlockPos centerPos = pos.relative(normal, j);
-					for(Direction direction : Direction.values())
-					{
-						BlockPos relativePos = centerPos.relative(direction);
+					BlockPos relativePos = pos;
+					ConnectionState state = antline.getState(side);
+					if(state.equals(ConnectionState.SIDE) || state.equals(ConnectionState.LINK))
+						relativePos = pos.relative(side);
 
-						if(!visited.contains(relativePos))
-							queue.add(relativePos);
-					}
+					if(state.equals(ConnectionState.SIDE_UP))
+						relativePos = pos.relative(side).relative(normal);
+
+					if(state.equals(ConnectionState.UP))
+						relativePos = pos.relative(normal);
+
+					if(state.equals(ConnectionState.DOWN))
+						relativePos = pos.relative(side).relative(normal.getOpposite());
+
+					if(!visited.contains(relativePos))
+						queue.add(relativePos);
 				}
 
 			}
