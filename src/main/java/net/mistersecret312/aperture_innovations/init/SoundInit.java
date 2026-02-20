@@ -26,6 +26,13 @@ public class SoundInit
 
     public static RegistryObject<SoundEvent> LONG_FALL_BOOTS_LAND = registerSoundEvent("long_fall_boots_land");
 
+    public static RegistryObject<SoundEvent> CUBE_IMPACT = registerSoundEvent("cube_impact");
+
+    public static RegistryObject<SoundEvent> PEDESTAL_BUTTON_DOWN = registerSoundEvent("pedestal_button_down");
+    public static RegistryObject<SoundEvent> PEDESTAL_BUTTON_UP = registerSoundEvent("pedestal_button_up");
+    public static RegistryObject<SoundEvent> LARGE_BUTTON_DOWN = registerSoundEvent("large_button_down");
+    public static RegistryObject<SoundEvent> LARGE_BUTTON_UP = registerSoundEvent("large_button_up");
+
     private static RegistryObject<SoundEvent> registerSoundEvent(String sound)
     {
         return SOUNDS.register(sound, () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(ApertureInnovations.MODID, sound)));
