@@ -12,6 +12,9 @@ public class IrisCompat
 
 	public static boolean areShadersOn()
 	{
+		if(!isIrisLoaded())
+			return false;
+
 		return Iris.getCurrentPack().isPresent();
 	}
 }

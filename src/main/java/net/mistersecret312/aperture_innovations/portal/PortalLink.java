@@ -538,7 +538,7 @@ public class PortalLink
 
 				BlockPos targetBlock = BlockPos.containing(targetPos);
 				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(targetBlock)),
-						new ClientboundPortalSoundsPacket.EnterPortal(link.linkID, isPrimary));
+						new ClientboundPortalSoundsPacket.EnterPortal(link.linkID, !isPrimary));
 
 				if(entity instanceof ServerPlayer player)
 				{

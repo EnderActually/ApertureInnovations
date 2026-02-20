@@ -14,7 +14,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
-import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.client.ColorUtil;
 import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.compat.iris.IrisCompat;
@@ -23,7 +22,6 @@ import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
 import net.mistersecret312.aperture_innovations.portal.ClientPortalUtilities;
 import org.joml.Matrix4f;
-import org.joml.Quaternionf;
 import org.lwjgl.opengl.GL11;
 
 import java.util.HashMap;
@@ -41,7 +39,7 @@ public class PortalRenderer
 
 			if(link.isOpen())
 			{
-				//				renderPortalNonSee(buffer, poseStack, camera, link, true, scale);
+				renderPortalNonSee(buffer, poseStack, camera, link, true, scale);
 			}
 
 			Vec3 pos = link.getPrimaryPortal().getPosition();
@@ -68,7 +66,7 @@ public class PortalRenderer
 			poseStack.scale(2f, 2f, 2f);
 
 			poseStack.scale(scale, scale, scale);
-			poseStack.translate(0.25f, 0f, 0f);
+			poseStack.translate(0.25f, 0f, 0.0125f);
 
 			renderPortalFrame(ClientPortalUtilities.getPortalClosedTexture(link, true),
 					ClientPortalUtilities.getPortalColor(link, true), buffer, poseStack);
@@ -83,7 +81,7 @@ public class PortalRenderer
 			poseStack.pushPose();
 			if(link.isOpen())
 			{
-				//				renderPortalNonSee(buffer, poseStack, camera, link, false, scale);
+				renderPortalNonSee(buffer, poseStack, camera, link, false, scale);
 			}
 			Vec3 pos = link.getSecondaryPortal().getPosition();
 			poseStack.translate(-camera.getPosition().x + pos.x,
@@ -107,7 +105,7 @@ public class PortalRenderer
 			poseStack.scale(2f, 2f, 2f);
 
 			poseStack.scale(scale, scale, scale);
-			poseStack.translate(0.25f, 0f, 0f);
+			poseStack.translate(0.25f, 0f, 0.0125f);
 
 			renderPortalFrame(ClientPortalUtilities.getPortalClosedTexture(link, false), ClientPortalUtilities.getPortalColor(link, false),
 					buffer, poseStack);
@@ -143,6 +141,8 @@ public class PortalRenderer
 
 		poseStack.translate(0,0f,0.01f);
 		poseStack.scale(scale, scale, scale);
+
+		poseStack.translate(0f, 0f, 0.025f);
 
 		if(IrisCompat.isIrisLoaded())
 		{
@@ -298,7 +298,7 @@ public class PortalRenderer
 		float scale = ClientPortalUtilities.getPortalOpeningAnimationProgress(link.linkID(), isPrimary);
 		poseStack.scale(2f, 2f, 2f);
 		poseStack.scale(scale, scale, scale);
-		poseStack.translate(0, 0f, 0.0125);
+		poseStack.translate(0, 0f, 0.025);
 
 		ColorUtil.RGBA color = ClientPortalUtilities.getPortalColor(link, isPrimary);
 
