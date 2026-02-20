@@ -58,7 +58,7 @@ public class ClientPacketHandler
 		}
 	}
 
-	public static void handleAntlineUpdate(BlockPos pos)
+	public static void handleAntlineUpdate(BlockPos pos, boolean active)
 	{
 		BlockEntity blockEntity = Minecraft.getInstance().level.getBlockEntity(pos);
 		if(blockEntity != null)
@@ -67,6 +67,7 @@ public class ClientPacketHandler
 			{
 				antlineBlockEntity.updateConnections();
 				antlineBlockEntity.trimConnections();
+				antlineBlockEntity.active = active;
 				antlineBlockEntity.setChanged();
 			}
 		}

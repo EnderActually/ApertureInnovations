@@ -9,6 +9,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.RedstoneLampBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.block_entities.AntlineBlockEntity;
@@ -29,8 +30,9 @@ public class AntlineRenderer implements BlockEntityRenderer<AntlineBlockEntity>
 	public void render(AntlineBlockEntity blockEntity, float partialTick, PoseStack poseStack,
 						   MultiBufferSource bufferSource, int packedLight, int packedOverlay)
 	{
-		ResourceLocation relayTexture = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "textures/antline/antline_relay_inactive.png");
-		ResourceLocation connectionTexture = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "textures/antline/antline_connection_inactive.png");
+		String activity = blockEntity.active ? "active" : "inactive";
+		ResourceLocation relayTexture = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "textures/antline/antline_relay_"+ activity +".png");
+		ResourceLocation connectionTexture = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "textures/antline/antline_connection_"+ activity + ".png");
 		poseStack.pushPose();
 
 		poseStack.mulPose(Axis.XN.rotationDegrees(90));
@@ -85,20 +87,17 @@ public class AntlineRenderer implements BlockEntityRenderer<AntlineBlockEntity>
 			poseStack.translate(1.33f*direction.getNormal().getX(), (positive ? -1f : 1f) * 1.33f*direction.getNormal().getZ(), 0);
 			renderDot(bufferSource, poseStack, relayTexture, -1);
 
-			if(blockEntity.getState(direction) == ConnectionState.UP)
+			if(blockEntity.getState(direction) == ConnectionState.UP
+					   || blockEntity.getState(direction) == ConnectionState.SIDE_UP)
 			{
 				Level level = blockEntity.getLevel();
 				if(level != null)
 				{
-					BlockState state = level.getBlockState(blockEntity.getBlockPos().relative(direction));
-					if(!(state.getBlock() instanceof AntlineBlock))
-					{
-						poseStack.popPose();
-						continue;
-					}
-					Direction otherNormal = state.getValue(AntlineBlock.NORMAL);
+					BlockState state = level.getBlockState(blockEntity.getBlockPos().relative(normal));
+					if(blockEntity.getState(direction) == ConnectionState.SIDE_UP)
+						state = level.getBlockState(blockEntity.getBlockPos().relative(direction).relative(normal));
 
-					if(!blockEntity.getNormal().equals(otherNormal))
+					if(!(state.getBlock() instanceof AntlineBlock))
 					{
 						poseStack.popPose();
 						continue;
@@ -110,29 +109,40 @@ public class AntlineRenderer implements BlockEntityRenderer<AntlineBlockEntity>
 
 				poseStack.translate(3*1.33f*direction.getNormal().getX(), 3*(positive ? -1f : 1f) * 1.33f*direction.getNormal().getZ(), 0);
 
-				if(direction.getAxis().isVertical())
-				{
-					poseStack.pushPose();
-					if(normal.getAxis().equals(Direction.Axis.Z))
-						poseStack.translate(-4f, 4f, 0f);
-					renderDot(bufferSource, poseStack, relayTexture, -1);
-					poseStack.popPose();
-				}
-
-				for(int i = 0; i < (direction.getAxis().isVertical() ? 3 : 4); i++)
+				for(int i = 0; i < 3; i++)
 				{
 					poseStack.translate(1.33f*direction.getNormal().getX(), (positive ? -1f : 1f) * 1.33f*direction.getNormal().getZ(), 0);
+
 					poseStack.pushPose();
 					if(direction.getAxis().isVertical())
 					{
+						boolean dirPos = normal.getAxisDirection().equals(Direction.AxisDirection.POSITIVE);
 						if(normal.getAxis().equals(Direction.Axis.X))
 						{
+							if(direction.equals(Direction.UP))
+							{
+								poseStack.translate(-3.95f, 0f, 4f);
+								poseStack.mulPose(Axis.YP.rotationDegrees(180));
+							}
+							if(direction.equals(Direction.DOWN))
+							{
+								poseStack.translate(-4f, 0f, 0f);
+							}
 							poseStack.translate(0.66f, 0f, 0.66f + i * 1.33f);
 							poseStack.mulPose(Axis.YP.rotationDegrees(-90));
 						}
 						if(normal.getAxis().equals(Direction.Axis.Z))
 						{
-							poseStack.translate(-4f, 4.66f, 0f);
+							if(direction.equals(Direction.UP))
+							{
+								poseStack.translate(0f, dirPos ? -4.05f : 4.05f, 4f);
+								poseStack.mulPose(Axis.XP.rotationDegrees(180));
+							}
+							if(direction.equals(Direction.DOWN))
+							{
+								poseStack.translate(0f, dirPos ? 4f : -4f, 0f);
+							}
+							poseStack.translate(-4f, dirPos ? -4.66f : 4.66f, 0f);
 
 							poseStack.translate(0f, 0f, 0.66f + i * 1.33f);
 							poseStack.mulPose(Axis.XP.rotationDegrees(positive ? -90 : 90));
@@ -143,18 +153,20 @@ public class AntlineRenderer implements BlockEntityRenderer<AntlineBlockEntity>
 					{
 						boolean dirPos = direction.getAxisDirection().equals(Direction.AxisDirection.POSITIVE);
 						poseStack.translate(-1.33f*direction.getNormal().getX(), -(positive ? -1f : 1f) * 1.33f*direction.getNormal().getZ(), 0);
-						if(i > 0)
+
+						if(direction.getAxis().equals(Direction.Axis.X))
 						{
-							if(direction.getAxis().equals(Direction.Axis.X))
-							{
-								poseStack.mulPose(Axis.YP.rotationDegrees(dirPos ? -90 : 90));
-								poseStack.translate(i*(dirPos ? 1.33f : -1.33f)+(dirPos ? -0.66f : 0.66f), 0f, i*1.33f-0.66f);
-							}
-							if(direction.getAxis().equals(Direction.Axis.Z))
-							{
-								poseStack.mulPose(Axis.XP.rotationDegrees(dirPos ? -90 : 90));
-								poseStack.translate(0f, i*(dirPos ? -1.33f : 1.33f)+(dirPos ? 0.66f : -0.66f), i*1.33f-0.66f);
-							}
+							poseStack.translate(dirPos ? -4f : 4f, 0f, 1.33f);
+							poseStack.mulPose(Axis.YP.rotationDegrees(dirPos ? -90 : 90));
+							poseStack.translate(i * (dirPos ? 1.33f : -1.33f) + (dirPos ? -0.66f : 0.66f), 0f,
+									i * 1.33f - 0.66f);
+						}
+						if(direction.getAxis().equals(Direction.Axis.Z))
+						{
+							poseStack.translate(0f, dirPos ? 4f : -4f, 1.33f);
+							poseStack.mulPose(Axis.XP.rotationDegrees(dirPos ? -90 : 90));
+							poseStack.translate(0f, i * (dirPos ? -1.33f : 1.33f) + (dirPos ? 0.66f : -0.66f),
+									i * 1.33f - 0.66f);
 						}
 					}
 

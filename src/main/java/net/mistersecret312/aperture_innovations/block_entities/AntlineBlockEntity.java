@@ -40,6 +40,8 @@ public class AntlineBlockEntity extends BlockEntity
 	public int networkId = 0;
 	private Antline antline = null;
 
+	public int signal = 0;
+
 	public AntlineBlockEntity(BlockPos pos, BlockState blockState)
 	{
 		super(BlockEntityInit.ANTLINE.get(), pos, blockState);
@@ -51,7 +53,7 @@ public class AntlineBlockEntity extends BlockEntity
 		if(getLevel() != null && !getLevel().isClientSide())
 		{
 			PacketDistributor.sendToPlayersTrackingChunk((ServerLevel) getLevel(), new ChunkPos(getBlockPos()),
-					new ClientboundAntlineUpdatePacket(getBlockPos()));
+					new ClientboundAntlineUpdatePacket(getBlockPos(), active));
 		}
 		super.setChanged();
 	}
@@ -200,43 +202,72 @@ public class AntlineBlockEntity extends BlockEntity
 		if(level == null)
 			return;
 
-		for(int i = -1; i <= 1; i++)
+		for(Direction direction : Direction.values())
 		{
-			BlockPos centerPos = getBlockPos().relative(normal, i);
-			for(Direction direction : Direction.values())
+			if(direction.getAxis().equals(normal.getAxis()))
+				continue;
+
+			ConnectionState state;
+			BlockPos relativePos = getBlockPos().relative(direction);
+
+			state = validateBlock(level, relativePos, direction);
+			if(state.equals(ConnectionState.NONE))
 			{
-				ConnectionState state = ConnectionState.NONE;
-				BlockPos relativePos = centerPos.relative(direction);
-				if(direction.getAxis().equals(normal.getAxis()))
-					continue;
-
-				BlockState blockState = level.getBlockState(relativePos);
-				BlockEntity blockEntity = level.getBlockEntity(relativePos);
-
-				if(blockState.is(TagInit.Blocks.CONNECTS_TO_ANTLINE))
-					state = ConnectionState.LINK;
-
-				if(blockState.canRedstoneConnectTo(level, relativePos, direction.getOpposite()))
-					state = ConnectionState.LINK;
-
-				if(blockEntity instanceof AntlineBlockEntity antline)
-				{
-					if(antline.color != this.color || antline.activeColor != this.activeColor)
-						continue;
-					state = ConnectionState.SIDE;
-
-					if(i == -1)
-						state = ConnectionState.DOWN;
-					if(i == 1)
-						state = ConnectionState.UP;
-				}
-
+				state = validateBlock(level, relativePos.relative(normal.getOpposite()), direction);
 				if(state.equals(ConnectionState.NONE))
-					continue;
+				{
+					state = validateBlock(level, relativePos.relative(normal), direction);
 
-				this.setState(direction, state);
+					if(!state.equals(ConnectionState.NONE) &&
+							   level.getBlockEntity(relativePos.relative(normal)) instanceof AntlineBlockEntity antlineBlockEntity)
+					{
+						if(antlineBlockEntity.getNormal().equals(this.getNormal()))
+						{
+							this.setState(direction, ConnectionState.SIDE_UP);
+							continue;
+						}
+						else continue;
+					}
+
+					if(state.equals(ConnectionState.NONE))
+					{
+						if(level.getBlockEntity(getBlockPos().relative(normal)) instanceof AntlineBlockEntity antlineBlockEntity)
+						{
+							if(antlineBlockEntity.getNormal().getOpposite().equals(direction))
+							{
+								state = validateBlock(level, getBlockPos().relative(normal), direction);
+								if(!state.equals(ConnectionState.NONE))
+									state = ConnectionState.UP;
+							}
+						}
+					}
+				}
 			}
+
+			this.setState(direction, state);
 		}
+	}
+
+	public ConnectionState validateBlock(Level level, BlockPos relativePos, Direction direction)
+	{
+		BlockState blockState = level.getBlockState(relativePos);
+		BlockEntity blockEntity = level.getBlockEntity(relativePos);
+
+		if(blockEntity instanceof AntlineBlockEntity antline)
+		{
+			if(antline.color != this.color || antline.activeColor != this.activeColor)
+				return ConnectionState.NONE;
+
+			return ConnectionState.SIDE;
+		}
+
+		if(blockState.is(TagInit.Blocks.CONNECTS_TO_ANTLINE))
+			return ConnectionState.LINK;
+
+		if(blockState.canRedstoneConnectTo(level, relativePos, direction.getOpposite()))
+			return ConnectionState.LINK;
+
+		return ConnectionState.NONE;
 	}
 
 	public void trimConnections()
@@ -246,6 +277,9 @@ public class AntlineBlockEntity extends BlockEntity
 		Direction normal = getNormal();
 
 		if(level == null)
+			return;
+
+		if(true)
 			return;
 
 		for(Direction direction : Direction.values())

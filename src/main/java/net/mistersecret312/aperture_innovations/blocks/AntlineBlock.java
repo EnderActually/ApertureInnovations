@@ -45,6 +45,13 @@ public class AntlineBlock extends BaseEntityBlock
 	{
 		super.neighborChanged(state, level, pos, neighborBlock, neighborPos, movedByPiston);
 		updateAntline(level, pos);
+
+		if(level.hasNeighborSignal(pos))
+		{
+			int signal = level.getBestNeighborSignal(pos);
+			toggleAntline(level, pos, signal, true);
+		}
+		else toggleAntline(level, pos, 0, false);
 	}
 
 	@Override
@@ -83,6 +90,14 @@ public class AntlineBlock extends BaseEntityBlock
 				antline.updateConnections();
 				antline.trimConnections();
 			}
+		}
+	}
+
+	public void toggleAntline(Level level, BlockPos pos, int signal, boolean activate)
+	{
+		if(!level.isClientSide())
+		{
+			AntlineData.get(level).toggle(level, pos, signal, activate);
 		}
 	}
 

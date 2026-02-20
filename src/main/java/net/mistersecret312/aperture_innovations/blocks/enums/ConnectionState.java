@@ -5,6 +5,8 @@ public enum ConnectionState
 		NONE("none"),
 		LINK("link"),
 		SIDE("side"),
+		SIDE_UP("side_up"),
+		SIDE_DOWN("side_down"),
 		UP("up"),
 		DOWN("down");
 
@@ -20,6 +22,8 @@ public enum ConnectionState
 			{
 				case "link" -> LINK;
 				case "side" -> SIDE;
+				case "side_up" -> SIDE_UP;
+				case "side_down" -> SIDE_DOWN;
 				case "up" -> UP;
 				case "down" -> DOWN;
 

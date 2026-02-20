@@ -119,6 +119,39 @@ public class AntlineData extends SavedData
 		this.setDirty();
 	}
 
+	public void toggle(Level level, BlockPos pos, int signal, boolean active)
+	{
+		BlockEntity blockEntity = level.getBlockEntity(pos);
+		if(blockEntity instanceof AntlineBlockEntity antline)
+		{
+			Antline line = this.getLine(antline.getNetworkID());
+			for(BlockPos piecePos : line.antlineBlocks)
+			{
+				BlockEntity pieceEntity = level.getBlockEntity(piecePos);
+				if(pieceEntity instanceof AntlineBlockEntity pieceAntline)
+				{
+					pieceAntline.active = active;
+					pieceAntline.signal = signal;
+
+					pieceAntline.setChanged();
+				}
+			}
+
+			for(BlockPos outputPos : line.links)
+			{
+				BlockEntity outputEntity = level.getBlockEntity(outputPos);
+				if(outputEntity instanceof AntlineBlockEntity outputAntline)
+				{
+					outputAntline.active = active;
+					outputAntline.signal = signal;
+					outputAntline.outputting = active;
+
+					outputAntline.setChanged();
+				}
+			}
+		}
+	}
+
 	public static List<AntlineBlockEntity> findConnectedParts(Level level, BlockPos startPos)
 	{
 		List<AntlineBlockEntity> antlines = new ArrayList<>();
