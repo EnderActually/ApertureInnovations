@@ -16,6 +16,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.mistersecret312.aperture_innovations.block_entities.AntlineBlockEntity;
+import net.mistersecret312.aperture_innovations.blocks.enums.ConnectionState;
 import net.mistersecret312.aperture_innovations.data.AntlineData;
 import net.mistersecret312.aperture_innovations.init.BlockEntityInit;
 import org.jetbrains.annotations.Nullable;
@@ -43,15 +44,9 @@ public class AntlineBlock extends BaseEntityBlock
 	protected void neighborChanged(BlockState state, Level level, BlockPos pos, Block neighborBlock,
 								   BlockPos neighborPos, boolean movedByPiston)
 	{
+		toggleAntline(level, pos, 0, false);
 		super.neighborChanged(state, level, pos, neighborBlock, neighborPos, movedByPiston);
 		updateAntline(level, pos);
-
-		if(level.hasNeighborSignal(pos))
-		{
-			int signal = level.getBestNeighborSignal(pos);
-			toggleAntline(level, pos, signal, true);
-		}
-		else toggleAntline(level, pos, 0, false);
 	}
 
 	@Override
@@ -99,6 +94,25 @@ public class AntlineBlock extends BaseEntityBlock
 		{
 			AntlineData.get(level).toggle(level, pos, signal, activate);
 		}
+	}
+
+
+	@Override
+	protected int getSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction)
+	{
+		BlockEntity blockEntity = level.getBlockEntity(pos);
+		if(blockEntity.getLevel() != null && blockEntity instanceof AntlineBlockEntity antline)
+		{
+			if(antline.active && antline.outputting)
+			{
+				if(antline.getState(direction.getOpposite()).equals(ConnectionState.LINK))
+				{
+					return antline.signal;
+				}
+
+			}
+		}
+		return 0;
 	}
 
 	@Override

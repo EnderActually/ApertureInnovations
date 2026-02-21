@@ -16,6 +16,7 @@ import net.mistersecret312.aperture_innovations.block_entities.AntlineBlockEntit
 import net.mistersecret312.aperture_innovations.blocks.AntlineBlock;
 import net.mistersecret312.aperture_innovations.blocks.enums.ConnectionState;
 import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
+import net.mistersecret312.aperture_innovations.utilities.ClientAntlineUtilities;
 
 import java.util.stream.Collectors;
 
@@ -30,7 +31,7 @@ public class AntlineRenderer implements BlockEntityRenderer<AntlineBlockEntity>
 	public void render(AntlineBlockEntity blockEntity, float partialTick, PoseStack poseStack,
 						   MultiBufferSource bufferSource, int packedLight, int packedOverlay)
 	{
-		String activity = blockEntity.active ? "active" : "inactive";
+		String activity = ClientAntlineUtilities.isActive(blockEntity.getNetworkID()) ? "active" : "inactive";
 		ResourceLocation relayTexture = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "textures/antline/antline_relay_"+ activity +".png");
 		ResourceLocation connectionTexture = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "textures/antline/antline_connection_"+ activity + ".png");
 		poseStack.pushPose();

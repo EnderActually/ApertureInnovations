@@ -11,6 +11,7 @@ import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.storage.DimensionDataStorage;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.block_entities.AntlineBlockEntity;
+import net.mistersecret312.aperture_innovations.blocks.AntlineBlock;
 import net.mistersecret312.aperture_innovations.blocks.enums.ConnectionState;
 import net.mistersecret312.aperture_innovations.data.antline.Antline;
 
@@ -125,26 +126,35 @@ public class AntlineData extends SavedData
 		if(blockEntity instanceof AntlineBlockEntity antline)
 		{
 			Antline line = this.getLine(antline.getNetworkID());
-			for(BlockPos piecePos : line.antlineBlocks)
+			boolean shouldActive = false;
+			BlockPos input = null;
+			for(BlockPos link : line.links)
 			{
-				BlockEntity pieceEntity = level.getBlockEntity(piecePos);
-				if(pieceEntity instanceof AntlineBlockEntity pieceAntline)
-				{
-					pieceAntline.active = active;
-					pieceAntline.signal = signal;
+				if(level.getBlockEntity(link) instanceof AntlineBlockEntity linkBE)
+					if(linkBE.outputting)
+						continue;
 
-					pieceAntline.setChanged();
+				if(!shouldActive)
+				{
+					shouldActive = level.getBestNeighborSignal(link) != 0;
+					signal = level.getBestNeighborSignal(link);
+					input = link;
 				}
 			}
 
-			for(BlockPos outputPos : line.links)
+
+			active = shouldActive;
+			for(BlockPos outputPos : line.antlineBlocks)
 			{
 				BlockEntity outputEntity = level.getBlockEntity(outputPos);
 				if(outputEntity instanceof AntlineBlockEntity outputAntline)
 				{
-					outputAntline.active = active;
+					outputAntline.active = shouldActive;
 					outputAntline.signal = signal;
-					outputAntline.outputting = active;
+					if(line.links.contains(outputPos))
+						outputAntline.outputting = true;
+					if(outputPos.equals(input))
+						outputAntline.outputting = false;
 
 					outputAntline.setChanged();
 				}

@@ -79,6 +79,8 @@ public class AntlineBlockEntity extends BlockEntity
 		tag.putInt("active_color", this.activeColor);
 
 		tag.putBoolean("active", this.active);
+		tag.putBoolean("outputting", this.outputting);
+		tag.putInt("signal", this.signal);
 
 		tag.putString("north", this.north.name);
 		tag.putString("south", this.south.name);
@@ -101,6 +103,8 @@ public class AntlineBlockEntity extends BlockEntity
 		this.activeColor = tag.getInt("active_color");
 
 		this.active = tag.getBoolean("active");
+		this.outputting = tag.getBoolean("outputting");
+		this.signal = tag.getInt("signal");
 
 		this.north = ConnectionState.fromString(tag.getString("north"));
 		this.south = ConnectionState.fromString(tag.getString("south"));

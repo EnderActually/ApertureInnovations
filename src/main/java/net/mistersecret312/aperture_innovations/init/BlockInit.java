@@ -35,7 +35,10 @@ public class BlockInit
             () -> new VerticalOneByTwoBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CONCRETE).mapColor(MapColor.TERRACOTTA_WHITE)));
 
     public static final DeferredBlock<Block> ANTLINE = registerBlock("antline",
-            () -> new AntlineBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.REDSTONE_WIRE)));
+            () -> new AntlineBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.REDSTONE_WIRE).isRedstoneConductor(
+                    (state, getter, pos) -> {
+						return true;
+					})));
 
     private static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block)
     {

@@ -12,6 +12,7 @@ import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
 import net.mistersecret312.aperture_innovations.client.renderer.PortalRenderer;
 import net.mistersecret312.aperture_innovations.init.AttachmentTypeInit;
 import net.mistersecret312.aperture_innovations.data.portal.ClientPortalLink;
+import net.mistersecret312.aperture_innovations.utilities.ClientAntlineUtilities;
 import net.mistersecret312.aperture_innovations.utilities.ClientPortalUtilities;
 import net.mistersecret312.aperture_innovations.data.portal.Portal;
 import net.mistersecret312.aperture_innovations.utilities.PortalUtilities;
@@ -68,6 +69,9 @@ public class ClientPacketHandler
 				antlineBlockEntity.updateConnections();
 				antlineBlockEntity.trimConnections();
 				antlineBlockEntity.active = active;
+
+				ClientAntlineUtilities.setActive(antlineBlockEntity.getNetworkID(), active);
+
 				antlineBlockEntity.setChanged();
 			}
 		}
