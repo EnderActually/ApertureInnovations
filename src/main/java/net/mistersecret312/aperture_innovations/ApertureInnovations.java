@@ -6,18 +6,11 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.item.ItemProperties;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
 import net.minecraft.util.FastColor;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.mistersecret312.aperture_innovations.client.Layers;
 import net.mistersecret312.aperture_innovations.client.overlay.CrosshairOverlay;
-import net.mistersecret312.aperture_innovations.client.renderer.AntlineOutputRenderer;
-import net.mistersecret312.aperture_innovations.client.renderer.AntlineRenderer;
-import net.mistersecret312.aperture_innovations.client.renderer.LongFallBootsRenderProperties;
-import net.mistersecret312.aperture_innovations.client.renderer.PortalGunRenderProperties;
+import net.mistersecret312.aperture_innovations.client.renderer.*;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ResourcePackReloadListener;
 import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
 import net.mistersecret312.aperture_innovations.init.*;
@@ -66,6 +59,7 @@ public class ApertureInnovations
 		ItemInit.register(modEventBus);
 		BlockInit.register(modEventBus);
 		BlockEntityInit.register(modEventBus);
+		EntityInit.register(modEventBus);
 		ItemTabInit.register(modEventBus);
 		SoundInit.register(modEventBus);
 		StatisticsInit.register(modEventBus);
@@ -107,14 +101,18 @@ public class ApertureInnovations
 		public static final Lazy<KeyMapping> RESET_PORTAL_GUN = Lazy.of(() -> new KeyMapping("aperture_innovations.portal_gun.reset",
 				KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.category.aperture_innovations"));
 
+		public static final Lazy<KeyMapping> PICK_UP = Lazy.of(() -> new KeyMapping("aperture_innovations.portal_gun.pick_up",
+				KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_F, "key.category.aperture_innovations"));
+
+
 		@SubscribeEvent
 		public static void onClientSetup(FMLClientSetupEvent event)
 		{
-			event.enqueueWork(()
-									  -> {
+			event.enqueueWork(
+					() -> {
 					ItemProperties.register(ItemInit.COLORFUL_GEL.get(),
 							ResourceLocation.fromNamespaceAndPath(MODID, "colored"), new ColorfulGelItemProperty());
-				});
+					});
 		}
 
 		@SubscribeEvent
@@ -122,6 +120,9 @@ public class ApertureInnovations
 		{
 			event.registerBlockEntityRenderer(BlockEntityInit.ANTLINE.get(), AntlineRenderer::new);
 			event.registerBlockEntityRenderer(BlockEntityInit.CHECKMARK.get(), AntlineOutputRenderer::new);
+			event.registerBlockEntityRenderer(BlockEntityInit.PEDESTAL_BUTTON.get(), PedestalButtonRenderer::new);
+
+			event.registerEntityRenderer(EntityInit.WEIGHTED_STORAGE_CUBE.get(), WeightedStorageCubeRenderer::new);
 		}
 
 		@SubscribeEvent
@@ -157,6 +158,7 @@ public class ApertureInnovations
 		public static void registerKeybindings(RegisterKeyMappingsEvent event)
 		{
 			event.register(RESET_PORTAL_GUN.get());
+			event.register(PICK_UP.get());
 		}
 
 		@SubscribeEvent

@@ -20,6 +20,7 @@ import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.network.ServerboundOpenPortalPacket;
+import net.mistersecret312.aperture_innovations.network.ServerboundPickUpEntityPacket;
 import net.mistersecret312.aperture_innovations.network.ServerboundResetPortalLinkPacket;
 import net.mistersecret312.aperture_innovations.data.portal.ClientPortalLink;
 import net.mistersecret312.aperture_innovations.utilities.ClientPortalUtilities;
@@ -187,6 +188,9 @@ public class ClientEvents
 
 		while(ApertureInnovations.ClientModEvents.RESET_PORTAL_GUN.get().consumeClick())
 			PacketDistributor.sendToServer(new ServerboundResetPortalLinkPacket());
+
+		while(ApertureInnovations.ClientModEvents.PICK_UP.get().consumeClick())
+			PacketDistributor.sendToServer(new ServerboundPickUpEntityPacket());
 	}
 
 }

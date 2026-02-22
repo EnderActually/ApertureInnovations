@@ -10,6 +10,7 @@
   "block.aperture_innovations.metal_surface_2x2_block": "Metal Surface 2x2 Block",
 
   "block.aperture_innovations.antline": "Antline",
+  "block.aperture_innovations.antline_checkmark": "Antline Checkmark",
 
   "item.aperture_innovations.portal_gun": "Aperture Science Handheld Portal Device",
   "item.aperture_innovations.portal_gun.duality_primary": "Single Portal - Primary",
@@ -30,6 +31,8 @@
 
   "item.aperture_innovations.long_fall_boots": "Long Fall Boots",
   "item.aperture_innovations.long_fall_boots.energy": "Energy: ",
+
+  "item.aperture_innovations.weighted_storage_cube": "Weighted Storage Cube",
 
   "aperture_innovations.portal_gun.variant_chell": "Chell Variant",
   "aperture_innovations.portal_gun.variant_pbody": "P-Body Variant",
@@ -73,6 +76,10 @@
   "advancements.aperture_innovations.aperture.lunacy.description": "Shoot a portal to the moon, and go through it",
 
   "stat.aperture_innovations.times_used_portals": "Times travelled by Portal",
+
+  "entity.aperture_innovations.weighted_storage_cube": "Weighted Storage Cube",
+
+  "container.aperture_innovations.weighted_storage_cube": "Weighted Storage Cube",
 
   "aperture_innovations.configuration.portal_gun": "Portal Gun",
   "aperture_innovations.configuration.portalable_tag": "Use Portalable Tag",

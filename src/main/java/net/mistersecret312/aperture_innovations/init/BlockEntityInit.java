@@ -5,9 +5,9 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.block_entities.AntlineBlockEntity;
 import net.mistersecret312.aperture_innovations.block_entities.AntlineOutputBlockEntity;
+import net.mistersecret312.aperture_innovations.block_entities.PedestalButtonBlockEntity;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 import java.util.function.Supplier;
 
@@ -23,6 +23,10 @@ public class BlockEntityInit
 	public static final Supplier<BlockEntityType<AntlineOutputBlockEntity>> CHECKMARK =
 			BLOCK_ENTITIES.register("antline_checkmark",
 					() -> BlockEntityType.Builder.of(AntlineOutputBlockEntity::new, BlockInit.CHECKMARK.get()).build(null));
+
+	public static final Supplier<BlockEntityType<PedestalButtonBlockEntity>> PEDESTAL_BUTTON =
+			BLOCK_ENTITIES.register("pedestal_button",
+					() -> BlockEntityType.Builder.of(PedestalButtonBlockEntity::new, BlockInit.PEDESTAL_BUTTON.get()).build(null));
 
 	public static void register(IEventBus bus)
 	{

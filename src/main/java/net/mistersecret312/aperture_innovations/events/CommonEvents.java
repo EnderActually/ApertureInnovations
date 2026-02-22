@@ -29,6 +29,7 @@ import net.mistersecret312.aperture_innovations.block_entities.AntlineOutputBloc
 import net.mistersecret312.aperture_innovations.blocks.AntlineOutputBlock;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
+import net.mistersecret312.aperture_innovations.capabilities.HoldEntityCapability;
 import net.mistersecret312.aperture_innovations.config.LongFallBootsConfig;
 import net.mistersecret312.aperture_innovations.init.*;
 import net.mistersecret312.aperture_innovations.items.LongFallBootsItem;
@@ -260,6 +261,8 @@ public class CommonEvents
 
 		ApertureCapability aperture = entity.getData(AttachmentTypeInit.APERTURE.get());
 		aperture.tick(level, entity);
+		HoldEntityCapability holdEntity = entity.getData(AttachmentTypeInit.HOLD_ENTITY.get());
+		holdEntity.tick(level, entity);
 	}
 
 	@SubscribeEvent

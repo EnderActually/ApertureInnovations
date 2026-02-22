@@ -342,6 +342,19 @@ public class PortalGunItem extends Item implements GeoItem
 		stack.set(DataComponentInit.PAIR_ID, pairID.toString());
 	}
 
+	@Nullable
+	public Integer getHeldEntity(ItemStack stack)
+	{
+		return stack.get(DataComponentInit.HELD_ENTITY);
+	}
+
+	public void setHeldEntity(ItemStack stack, Entity entity)
+	{
+		if(entity == null)
+			stack.remove(DataComponentInit.HELD_ENTITY);
+		else stack.set(DataComponentInit.HELD_ENTITY, entity.getId());
+	}
+
 	public int getDualityState(ItemStack stack)
 	{
 		return stack.getOrDefault(DataComponentInit.DUALITY_STATE, 2);

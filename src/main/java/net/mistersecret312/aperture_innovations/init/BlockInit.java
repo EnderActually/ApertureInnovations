@@ -9,6 +9,7 @@ import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.minecraft.world.level.block.Block;
 import net.mistersecret312.aperture_innovations.blocks.AntlineBlock;
 import net.mistersecret312.aperture_innovations.blocks.AntlineOutputBlock;
+import net.mistersecret312.aperture_innovations.blocks.PedestalButtonBlock;
 import net.mistersecret312.aperture_innovations.blocks.VerticalOneByTwoBlock;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
@@ -41,6 +42,9 @@ public class BlockInit
 
     public static final DeferredBlock<Block> CHECKMARK = registerBlock("antline_checkmark",
             () -> new AntlineOutputBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.REDSTONE_WIRE)));
+
+    public static final DeferredBlock<Block> PEDESTAL_BUTTON = registerBlock("pedestal_button",
+            () -> new PedestalButtonBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
 
     private static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block)
     {

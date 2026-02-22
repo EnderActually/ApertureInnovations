@@ -26,6 +26,12 @@ public class NetworkInit
 				ServerboundResetPortalLinkPacket::handle
 		);
 
+		registrar.playToServer(
+				ServerboundPickUpEntityPacket.TYPE,
+				ServerboundPickUpEntityPacket.STREAM_CODEC,
+				ServerboundPickUpEntityPacket::handle
+		);
+
 		//Client
 
 		registrar.playToClient(

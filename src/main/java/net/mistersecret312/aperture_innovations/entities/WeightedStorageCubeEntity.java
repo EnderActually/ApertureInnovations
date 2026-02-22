@@ -1,0 +1,205 @@
+package net.mistersecret312.aperture_innovations.entities;
+
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.*;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.ChestMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
+import net.mistersecret312.aperture_innovations.init.AttachmentTypeInit;
+import net.mistersecret312.aperture_innovations.init.EntityInit;
+import net.mistersecret312.aperture_innovations.init.ItemInit;
+import net.mistersecret312.aperture_innovations.init.SoundInit;
+import net.mistersecret312.aperture_innovations.items.ColorfulGelItem;
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.util.GeckoLibUtil;
+
+public class WeightedStorageCubeEntity extends Entity implements GeoEntity
+{
+	private static final EntityDataAccessor<Boolean> ACTIVE = SynchedEntityData.defineId(WeightedStorageCubeEntity.class, EntityDataSerializers.BOOLEAN);
+	private static final EntityDataAccessor<Integer> COLOR = SynchedEntityData.defineId(WeightedStorageCubeEntity.class, EntityDataSerializers.INT);
+	private static final EntityDataAccessor<Integer> ACTIVE_COLOR = SynchedEntityData.defineId(
+			WeightedStorageCubeEntity.class, EntityDataSerializers.INT);
+
+	private SimpleContainer container = new SimpleContainer(27);
+
+	private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
+
+	public WeightedStorageCubeEntity(EntityType<?> type, Level level)
+	{
+		super(type, level);
+	}
+
+	public WeightedStorageCubeEntity(Level level)
+	{
+		super(EntityInit.WEIGHTED_STORAGE_CUBE.get(), level);
+	}
+
+	@Override
+	public void tick()
+	{
+		super.tick();
+
+		if(!isNoGravity())
+		{
+			this.addDeltaMovement(new Vec3(0f, -0.08f, 0f));
+		}
+
+		float friction = 0.85f;
+		if(this.getData(AttachmentTypeInit.APERTURE.get()).frictionlessTime > 0)
+			friction = 1f;
+
+		this.setDeltaMovement(this.getDeltaMovement().multiply(friction, 1f, friction));
+		this.move(MoverType.SELF, this.getDeltaMovement());
+	}
+
+	@Override
+	public boolean causeFallDamage(float fallDistance, float multiplier, DamageSource source)
+	{
+		Level level = this.level();
+		if(!level.isClientSide())
+			level.playSound(null, blockPosition(), SoundInit.CUBE_IMPACT.get(), SoundSource.NEUTRAL);
+		return false;
+	}
+
+	@Override
+	public boolean canBeCollidedWith()
+	{
+		return true;
+	}
+
+	@Override
+	public boolean isPickable()
+	{
+		return true;
+	}
+
+	@Override
+	public boolean isPushable()
+	{
+		return true;
+	}
+
+	@Override
+	public boolean hurt(DamageSource source, float amount)
+	{
+		return false;
+	}
+
+	@Override
+	public boolean skipAttackInteraction(Entity entity)
+	{
+		return true;
+	}
+
+	@Override
+	public InteractionResult interact(Player player, InteractionHand hand)
+	{
+		Level level = player.level();
+		ItemStack stack = player.getItemInHand(hand);
+
+		if(stack.isEmpty() && !player.isCrouching())
+		{
+			player.openMenu(new SimpleMenuProvider(
+					(id, playerInv, playerEntity) -> ChestMenu.threeRows(id, playerInv, this.container),
+					Component.translatable("container.aperture_innovations.weighted_storage_cube")
+			));
+			return InteractionResult.SUCCESS;
+		}
+		if(stack.isEmpty() && player.isCrouching())
+		{
+			this.discard();
+			ItemEntity item = new ItemEntity(player.level(), this.getX(), this.getY(), this.getZ(),
+					ItemInit.WEIGHTED_STORAGE_CUBE.get().getDefaultInstance());
+			level.addFreshEntity(item);
+			return InteractionResult.SUCCESS;
+		}
+		if(stack.getItem() instanceof ColorfulGelItem gelItem)
+		{
+			int color = gelItem.getColor(stack);
+			setColor(color);
+
+			return InteractionResult.SUCCESS;
+		}
+
+		return InteractionResult.CONSUME;
+	}
+
+	public int getColor()
+	{
+		return this.entityData.get(COLOR);
+	}
+
+	public int getActiveColor()
+	{
+		return this.entityData.get(ACTIVE_COLOR);
+	}
+
+	public boolean isActive()
+	{
+		return this.entityData.get(ACTIVE);
+	}
+
+	public void setActive(boolean active)
+	{
+		this.entityData.set(ACTIVE, active);
+	}
+
+	public void setColor(int color)
+	{
+		this.entityData.set(COLOR, color);
+	}
+
+	public void setActiveColor(int color)
+	{
+		this.entityData.set(ACTIVE_COLOR, color);
+	}
+
+	@Override
+	protected void defineSynchedData(SynchedEntityData.Builder builder)
+	{
+		builder.define(ACTIVE, false);
+		builder.define(COLOR, -1);
+		builder.define(ACTIVE_COLOR, -1);
+	}
+
+	@Override
+	protected void readAdditionalSaveData(CompoundTag compound)
+	{
+		if (compound.contains("Inventory")) {
+			this.container.fromTag(compound.getList("Inventory", Tag.TAG_COMPOUND), this.registryAccess());
+		}
+	}
+
+	@Override
+	protected void addAdditionalSaveData(CompoundTag compound)
+	{
+		compound.put("Inventory", this.container.createTag(this.registryAccess()));
+	}
+
+	@Override
+	public void registerControllers(AnimatableManager.ControllerRegistrar controllers)
+	{
+
+	}
+
+	@Override
+	public AnimatableInstanceCache getAnimatableInstanceCache()
+	{
+		return this.geoCache;
+	}
+}

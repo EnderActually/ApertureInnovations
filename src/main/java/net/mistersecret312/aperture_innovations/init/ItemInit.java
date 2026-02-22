@@ -6,6 +6,7 @@ import net.minecraft.world.item.ArmorMaterials;
 import net.minecraft.world.item.Item;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.items.ColorfulGelItem;
+import net.mistersecret312.aperture_innovations.items.CubeItem;
 import net.mistersecret312.aperture_innovations.items.LongFallBootsItem;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.neoforged.bus.api.IEventBus;
@@ -23,6 +24,9 @@ public class ItemInit
 
 	public static final DeferredItem<LongFallBootsItem> LONG_FALL_BOOTS = ITEMS.register("long_fall_boots",
 			() -> new LongFallBootsItem(ArmorMaterials.NETHERITE, ArmorItem.Type.BOOTS, new Item.Properties().stacksTo(1).fireResistant()));
+
+	public static final DeferredItem<CubeItem> WEIGHTED_STORAGE_CUBE = ITEMS.register("weighted_storage_cube",
+			() -> new CubeItem(EntityInit.WEIGHTED_STORAGE_CUBE.get(), new Item.Properties().stacksTo(64)));
 
 	public static void register(IEventBus bus)
 	{

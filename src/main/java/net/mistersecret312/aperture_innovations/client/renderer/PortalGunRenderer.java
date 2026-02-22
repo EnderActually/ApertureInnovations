@@ -24,6 +24,7 @@ import net.mistersecret312.aperture_innovations.utilities.PortalUtilities;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import software.bernie.geckolib.cache.object.GeoBone;
+import software.bernie.geckolib.cache.object.GeoQuad;
 import software.bernie.geckolib.model.DefaultedItemGeoModel;
 import software.bernie.geckolib.renderer.specialty.DynamicGeoItemRenderer;
 import software.bernie.geckolib.util.RenderUtil;
@@ -138,6 +139,11 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem> {
                 return ClientPortalUtilities.getPortalGunCoreTexture(link, portal);
             else return ClientPortalUtilities.getPortalGunTexture(link);
         }
+        if(bone.getName().equals("Zap"))
+        {
+            return ApertureInnovations.of("textures/item/portal_gun_zap.png");
+        }
+
         return ApertureInnovations.of( "textures/item/portal_gun.png");
     }
 
@@ -178,7 +184,7 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem> {
             super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, colour);
 
         if (renderTypeOverride != null)
-            buffer = bufferSource.getBuffer(renderTypeOverride);
+            buffer = bufferSource.getBuffer(renderType);
 
         if (!isReRender)
             applyRenderLayersForBone(poseStack, animatable, bone, renderTypeOverride, bufferSource, buffer, partialTick, packedLight, packedOverlay);
@@ -200,7 +206,7 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem> {
         RenderSystem.defaultBlendFunc();
     });
     private static final RenderStateShard.WriteMaskStateShard WRITE_MASK = new RenderStateShard.WriteMaskStateShard(true, true);
-    private static final BiFunction<ResourceLocation, Boolean, RenderType> GLOWING_RENDER_TYPE = Util.memoize((texture, isGlowing) -> {
+    public static final BiFunction<ResourceLocation, Boolean, RenderType> GLOWING_RENDER_TYPE = Util.memoize((texture, isGlowing) -> {
         RenderStateShard.TextureStateShard textureState = new RenderStateShard.TextureStateShard(texture, false, false);
 
         return RenderType.create("geo_glowing_layer", DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 256, false, true,

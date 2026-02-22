@@ -32,7 +32,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class AntlineOutputBlock extends BaseEntityBlock
 {
-	public static final MapCodec<AntlineBlock> CODEC = simpleCodec(AntlineBlock::new);
+	public static final MapCodec<AntlineOutputBlock> CODEC = simpleCodec(AntlineOutputBlock::new);
 
 	public static final DirectionProperty NORMAL = DirectionProperty.create("normal");
 	public static final DirectionProperty FACING = DirectionProperty.create("facing");

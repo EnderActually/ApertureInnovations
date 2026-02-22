@@ -43,6 +43,10 @@ public class DataComponentInit
 	public static final DeferredHolder<DataComponentType<?>, DataComponentType<ResourceLocation>> PORTAL_GUN_VARIANT = register("portal_gun_variant", builder -> builder.persistent(
 			ResourceLocation.CODEC));
 
+	public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> HELD_ENTITY = register("held_entity", builder -> builder.persistent(
+			Codec.INT
+	));
+
 	private static <T>DeferredHolder<DataComponentType<?>, DataComponentType<T>> register(String name, UnaryOperator<DataComponentType.Builder<T>> builderOperator)
 	{
 		return DATA_COMPONENTS.register(name, () -> builderOperator.apply(DataComponentType.builder()).build());

@@ -6,6 +6,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
+import net.mistersecret312.aperture_innovations.capabilities.HoldEntityCapability;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.attachment.IAttachmentHolder;
@@ -36,6 +37,29 @@ public class AttachmentTypeInit
 											@Override
 											public @Nullable CompoundTag write(ApertureCapability attachment,
 																	   HolderLookup.Provider provider)
+											{
+												return attachment.serializeNBT(provider);
+											}
+										})
+										.copyOnDeath()
+										.build());
+
+	public static final DeferredHolder<AttachmentType<?>, AttachmentType<HoldEntityCapability>> HOLD_ENTITY =
+			ATTACHMENT_TYPES.register("hold_entity",
+					() -> AttachmentType.builder(HoldEntityCapability::new)
+										.serialize(new IAttachmentSerializer<CompoundTag, HoldEntityCapability>() {
+											@Override
+											public HoldEntityCapability read(IAttachmentHolder holder, CompoundTag tag,
+																		   HolderLookup.Provider provider)
+											{
+												HoldEntityCapability capability = new HoldEntityCapability();
+												capability.deserializeNBT(provider, tag);
+												return capability;
+											}
+
+											@Override
+											public @Nullable CompoundTag write(HoldEntityCapability attachment,
+																			   HolderLookup.Provider provider)
 											{
 												return attachment.serializeNBT(provider);
 											}
