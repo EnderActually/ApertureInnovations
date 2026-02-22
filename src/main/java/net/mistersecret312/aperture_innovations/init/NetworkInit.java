@@ -104,5 +104,11 @@ public class NetworkInit
 				ClientboundAntlineUpdatePacket.STREAM_CODEC,
 				ClientboundAntlineUpdatePacket::handle
 		);
+
+		registrar.playToClient(
+				ClientboundAntlineOutputUpdatePacket.TYPE,
+				ClientboundAntlineOutputUpdatePacket.STREAM_CODEC,
+				ClientboundAntlineOutputUpdatePacket::handle
+		);
 	}
 }

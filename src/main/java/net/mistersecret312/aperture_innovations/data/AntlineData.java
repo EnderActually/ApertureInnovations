@@ -7,6 +7,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.storage.DimensionDataStorage;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
@@ -108,6 +109,7 @@ public class AntlineData extends SavedData
 					antline.links.add(antlineBlockEntity.getBlockPos());
 
 				antline.antlineBlocks.add(antlineBlockEntity.getBlockPos());
+				antlineBlockEntity.outputting = false;
 				antlineBlockEntity.updateConnections();
 				antlineBlockEntity.trimConnections();
 				antlineBlockEntity.setNetworkID(id);
@@ -120,14 +122,13 @@ public class AntlineData extends SavedData
 		this.setDirty();
 	}
 
-	public void toggle(Level level, BlockPos pos, int signal, boolean active)
+	public void toggle(Level level, BlockPos pos, int signal)
 	{
 		BlockEntity blockEntity = level.getBlockEntity(pos);
 		if(blockEntity instanceof AntlineBlockEntity antline)
 		{
 			Antline line = this.getLine(antline.getNetworkID());
 			boolean shouldActive = false;
-			BlockPos input = null;
 			for(BlockPos link : line.links)
 			{
 				if(level.getBlockEntity(link) instanceof AntlineBlockEntity linkBE)
@@ -138,12 +139,10 @@ public class AntlineData extends SavedData
 				{
 					shouldActive = level.getBestNeighborSignal(link) != 0;
 					signal = level.getBestNeighborSignal(link);
-					input = link;
 				}
 			}
 
 
-			active = shouldActive;
 			for(BlockPos outputPos : line.antlineBlocks)
 			{
 				BlockEntity outputEntity = level.getBlockEntity(outputPos);
@@ -151,12 +150,23 @@ public class AntlineData extends SavedData
 				{
 					outputAntline.active = shouldActive;
 					outputAntline.signal = signal;
-					if(line.links.contains(outputPos))
-						outputAntline.outputting = true;
-					if(outputPos.equals(input))
-						outputAntline.outputting = false;
+//					if(line.links.contains(outputPos))
+//						outputAntline.outputting = true;
+//					if(outputPos.equals(input))
+//						outputAntline.outputting = false;
 
 					outputAntline.setChanged();
+					for(Direction connectedSide : outputAntline.getConnectedSides())
+					{
+						ConnectionState state = outputAntline.getState(connectedSide);
+						if(state.equals(ConnectionState.LINK))
+						{
+							BlockPos otherPos = outputAntline.getBlockPos().relative(connectedSide);
+							BlockState otherState = level.getBlockState(otherPos);
+
+							level.neighborChanged(otherState, otherPos, otherState.getBlock(), outputAntline.getBlockPos(), false);
+						}
+					}
 				}
 			}
 		}

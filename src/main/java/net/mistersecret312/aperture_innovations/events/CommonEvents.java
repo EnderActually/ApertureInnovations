@@ -13,15 +13,27 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.DiodeBlock;
+import net.minecraft.world.level.block.RedstoneLampBlock;
+import net.minecraft.world.level.block.TargetBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.piston.PistonBaseBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.block_entities.AntlineBlockEntity;
+import net.mistersecret312.aperture_innovations.block_entities.AntlineOutputBlockEntity;
+import net.mistersecret312.aperture_innovations.blocks.AntlineOutputBlock;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
 import net.mistersecret312.aperture_innovations.config.LongFallBootsConfig;
 import net.mistersecret312.aperture_innovations.init.*;
 import net.mistersecret312.aperture_innovations.items.LongFallBootsItem;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
+import net.mistersecret312.aperture_innovations.neo_events.AntlineActivateEvent;
 import net.mistersecret312.aperture_innovations.network.*;
 import net.mistersecret312.aperture_innovations.data.portal.Portal;
 import net.mistersecret312.aperture_innovations.data.portal.PortalLink;
@@ -257,5 +269,42 @@ public class CommonEvents
 		{
 			event.getEntity().setThrower(event.getPlayer());
 		}
+	}
+
+	@SubscribeEvent
+	public static void antlineActivate(AntlineActivateEvent event)
+	{
+		Level level = event.getLevel();
+		BlockPos antlinePos = event.getAntlinePos();
+		BlockPos activatedBlockPos = event.getActivatedBlockPos();
+		int signal = event.getSignal();
+
+		AntlineBlockEntity antline = (AntlineBlockEntity) level.getBlockEntity(antlinePos);
+		if(antline == null)
+			return;
+
+		BlockState activatedBlockState = level.getBlockState(activatedBlockPos);
+		if(activatedBlockState.getBlock().equals(Blocks.REDSTONE_LAMP))
+		{
+			activatedBlockState = activatedBlockState.setValue(RedstoneLampBlock.LIT, signal != 0);
+			level.setBlock(activatedBlockPos, activatedBlockState, 16 | 2);
+		}
+		if(activatedBlockState.getBlock() instanceof PistonBaseBlock)
+		{
+			activatedBlockState = activatedBlockState.setValue(PistonBaseBlock.EXTENDED, signal != 0);
+			level.setBlock(activatedBlockPos, activatedBlockState, 16 | 2);
+		}
+		if(activatedBlockState.getBlock() instanceof AntlineOutputBlock)
+		{
+			activatedBlockState = activatedBlockState.setValue(AntlineOutputBlock.ACTIVE, signal != 0);
+			BlockEntity blockEntity = level.getBlockEntity(activatedBlockPos);
+			if(blockEntity instanceof AntlineOutputBlockEntity output)
+				output.signal = signal;
+
+			level.setBlock(activatedBlockPos, activatedBlockState, 2);
+			BlockPos relativePos = activatedBlockPos.relative(activatedBlockState.getValue(AntlineOutputBlock.NORMAL).getOpposite());
+			level.updateNeighborsAt(relativePos, activatedBlockState.getBlock());
+		}
+
 	}
 }

@@ -14,6 +14,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.mistersecret312.aperture_innovations.client.Layers;
 import net.mistersecret312.aperture_innovations.client.overlay.CrosshairOverlay;
+import net.mistersecret312.aperture_innovations.client.renderer.AntlineOutputRenderer;
 import net.mistersecret312.aperture_innovations.client.renderer.AntlineRenderer;
 import net.mistersecret312.aperture_innovations.client.renderer.LongFallBootsRenderProperties;
 import net.mistersecret312.aperture_innovations.client.renderer.PortalGunRenderProperties;
@@ -120,6 +121,7 @@ public class ApertureInnovations
 		public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event)
 		{
 			event.registerBlockEntityRenderer(BlockEntityInit.ANTLINE.get(), AntlineRenderer::new);
+			event.registerBlockEntityRenderer(BlockEntityInit.CHECKMARK.get(), AntlineOutputRenderer::new);
 		}
 
 		@SubscribeEvent

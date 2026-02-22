@@ -53,7 +53,7 @@ public class AntlineBlockEntity extends BlockEntity
 		if(getLevel() != null && !getLevel().isClientSide())
 		{
 			PacketDistributor.sendToPlayersTrackingChunk((ServerLevel) getLevel(), new ChunkPos(getBlockPos()),
-					new ClientboundAntlineUpdatePacket(getBlockPos(), active));
+					new ClientboundAntlineUpdatePacket(getBlockPos(), active, color, activeColor));
 		}
 		super.setChanged();
 	}

@@ -11,7 +11,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.joml.Vector3f;
 
 
-public record ClientboundAntlineUpdatePacket(BlockPos pos, boolean active) implements CustomPacketPayload
+public record ClientboundAntlineUpdatePacket(BlockPos pos, boolean active, int color, int activeColor) implements CustomPacketPayload
 {
 	public static final Type<ClientboundAntlineUpdatePacket> TYPE = new Type<>(
 			ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "s2c_antline_update"));
@@ -19,6 +19,8 @@ public record ClientboundAntlineUpdatePacket(BlockPos pos, boolean active) imple
 	public static final StreamCodec<ByteBuf, ClientboundAntlineUpdatePacket> STREAM_CODEC = StreamCodec.composite(
 			BlockPos.STREAM_CODEC, ClientboundAntlineUpdatePacket::pos,
 			ByteBufCodecs.BOOL, ClientboundAntlineUpdatePacket::active,
+			ByteBufCodecs.INT, ClientboundAntlineUpdatePacket::color,
+			ByteBufCodecs.INT, ClientboundAntlineUpdatePacket::activeColor,
 			ClientboundAntlineUpdatePacket::new
 	);
 
@@ -32,7 +34,7 @@ public record ClientboundAntlineUpdatePacket(BlockPos pos, boolean active) imple
 	{
 		ctx.enqueueWork(() ->
 			{
-				ClientPacketHandler.handleAntlineUpdate(packet.pos, packet.active);
+				ClientPacketHandler.handleAntlineUpdate(packet.pos, packet.active, packet.color, packet.activeColor);
 			});
 	}
 }

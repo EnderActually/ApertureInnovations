@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FastColor;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.RedstoneLampBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -18,6 +19,7 @@ import net.mistersecret312.aperture_innovations.blocks.enums.ConnectionState;
 import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.utilities.ClientAntlineUtilities;
 
+import java.awt.*;
 import java.util.stream.Collectors;
 
 public class AntlineRenderer implements BlockEntityRenderer<AntlineBlockEntity>
@@ -32,8 +34,26 @@ public class AntlineRenderer implements BlockEntityRenderer<AntlineBlockEntity>
 						   MultiBufferSource bufferSource, int packedLight, int packedOverlay)
 	{
 		String activity = ClientAntlineUtilities.isActive(blockEntity.getNetworkID()) ? "active" : "inactive";
-		ResourceLocation relayTexture = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "textures/antline/antline_relay_"+ activity +".png");
-		ResourceLocation connectionTexture = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "textures/antline/antline_connection_"+ activity + ".png");
+		int color = ClientAntlineUtilities.isActive(blockEntity.getNetworkID()) ? blockEntity.activeColor : blockEntity.color;
+
+		ResourceLocation relayTexture;
+		ResourceLocation connectionTexture;
+		if(color == -1)
+		{
+			relayTexture = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+					"textures/antline/antline_relay_" + activity + ".png");
+			connectionTexture = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+					"textures/antline/antline_connection_" + activity + ".png");
+		}
+		else
+		{
+			relayTexture = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+					"textures/antline/antline_relay_generic.png");
+			connectionTexture = ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+					"textures/antline/antline_connection_generic.png");
+		}
+
+
 		poseStack.pushPose();
 
 		poseStack.mulPose(Axis.XN.rotationDegrees(90));
@@ -67,7 +87,7 @@ public class AntlineRenderer implements BlockEntityRenderer<AntlineBlockEntity>
 		if(axises > 1)
 			texture = connectionTexture;
 
-		renderDot(bufferSource, poseStack, texture, -1);
+		renderDot(bufferSource, poseStack, texture, color);
 
 		for(Direction direction : Direction.values())
 		{
@@ -86,7 +106,7 @@ public class AntlineRenderer implements BlockEntityRenderer<AntlineBlockEntity>
 				poseStack.mulPose(Axis.ZP.rotationDegrees(180));
 
 			poseStack.translate(1.33f*direction.getNormal().getX(), (positive ? -1f : 1f) * 1.33f*direction.getNormal().getZ(), 0);
-			renderDot(bufferSource, poseStack, blockEntity.getState(direction).equals(ConnectionState.LINK) ? connectionTexture : relayTexture, -1);
+			renderDot(bufferSource, poseStack, blockEntity.getState(direction).equals(ConnectionState.LINK) ? connectionTexture : relayTexture, color);
 
 			if(blockEntity.getState(direction) == ConnectionState.UP
 					   || blockEntity.getState(direction) == ConnectionState.SIDE_UP)
@@ -178,7 +198,7 @@ public class AntlineRenderer implements BlockEntityRenderer<AntlineBlockEntity>
 						}
 					}
 
-					renderDot(bufferSource, poseStack, relayTexture, -1);
+					renderDot(bufferSource, poseStack, relayTexture, color);
 					poseStack.popPose();
 				}
 			}
@@ -192,6 +212,7 @@ public class AntlineRenderer implements BlockEntityRenderer<AntlineBlockEntity>
 	public void renderDot(MultiBufferSource bufferSource, PoseStack poseStack, ResourceLocation texture, int color)
 	{
 		VertexConsumer consumer = bufferSource.getBuffer(PortalRenderTypes.antline(texture));
+		color = FastColor.ARGB32.color(255, color);
 		consumer.addVertex(poseStack.last().pose(), -0.5f, -0.5f, 0).setUv(0, 1).setColor(color);
 		consumer.addVertex(poseStack.last().pose(), 0.5f, -0.5f, 0).setUv(1, 1).setColor(color);
 		consumer.addVertex(poseStack.last().pose(), 0.5f, 0.5f, 0).setUv(1, 0).setColor(color);

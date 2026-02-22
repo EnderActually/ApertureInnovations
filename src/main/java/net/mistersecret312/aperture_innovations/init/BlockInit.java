@@ -8,6 +8,7 @@ import net.minecraft.world.level.material.MapColor;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.minecraft.world.level.block.Block;
 import net.mistersecret312.aperture_innovations.blocks.AntlineBlock;
+import net.mistersecret312.aperture_innovations.blocks.AntlineOutputBlock;
 import net.mistersecret312.aperture_innovations.blocks.VerticalOneByTwoBlock;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
@@ -35,10 +36,11 @@ public class BlockInit
             () -> new VerticalOneByTwoBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CONCRETE).mapColor(MapColor.TERRACOTTA_WHITE)));
 
     public static final DeferredBlock<Block> ANTLINE = registerBlock("antline",
-            () -> new AntlineBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.REDSTONE_WIRE).isRedstoneConductor(
-                    (state, getter, pos) -> {
-						return true;
-					})));
+            () -> new AntlineBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.REDSTONE_WIRE)
+                 .isRedstoneConductor((state, getter, pos) -> true)));
+
+    public static final DeferredBlock<Block> CHECKMARK = registerBlock("antline_checkmark",
+            () -> new AntlineOutputBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.REDSTONE_WIRE)));
 
     private static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block)
     {
