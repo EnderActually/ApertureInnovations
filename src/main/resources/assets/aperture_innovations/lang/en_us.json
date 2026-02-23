@@ -13,6 +13,7 @@
   "block.aperture_innovations.antline_checkmark": "Antline Checkmark",
 
   "block.aperture_innovations.pedestal_button": "Pedestal Button",
+  "block.aperture_innovations.large_button": "Large Button",
 
   "item.aperture_innovations.portal_gun": "Aperture Science Handheld Portal Device",
   "item.aperture_innovations.portal_gun.duality_primary": "Single Portal - Primary",
@@ -58,6 +59,8 @@
   "sound.aperture_innovations.cube_impact": "A cube hits the surface",
   "sound.aperture_innovations.pedestal_button_down": "Pedestal Button pressed",
   "sound.aperture_innovations.pedestal_button_up": "Pedestal Button unpressed",
+  "sound.aperture_innovations.large_button_down": "Large Button pressed",
+  "sound.aperture_innovations.large_button_up": "Large Button unpressed",
 
   "advancements.aperture_innovations.aperture.root.title": "Aperture Science Innovators",
   "advancements.aperture_innovations.aperture.root.description": "Obtain the Aperture Science Handheld Portal Device",

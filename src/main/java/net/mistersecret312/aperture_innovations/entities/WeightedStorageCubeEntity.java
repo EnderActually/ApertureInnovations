@@ -18,10 +18,9 @@ import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.mistersecret312.aperture_innovations.init.AttachmentTypeInit;
-import net.mistersecret312.aperture_innovations.init.EntityInit;
-import net.mistersecret312.aperture_innovations.init.ItemInit;
-import net.mistersecret312.aperture_innovations.init.SoundInit;
+import net.mistersecret312.aperture_innovations.block_entities.LargeButtonBlockEntity;
+import net.mistersecret312.aperture_innovations.blocks.LargeButtonBlock;
+import net.mistersecret312.aperture_innovations.init.*;
 import net.mistersecret312.aperture_innovations.items.ColorfulGelItem;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
@@ -58,6 +57,13 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity
 		{
 			this.addDeltaMovement(new Vec3(0f, -0.08f, 0f));
 		}
+
+		if(level().getBlockEntity(this.blockPosition()) instanceof LargeButtonBlockEntity button)
+		{
+			this.setActive(button.getBlockState().getValue(LargeButtonBlock.PRESSED));
+			this.setActiveColor(button.color);
+		}
+		else this.setActive(false);
 
 		float friction = 0.85f;
 		if(this.getData(AttachmentTypeInit.APERTURE.get()).frictionlessTime > 0)

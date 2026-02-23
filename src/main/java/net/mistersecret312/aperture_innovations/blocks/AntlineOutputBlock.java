@@ -107,7 +107,7 @@ public class AntlineOutputBlock extends BaseEntityBlock
 		BlockState state = this.defaultBlockState();
 		Direction direction = context.getClickedFace().getAxis().isHorizontal() ?
 									  context.getNearestLookingVerticalDirection()
-									  : context.getNearestLookingDirection();
+									  : context.getHorizontalDirection();
 
 		state = state.setValue(NORMAL, context.getClickedFace());
 		state = state.setValue(FACING, direction);

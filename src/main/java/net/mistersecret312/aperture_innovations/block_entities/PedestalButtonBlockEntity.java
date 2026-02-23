@@ -4,6 +4,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.level.block.MagmaBlock;
+import net.minecraft.world.level.block.PressurePlateBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.mistersecret312.aperture_innovations.init.BlockEntityInit;
@@ -19,14 +21,13 @@ public class PedestalButtonBlockEntity extends BlockEntity implements GeoBlockEn
 	private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
 	public int color = -1;
+	public int activeColor = -1;
 	public int buttonColor = -1;
 
 	public PedestalButtonBlockEntity(BlockPos pos, BlockState blockState)
 	{
 		super(BlockEntityInit.PEDESTAL_BUTTON.get(), pos, blockState);
 	}
-
-
 
 	@Override
 	public ClientboundBlockEntityDataPacket getUpdatePacket()
@@ -44,6 +45,7 @@ public class PedestalButtonBlockEntity extends BlockEntity implements GeoBlockEn
 	protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries)
 	{
 		tag.putInt("color", this.color);
+		tag.putInt("active_color", this.activeColor);
 		tag.putInt("button_color", this.buttonColor);
 
 		super.saveAdditional(tag, registries);
@@ -55,6 +57,7 @@ public class PedestalButtonBlockEntity extends BlockEntity implements GeoBlockEn
 		super.loadAdditional(tag, registries);
 
 		this.color = tag.getInt("color");
+		this.activeColor = tag.getInt("active_color");
 		this.buttonColor = tag.getInt("button_color");
 	}
 

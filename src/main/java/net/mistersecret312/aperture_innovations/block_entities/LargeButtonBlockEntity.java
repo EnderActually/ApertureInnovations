@@ -24,7 +24,7 @@ public class LargeButtonBlockEntity extends BlockEntity implements GeoBlockEntit
 
 	public LargeButtonBlockEntity(BlockPos pos, BlockState blockState)
 	{
-		super(BlockEntityInit.PEDESTAL_BUTTON.get(), pos, blockState);
+		super(BlockEntityInit.LARGE_BUTTON.get(), pos, blockState);
 	}
 
 	@Override

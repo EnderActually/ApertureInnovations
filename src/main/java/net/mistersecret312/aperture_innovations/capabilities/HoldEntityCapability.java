@@ -58,6 +58,7 @@ public class HoldEntityCapability implements INBTSerializable<CompoundTag>
 		Vec3 targetPos = player.getEyePosition().add(player.getViewVector(1F).multiply(3f, 3f, 3f));
 		Vec3 offset = entity.getBoundingBox().getCenter().vectorTo(targetPos);
 
+		entity.setYRot(-player.getYRot());
 		entity.setDeltaMovement(offset);
 	}
 
