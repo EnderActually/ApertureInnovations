@@ -3,21 +3,27 @@ package net.mistersecret312.aperture_innovations.client.renderer;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Axis;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
+import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.block_entities.PedestalButtonBlockEntity;
+import net.mistersecret312.aperture_innovations.blocks.PedestalButtonBlock;
 import net.mistersecret312.aperture_innovations.client.model.PedestalButtonModel;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.cache.object.GeoBone;
 import software.bernie.geckolib.renderer.specialty.DynamicGeoBlockRenderer;
 import software.bernie.geckolib.util.RenderUtil;
 
+import java.awt.*;
 import java.util.List;
 
 import static net.mistersecret312.aperture_innovations.client.renderer.PortalGunRenderer.GLOWING_RENDER_TYPE;
@@ -34,7 +40,19 @@ public class PedestalButtonRenderer extends DynamicGeoBlockRenderer<PedestalButt
 										 VertexConsumer buffer, float partialTick, int packedLight, int packedOverlay,
 										 int colour)
 	{
-		//TODO - finish buttons
+		if(bone.getName().equals("ColoredLines"))
+		{
+			Color color = new Color(this.animatable.color, false);
+			renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, color.getRGB());
+			return true;
+		}
+		if(bone.getName().equals("Button"))
+		{
+			Color color = new Color(this.animatable.buttonColor, false);
+			renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, color.getRGB());
+			return true;
+		}
+
 		return super.boneRenderOverride(poseStack, bone, bufferSource, buffer, partialTick, packedLight, packedOverlay,
 				colour);
 	}
@@ -43,6 +61,26 @@ public class PedestalButtonRenderer extends DynamicGeoBlockRenderer<PedestalButt
 	protected @Nullable ResourceLocation getTextureOverrideForBone(GeoBone bone, PedestalButtonBlockEntity animatable,
 																   float partialTick)
 	{
+		if(bone.getName().equals("ColoredLines"))
+		{
+			int color = animatable.color;
+			if(color != -1)
+				return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+						"textures/block/pedestal_button/pedestal_button_lines_generic.png");
+
+			return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+					"textures/block/pedestal_button/pedestal_button_lines.png");
+		}
+		if(bone.getName().equals("Button"))
+		{
+			int color = animatable.buttonColor;
+			if(color != -1)
+				return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+						"textures/block/pedestal_button/pedestal_button_button_generic.png");
+
+			return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+					"textures/block/pedestal_button/pedestal_button_button.png");
+		}
 		return super.getTextureOverrideForBone(bone, animatable, partialTick);
 	}
 
@@ -56,6 +94,56 @@ public class PedestalButtonRenderer extends DynamicGeoBlockRenderer<PedestalButt
 			return GLOWING_RENDER_TYPE.apply(getTextureOverrideForBone(bone, animatable, partialTick), false);
 
 		return super.getRenderTypeOverrideForBone(bone, animatable, texturePath, bufferSource, partialTick);
+	}
+
+	@Override
+	public void preRender(PoseStack poseStack, PedestalButtonBlockEntity animatable, BakedGeoModel model,
+						  @Nullable MultiBufferSource bufferSource, @Nullable VertexConsumer buffer, boolean isReRender,
+						  float partialTick, int packedLight, int packedOverlay, int colour)
+	{
+		super.preRender(poseStack, animatable, model, bufferSource, buffer, isReRender, partialTick, packedLight,
+				packedOverlay, colour);
+
+		Direction facing = animatable.getBlockState().getValue(PedestalButtonBlock.FACING);
+		Direction normal = animatable.getBlockState().getValue(PedestalButtonBlock.NORMAL);
+		boolean positive = normal.getAxisDirection().equals(Direction.AxisDirection.POSITIVE);
+
+		if(normal.getAxis().isVertical())
+		{
+			if(!positive)
+			{
+				poseStack.translate(0f, 1f, 0f);
+				poseStack.mulPose(Axis.ZP.rotationDegrees(180));
+				if(facing.getAxis().equals(Direction.Axis.X))
+					poseStack.mulPose(Axis.YP.rotationDegrees(180));
+			}
+		}
+		if(normal.getAxis().isHorizontal())
+		{
+			if(normal.getAxis().equals(Direction.Axis.X))
+			{
+				poseStack.translate(positive ? -0.5f : 0.5f, 0.5f, 0f);
+
+				poseStack.mulPose(Axis.ZP.rotationDegrees(normal.toYRot()));
+				poseStack.mulPose(Axis.YP.rotationDegrees(positive ? 180 : 0));
+			}
+			if(normal.getAxis().equals(Direction.Axis.Z))
+			{
+				poseStack.translate(0f, 0.5f, positive ? -0.5f : 0.5f);
+				poseStack.mulPose(Axis.ZP.rotationDegrees(90));
+				poseStack.mulPose(Axis.XP.rotationDegrees(positive ? 90 : -90));
+			}
+
+			if(facing.getAxis().isVertical())
+			{
+				boolean posFace = facing.getAxisDirection().equals(Direction.AxisDirection.POSITIVE);
+				poseStack.mulPose(Axis.YP.rotationDegrees(posFace ? 0 :180));
+			}
+		}
+
+		poseStack.mulPose(Axis.YP.rotationDegrees(animatable.getBlockState().getValue(PedestalButtonBlock.FACING).toYRot()));
+		if(facing.getAxis().equals(Direction.Axis.X))
+			poseStack.mulPose(Axis.YP.rotationDegrees(180));
 	}
 
 	@Override
@@ -107,4 +195,6 @@ public class PedestalButtonRenderer extends DynamicGeoBlockRenderer<PedestalButt
 
 		poseStack.popPose();
 	}
+
+
 }

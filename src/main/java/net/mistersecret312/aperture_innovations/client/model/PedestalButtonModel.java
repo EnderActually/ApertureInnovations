@@ -17,7 +17,7 @@ public class PedestalButtonModel extends GeoModel<PedestalButtonBlockEntity>
 	@Override
 	public ResourceLocation getTextureResource(PedestalButtonBlockEntity animatable)
 	{
-		return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "textures/block/pedestal_button.png");
+		return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "textures/block/pedestal_button/pedestal_button.png");
 	}
 
 	@Override

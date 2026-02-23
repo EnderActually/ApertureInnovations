@@ -85,7 +85,6 @@ public record ServerboundPickUpEntityPacket() implements CustomPacketPayload
 					if(entity.getBoundingBox().getSize() >= player.getBoundingBox().getSize())
 						return;
 
-					System.out.println("Setting entity! " + entity.getName().getString());
 					HoldEntityCapability capability = entity.getData(AttachmentTypeInit.HOLD_ENTITY);
 					capability.isHeld = true;
 					portalGun.setHeldEntity(gunStack, entity);

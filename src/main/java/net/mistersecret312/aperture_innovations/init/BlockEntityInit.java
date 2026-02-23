@@ -5,6 +5,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.block_entities.AntlineBlockEntity;
 import net.mistersecret312.aperture_innovations.block_entities.AntlineOutputBlockEntity;
+import net.mistersecret312.aperture_innovations.block_entities.LargeButtonBlockEntity;
 import net.mistersecret312.aperture_innovations.block_entities.PedestalButtonBlockEntity;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -27,6 +28,11 @@ public class BlockEntityInit
 	public static final Supplier<BlockEntityType<PedestalButtonBlockEntity>> PEDESTAL_BUTTON =
 			BLOCK_ENTITIES.register("pedestal_button",
 					() -> BlockEntityType.Builder.of(PedestalButtonBlockEntity::new, BlockInit.PEDESTAL_BUTTON.get()).build(null));
+
+	public static final Supplier<BlockEntityType<LargeButtonBlockEntity>> LARGE_BUTTON =
+			BLOCK_ENTITIES.register("large_button",
+					() -> BlockEntityType.Builder.of(LargeButtonBlockEntity::new, BlockInit.LARGE_BUTTON.get()).build(null));
+
 
 	public static void register(IEventBus bus)
 	{

@@ -33,7 +33,7 @@ public class AntlineRenderer implements BlockEntityRenderer<AntlineBlockEntity>
 	public void render(AntlineBlockEntity blockEntity, float partialTick, PoseStack poseStack,
 						   MultiBufferSource bufferSource, int packedLight, int packedOverlay)
 	{
-		String activity = ClientAntlineUtilities.isActive(blockEntity.getNetworkID()) ? "active" : "inactive";
+		String activity = blockEntity.active ? "active" : "inactive";
 		int color = ClientAntlineUtilities.isActive(blockEntity.getNetworkID()) ? blockEntity.activeColor : blockEntity.color;
 
 		ResourceLocation relayTexture;

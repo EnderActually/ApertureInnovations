@@ -7,10 +7,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.minecraft.world.level.block.Block;
-import net.mistersecret312.aperture_innovations.blocks.AntlineBlock;
-import net.mistersecret312.aperture_innovations.blocks.AntlineOutputBlock;
-import net.mistersecret312.aperture_innovations.blocks.PedestalButtonBlock;
-import net.mistersecret312.aperture_innovations.blocks.VerticalOneByTwoBlock;
+import net.mistersecret312.aperture_innovations.blocks.*;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -44,7 +41,11 @@ public class BlockInit
             () -> new AntlineOutputBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.REDSTONE_WIRE)));
 
     public static final DeferredBlock<Block> PEDESTAL_BUTTON = registerBlock("pedestal_button",
-            () -> new PedestalButtonBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
+            () -> new PedestalButtonBlock(BlockBehaviour.Properties.of().noOcclusion()));
+
+    public static final DeferredBlock<Block> LARGE_BUTTON = registerBlock("large_button",
+            () -> new LargeButtonBlock(BlockBehaviour.Properties.of().noOcclusion()));
+
 
     private static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block)
     {

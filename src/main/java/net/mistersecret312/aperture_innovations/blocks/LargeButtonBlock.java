@@ -16,11 +16,8 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.ButtonBlock;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityTicker;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
@@ -37,16 +34,16 @@ import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.items.ColorfulGelItem;
 import org.jetbrains.annotations.Nullable;
 
-public class PedestalButtonBlock extends BaseEntityBlock
+public class LargeButtonBlock extends BaseEntityBlock
 {
 	public static final DirectionProperty FACING = DirectionProperty.create("facing");
 	public static final DirectionProperty NORMAL = DirectionProperty.create("normal");
 
 	public static final BooleanProperty PRESSED = BooleanProperty.create("pressed");
 
-	public static final MapCodec<PedestalButtonBlock> CODEC = simpleCodec(PedestalButtonBlock::new);
+	public static final MapCodec<LargeButtonBlock> CODEC = simpleCodec(LargeButtonBlock::new);
 
-	public PedestalButtonBlock(Properties properties)
+	public LargeButtonBlock(Properties properties)
 	{
 		super(properties);
 		this.registerDefaultState(this.defaultBlockState()
@@ -122,11 +119,11 @@ public class PedestalButtonBlock extends BaseEntityBlock
 
 		if(blockEntity instanceof PedestalButtonBlockEntity pedestalButton)
 		{
-			pedestalButton.triggerAnim("press", "press");
+			pedestalButton.triggerAnim("press", "down");
 			level.setBlock(pos, state.setValue(PRESSED, true), 3);
 			level.scheduleTick(pos, this, 15);
 			if(!level.isClientSide())
-				level.playSound(null, pos, SoundInit.PEDESTAL_BUTTON_DOWN.get(), SoundSource.BLOCKS);
+				level.playSound(null, pos, SoundInit.LARGE_BUTTON_DOWN.get(), SoundSource.BLOCKS);
 			return InteractionResult.SUCCESS;
 		}
 		return InteractionResult.PASS;
@@ -136,7 +133,10 @@ public class PedestalButtonBlock extends BaseEntityBlock
 	protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random)
 	{
 		level.setBlock(pos, state.setValue(PRESSED, false), 3);
-		level.playSound(null, pos, SoundInit.PEDESTAL_BUTTON_UP.get(), SoundSource.BLOCKS);
+		level.playSound(null, pos, SoundInit.LARGE_BUTTON_UP.get(), SoundSource.BLOCKS);
+		BlockEntity blockEntity = level.getBlockEntity(pos);
+		if(blockEntity instanceof PedestalButtonBlockEntity pedestal)
+			pedestal.triggerAnim("press", "up");
 		super.tick(state, level, pos, random);
 	}
 

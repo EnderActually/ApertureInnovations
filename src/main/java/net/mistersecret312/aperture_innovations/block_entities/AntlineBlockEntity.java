@@ -71,6 +71,12 @@ public class AntlineBlockEntity extends BlockEntity
 	}
 
 	@Override
+	public void onLoad()
+	{
+		super.onLoad();
+	}
+
+	@Override
 	protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries)
 	{
 		tag.putInt("network_id", this.networkId);

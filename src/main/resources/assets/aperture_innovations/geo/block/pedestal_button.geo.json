@@ -1,5 +1,5 @@
 {
-	"format_version": "1.21.0",
+	"format_version": "1.12.0",
 	"minecraft:geometry": [
 		{
 			"description": {
@@ -23,29 +23,26 @@
 							}
 						},
 						{
-							"origin": [-3, 20, 0],
+							"origin": [-2.975, 20, 0],
 							"size": [0, 2, 6],
 							"uv": {
-								"east": {"uv": [0, 6], "uv_size": [6, 2]},
 								"west": {"uv": [36, 6], "uv_size": [6, 2]}
 							}
 						},
 						{
-							"origin": [3, 20, 0],
+							"origin": [2.975, 20, 0],
 							"size": [0, 2, 6],
 							"uv": {
-								"east": {"uv": [24, 6], "uv_size": [6, 2]},
-								"west": {"uv": [12, 6], "uv_size": [6, 2]}
+								"east": {"uv": [24, 6], "uv_size": [6, 2]}
 							}
 						},
 						{"origin": [-3, 20, 2], "size": [6, 1, 2], "uv": [24, 0]},
-						{"origin": [-3, 21, 4], "size": [6, 1, 2], "uv": [40, 0]},
+						{"origin": [-3, 20, 4], "size": [6, 2, 2], "uv": [40, 0]},
 						{
-							"origin": [-3, 20, 6],
+							"origin": [-3, 20, 5.975],
 							"size": [6, 2, 0],
 							"uv": {
-								"north": {"uv": [42, 6], "uv_size": [6, 2]},
-								"south": {"uv": [18, 6], "uv_size": [6, 2]}
+								"north": {"uv": [42, 6], "uv_size": [6, 2]}
 							}
 						},
 						{"origin": [-4, 0, -1], "size": [8, 1, 8], "uv": [24, 14]},

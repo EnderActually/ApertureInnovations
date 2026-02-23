@@ -42,6 +42,8 @@ public class ItemTabInit
 							  output.accept(BlockInit.CHECKMARK.get());
 
 							  output.accept(ItemInit.WEIGHTED_STORAGE_CUBE.get());
+
+							  output.accept(BlockInit.PEDESTAL_BUTTON.get());
 						  }
 						  ).build());
 

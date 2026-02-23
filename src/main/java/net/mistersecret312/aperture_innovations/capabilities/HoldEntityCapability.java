@@ -47,12 +47,10 @@ public class HoldEntityCapability implements INBTSerializable<CompoundTag>
 		Player player = findHoldingPlayer(level, entity);
 		if(player == null)
 		{
-			System.out.println("didn't find player");
 			isHeld = false;
 			entity.setNoGravity(false);
 			return;
 		}
-
 
 		entity.setNoGravity(true);
 		entity.resetFallDistance();

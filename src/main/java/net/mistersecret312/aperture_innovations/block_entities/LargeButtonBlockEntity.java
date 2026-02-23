@@ -7,26 +7,25 @@ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.mistersecret312.aperture_innovations.init.BlockEntityInit;
-import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import software.bernie.geckolib.animatable.GeoBlockEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
-public class PedestalButtonBlockEntity extends BlockEntity implements GeoBlockEntity
+public class LargeButtonBlockEntity extends BlockEntity implements GeoBlockEntity
 {
-	protected static final RawAnimation PRESS = RawAnimation.begin().thenPlay("press");
+	protected static final RawAnimation PRESS = RawAnimation.begin().thenPlay("down");
+	protected static final RawAnimation UNPRESS = RawAnimation.begin().thenPlay("up");
+
 	private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
 	public int color = -1;
 	public int buttonColor = -1;
 
-	public PedestalButtonBlockEntity(BlockPos pos, BlockState blockState)
+	public LargeButtonBlockEntity(BlockPos pos, BlockState blockState)
 	{
 		super(BlockEntityInit.PEDESTAL_BUTTON.get(), pos, blockState);
 	}
-
-
 
 	@Override
 	public ClientboundBlockEntityDataPacket getUpdatePacket()
@@ -61,13 +60,14 @@ public class PedestalButtonBlockEntity extends BlockEntity implements GeoBlockEn
 	@Override
 	public void registerControllers(AnimatableManager.ControllerRegistrar controllers)
 	{
-		AnimationController<PedestalButtonBlockEntity> controller =
+		AnimationController<LargeButtonBlockEntity> controller =
 				new AnimationController<>(this, "press", 0, this::pressController);
-		controller.triggerableAnim("press", PRESS);
+		controller.triggerableAnim("down", PRESS);
+		controller.triggerableAnim("up", UNPRESS);
 		controllers.add(controller);
 	}
 
-	private PlayState pressController(AnimationState<PedestalButtonBlockEntity> state)
+	private PlayState pressController(AnimationState<LargeButtonBlockEntity> state)
 	{
 		return PlayState.STOP;
 	}
