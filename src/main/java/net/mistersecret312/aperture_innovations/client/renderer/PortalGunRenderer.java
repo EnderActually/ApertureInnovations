@@ -8,10 +8,13 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.Util;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.client.ColorUtil;
@@ -122,8 +125,8 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem> {
                                                                 ResourceLocation texturePath,
                                                                 MultiBufferSource bufferSource, float partialTick) {
         List<String> gunCore = Lists.newArrayList("CoreOuter", "CoreInner", "PortalLight", "Muzzle");
-        if (gunCore.contains(bone.getName())) {
-            return GLOWING_RENDER_TYPE.apply(getTextureOverrideForBone(bone, animatable, partialTick), false);
+        if (gunCore.contains(bone.getName()) || bone.getName().equals("Zap")) {
+            return GLOWING_RENDER_TYPE.apply(getTextureOverrideForBone(bone, animatable, partialTick), true);
         }
         return super.getRenderTypeOverrideForBone(bone, animatable, texturePath, bufferSource, partialTick);
     }
@@ -133,15 +136,17 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem> {
                                                                    float partialTick) {
         int portal = this.getAnimatable().getLastShotPortal(this.currentItemStack);
         ClientPortalLink link = PortalUtilities.getPortalLinks().get(this.getAnimatable().getUUID(this.currentItemStack, false));
+
+        if(bone.getName().equals("Zap"))
+        {
+            return ApertureInnovations.of("textures/portal_gun/zap/portal_gun_zap_0.png");
+        }
+
         if (link != null) {
             List<String> gunCore = Lists.newArrayList("CoreOuter", "CoreInner", "PortalLight", "Muzzle");
             if (gunCore.contains(bone.getName()))
                 return ClientPortalUtilities.getPortalGunCoreTexture(link, portal);
             else return ClientPortalUtilities.getPortalGunTexture(link);
-        }
-        if(bone.getName().equals("Zap"))
-        {
-            return ApertureInnovations.of("textures/item/portal_gun_zap.png");
         }
 
         return ApertureInnovations.of( "textures/item/portal_gun.png");
@@ -184,7 +189,7 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem> {
             super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, colour);
 
         if (renderTypeOverride != null)
-            buffer = bufferSource.getBuffer(renderType);
+            buffer = bufferSource.getBuffer(renderTypeOverride);
 
         if (!isReRender)
             applyRenderLayersForBone(poseStack, animatable, bone, renderTypeOverride, bufferSource, buffer, partialTick, packedLight, packedOverlay);
