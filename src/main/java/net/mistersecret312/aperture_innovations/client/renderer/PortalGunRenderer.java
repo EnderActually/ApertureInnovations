@@ -16,8 +16,11 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.client.ColorUtil;
+import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortalGunVariant;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortalGunVariants;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
@@ -126,7 +129,7 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem> {
                                                                 MultiBufferSource bufferSource, float partialTick) {
         List<String> gunCore = Lists.newArrayList("CoreOuter", "CoreInner", "PortalLight", "Muzzle");
         if (gunCore.contains(bone.getName()) || bone.getName().equals("Zap")) {
-            return GLOWING_RENDER_TYPE.apply(getTextureOverrideForBone(bone, animatable, partialTick), true);
+            return PortalRenderTypes.APERTURE_GLOW.apply(getTextureOverrideForBone(bone, animatable, partialTick), RenderStateShard.TRANSLUCENT_TRANSPARENCY);
         }
         return super.getRenderTypeOverrideForBone(bone, animatable, texturePath, bufferSource, partialTick);
     }
@@ -137,9 +140,9 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem> {
         int portal = this.getAnimatable().getLastShotPortal(this.currentItemStack);
         ClientPortalLink link = PortalUtilities.getPortalLinks().get(this.getAnimatable().getUUID(this.currentItemStack, false));
 
-        if(bone.getName().equals("Zap"))
+        if(bone.getName().equals("Zap") && animatable.getZapTick(currentItemStack) != -1)
         {
-            return ApertureInnovations.of("textures/portal_gun/zap/portal_gun_zap_0.png");
+			return ApertureInnovations.of("textures/portal_gun/zap/portal_gun_zap_" + animatable.getZapTick(this.currentItemStack) + ".png");
         }
 
         if (link != null) {

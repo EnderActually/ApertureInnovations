@@ -32,6 +32,10 @@ public class DataComponentInit
 	public static final DeferredHolder<DataComponentType<?>, DataComponentType<Boolean>> INITIALIZED = register("initialized", builder -> builder.persistent(
 			Codec.BOOL));
 
+	public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> ZAP_TICK = register("zap_tick", builder -> builder.persistent(
+			Codec.INT
+	));
+
 	public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> PRIMARY_PORTAL_COLOR = register("primary_portal_color", builder -> builder.persistent(
 			Codec.INT));
 	public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> SECONDARY_PORTAL_COLOR = register("secondary_portal_color", builder -> builder.persistent(

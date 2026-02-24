@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -12,6 +13,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.blocks.LargeButtonBlock;
 import net.mistersecret312.aperture_innovations.init.BlockEntityInit;
+import net.mistersecret312.aperture_innovations.init.SoundInit;
 import software.bernie.geckolib.animatable.GeoBlockEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
@@ -99,12 +101,14 @@ public class LargeButtonBlockEntity extends BlockEntity implements GeoBlockEntit
 		boolean isPressed = blockState.getValue(LargeButtonBlock.PRESSED);
 		if(level.isClientSide())
 			return;
+
 		if(isPressed)
 		{
 			if(entities.isEmpty())
 			{
 				level.setBlock(pos, blockState.setValue(LargeButtonBlock.PRESSED, false), 3);
 				button.triggerAnim("press", "up");
+				level.playSound(null, pos, SoundInit.LARGE_BUTTON_UP.get(), SoundSource.BLOCKS);
 			}
 		}
 
@@ -114,6 +118,7 @@ public class LargeButtonBlockEntity extends BlockEntity implements GeoBlockEntit
 			{
 				level.setBlock(pos, blockState.setValue(LargeButtonBlock.PRESSED, true), 3);
 				button.triggerAnim("press", "down");
+				level.playSound(null, pos, SoundInit.LARGE_BUTTON_DOWN.get(), SoundSource.BLOCKS);
 			}
 		}
 	}

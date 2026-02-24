@@ -11,6 +11,7 @@ import net.minecraft.world.*;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -36,6 +37,13 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity
 
 	private SimpleContainer container = new SimpleContainer(27);
 
+	private int lerpSteps;
+	private double lerpX;
+	private double lerpY;
+	private double lerpZ;
+	private double lerpYRot;
+	private double lerpXRot;
+
 	private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
 
 	public WeightedStorageCubeEntity(EntityType<?> type, Level level)
@@ -52,6 +60,7 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity
 	public void tick()
 	{
 		super.tick();
+		this.tickLerp();
 
 		if(!isNoGravity())
 		{
@@ -143,6 +152,53 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity
 		}
 
 		return InteractionResult.CONSUME;
+	}
+
+	private void tickLerp() {
+		if (this.isControlledByLocalInstance()) {
+			this.lerpSteps = 0;
+			this.syncPacketPositionCodec(this.getX(), this.getY(), this.getZ());
+		}
+
+		if (this.lerpSteps > 0) {
+			this.lerpPositionAndRotationStep(this.lerpSteps, this.lerpX, this.lerpY, this.lerpZ, this.lerpYRot, this.lerpXRot);
+			this.lerpSteps--;
+		}
+	}
+
+	@Override
+	public void lerpTo(double x, double y, double z, float yRot, float xRot, int steps) {
+		this.lerpX = x;
+		this.lerpY = y;
+		this.lerpZ = z;
+		this.lerpYRot = (double)yRot;
+		this.lerpXRot = (double)xRot;
+		this.lerpSteps = 10;
+	}
+
+	@Override
+	public double lerpTargetX() {
+		return this.lerpSteps > 0 ? this.lerpX : this.getX();
+	}
+
+	@Override
+	public double lerpTargetY() {
+		return this.lerpSteps > 0 ? this.lerpY : this.getY();
+	}
+
+	@Override
+	public double lerpTargetZ() {
+		return this.lerpSteps > 0 ? this.lerpZ : this.getZ();
+	}
+
+	@Override
+	public float lerpTargetXRot() {
+		return this.lerpSteps > 0 ? (float)this.lerpXRot : this.getXRot();
+	}
+
+	@Override
+	public float lerpTargetYRot() {
+		return this.lerpSteps > 0 ? (float)this.lerpYRot : this.getYRot();
 	}
 
 	public int getColor()

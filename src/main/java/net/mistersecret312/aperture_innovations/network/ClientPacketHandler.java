@@ -129,4 +129,13 @@ public class ClientPacketHandler
 		aperture.frictionlessTime = frictionlessTime;
 		player.setData(AttachmentTypeInit.APERTURE, aperture);
 	}
+
+	public static void handleEntityHeldUpdate(int id, boolean held)
+	{
+		Entity entity = Minecraft.getInstance().level.getEntity(id);
+		if(entity != null)
+		{
+			entity.getData(AttachmentTypeInit.HOLD_ENTITY.get()).setHeld(entity, held);
+		}
+	}
 }

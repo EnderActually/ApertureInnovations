@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
@@ -19,6 +20,7 @@ import net.mistersecret312.aperture_innovations.init.AttachmentTypeInit;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+import software.bernie.geckolib.animatable.GeoItem;
 
 public record ServerboundPickUpEntityPacket() implements CustomPacketPayload
 {
@@ -76,6 +78,7 @@ public record ServerboundPickUpEntityPacket() implements CustomPacketPayload
 				if(result == null)
 				{
 					portalGun.setHeldEntity(gunStack, null);
+					portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "reset");
 					return;
 				}
 
@@ -86,7 +89,7 @@ public record ServerboundPickUpEntityPacket() implements CustomPacketPayload
 						return;
 
 					HoldEntityCapability capability = entity.getData(AttachmentTypeInit.HOLD_ENTITY);
-					capability.isHeld = true;
+					capability.setHeld(entity, true);
 					portalGun.setHeldEntity(gunStack, entity);
 					entity.setData(AttachmentTypeInit.HOLD_ENTITY.get(), capability);
 				}

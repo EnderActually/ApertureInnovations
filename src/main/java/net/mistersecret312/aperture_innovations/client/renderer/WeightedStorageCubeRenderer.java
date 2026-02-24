@@ -4,10 +4,13 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.PigRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.client.model.WeightedStorageCubeModel;
 import net.mistersecret312.aperture_innovations.entities.WeightedStorageCubeEntity;
 import org.jetbrains.annotations.Nullable;
@@ -72,7 +75,7 @@ public class WeightedStorageCubeRenderer extends DynamicGeoEntityRenderer<Weight
 																MultiBufferSource bufferSource, float partialTick)
 	{
 		if(bone.getName().equals("ColoredCircle"))
-			return GLOWING_RENDER_TYPE.apply(getTextureOverrideForBone(bone, animatable, partialTick), false);
+			return PortalRenderTypes.APERTURE_GLOW.apply(getTextureOverrideForBone(bone, animatable, partialTick), RenderStateShard.TRANSLUCENT_TRANSPARENCY);
 		return super.getRenderTypeOverrideForBone(bone, animatable, texturePath, bufferSource, partialTick);
 	}
 

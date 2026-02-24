@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.Util;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
@@ -11,6 +12,8 @@ import net.minecraft.client.renderer.blockentity.TheEndPortalRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import org.lwjgl.opengl.GL11;
+
+import java.util.function.BiFunction;
 
 public class PortalRenderTypes extends RenderType
 {
@@ -101,6 +104,26 @@ public class PortalRenderTypes extends RenderType
 										 .createCompositeState(true)
 		);
 	}
+
+	public static final BiFunction<ResourceLocation, TransparencyStateShard, RenderType> APERTURE_GLOW = Util.memoize(
+			(p_311464_, p_311465_) -> {
+				RenderStateShard.TextureStateShard renderstateshard$texturestateshard = new RenderStateShard.TextureStateShard(p_311464_, false, false);
+				return create(
+						"aperture_glow",
+						DefaultVertexFormat.NEW_ENTITY,
+						VertexFormat.Mode.QUADS,
+						1536,
+						false,
+						true,
+						RenderType.CompositeState.builder()
+												 .setShaderState(RENDERTYPE_EYES_SHADER)
+												 .setTextureState(renderstateshard$texturestateshard)
+												 .setTransparencyState(p_311465_)
+												 .setWriteMaskState(RenderStateShard.COLOR_DEPTH_WRITE)
+												 .createCompositeState(false)
+				);
+			}
+	);
 
 	public static RenderType antline(ResourceLocation location)
 	{

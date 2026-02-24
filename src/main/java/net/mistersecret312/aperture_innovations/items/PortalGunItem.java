@@ -193,6 +193,13 @@ public class PortalGunItem extends Item implements GeoItem
 				}
 			}
 
+			if(getHeldEntity(stack) != null)
+			{
+				int tick = getZapTick(stack);
+				setZapTick(stack, tick+1);
+			}
+			else setZapTick(stack, -1);
+
 			if(link != null && isSelected && (getPair(stack) == null || getDualityState(stack) == 2) )
 			{
 				link.updateColors(level, getPrimaryPortalColor(stack), getSecondaryPortalColor(stack));
@@ -436,6 +443,23 @@ public class PortalGunItem extends Item implements GeoItem
 	{
 		return stack.getOrDefault(DataComponentInit.INITIALIZED, false);
 	}
+
+	public void setZapTick(ItemStack stack, int tick)
+	{
+		if(tick < 0)
+			stack.remove(DataComponentInit.ZAP_TICK);
+		else
+			stack.set(DataComponentInit.ZAP_TICK, tick);
+
+		if(tick > 8)
+			stack.set(DataComponentInit.ZAP_TICK, 0);
+	}
+
+	public int getZapTick(ItemStack stack)
+	{
+		return stack.getOrDefault(DataComponentInit.ZAP_TICK, -1);
+	}
+
 
 	private <T extends PortalGunItem> PlayState handleAnimationState(AnimationState state) {
 		return PlayState.STOP;

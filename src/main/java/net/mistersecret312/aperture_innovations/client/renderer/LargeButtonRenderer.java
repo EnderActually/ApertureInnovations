@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.BlockPos;
@@ -16,6 +17,7 @@ import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.block_entities.LargeButtonBlockEntity;
 import net.mistersecret312.aperture_innovations.blocks.LargeButtonBlock;
+import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.client.model.LargeButtonModel;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -65,10 +67,11 @@ public class LargeButtonRenderer extends DynamicGeoBlockRenderer<LargeButtonBloc
 	{
 		if(bone.getName().equals("ColoredLines"))
 		{
-			int color = animatable.color;
+			boolean active = animatable.getBlockState().getValue(LargeButtonBlock.PRESSED);
+			int color = active ? animatable.color : animatable.color;
 			if(color == -1)
 			{
-				if(animatable.getBlockState().getValue(LargeButtonBlock.PRESSED))
+				if(active)
 					return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
 							"textures/block/large_button/large_button_lines_active.png");
 				else return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
@@ -98,7 +101,7 @@ public class LargeButtonRenderer extends DynamicGeoBlockRenderer<LargeButtonBloc
 	{
 		List<String> glows = Lists.newArrayList("ColoredLines", "Button");
 		if(glows.contains(bone.getName()))
-			return GLOWING_RENDER_TYPE.apply(getTextureOverrideForBone(bone, animatable, partialTick), false);
+			return PortalRenderTypes.APERTURE_GLOW.apply(getTextureOverrideForBone(bone, animatable, partialTick), RenderStateShard.TRANSLUCENT_TRANSPARENCY);
 
 		return super.getRenderTypeOverrideForBone(bone, animatable, texturePath, bufferSource, partialTick);
 	}
@@ -234,7 +237,7 @@ public class LargeButtonRenderer extends DynamicGeoBlockRenderer<LargeButtonBloc
 				centerPos.x-1f, centerPos.y+0.5f, centerPos.z+1f);
 		poseStack.pushPose();
 		poseStack.translate(-animatable.getBlockPos().getX(), -animatable.getBlockPos().getY(), -animatable.getBlockPos().getZ());
-		LevelRenderer.renderLineBox(poseStack, bufferSource.getBuffer(RenderType.lines()), box, 1f, 0f, 0f, 1f);
+		//LevelRenderer.renderLineBox(poseStack, bufferSource.getBuffer(RenderType.lines()), box, 1f, 0f, 0f, 1f);
 		poseStack.popPose();
 
 		super.render(animatable, partialTick, poseStack, bufferSource, packedLight, packedOverlay);

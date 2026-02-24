@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
@@ -14,6 +15,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.block_entities.PedestalButtonBlockEntity;
 import net.mistersecret312.aperture_innovations.blocks.PedestalButtonBlock;
+import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.client.model.PedestalButtonModel;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -91,7 +93,7 @@ public class PedestalButtonRenderer extends DynamicGeoBlockRenderer<PedestalButt
 	{
 		List<String> glows = Lists.newArrayList("ColoredLines", "Button");
 		if(glows.contains(bone.getName()))
-			return GLOWING_RENDER_TYPE.apply(getTextureOverrideForBone(bone, animatable, partialTick), false);
+			return PortalRenderTypes.APERTURE_GLOW.apply(getTextureOverrideForBone(bone, animatable, partialTick), RenderStateShard.TRANSLUCENT_TRANSPARENCY);
 
 		return super.getRenderTypeOverrideForBone(bone, animatable, texturePath, bufferSource, partialTick);
 	}

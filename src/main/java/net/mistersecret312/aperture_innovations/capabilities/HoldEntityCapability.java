@@ -9,15 +9,18 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.targeting.TargetingConditions;
+import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.entities.WeightedStorageCubeEntity;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.network.ClientboundApertureCapabilityPacket;
+import net.mistersecret312.aperture_innovations.network.ClientboundEntityHeldUpdatePacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundTeleportMomentumPacket;
 import net.neoforged.neoforge.capabilities.EntityCapability;
 import net.neoforged.neoforge.common.util.INBTSerializable;
@@ -38,16 +41,13 @@ public class HoldEntityCapability implements INBTSerializable<CompoundTag>
 
 	public void tick(Level level, Entity entity)
 	{
-		if(level.isClientSide())
-			return;
-
 		if(!isHeld)
 			return;
 
 		Player player = findHoldingPlayer(level, entity);
 		if(player == null)
 		{
-			isHeld = false;
+			this.setHeld(entity, false);
 			entity.setNoGravity(false);
 			return;
 		}
@@ -58,6 +58,7 @@ public class HoldEntityCapability implements INBTSerializable<CompoundTag>
 		Vec3 targetPos = player.getEyePosition().add(player.getViewVector(1F).multiply(3f, 3f, 3f));
 		Vec3 offset = entity.getBoundingBox().getCenter().vectorTo(targetPos);
 
+		entity.setOldPosAndRot();
 		entity.setYRot(-player.getYRot());
 		entity.setDeltaMovement(offset);
 	}
@@ -96,6 +97,16 @@ public class HoldEntityCapability implements INBTSerializable<CompoundTag>
 		}
 
 		return holdingPlayer;
+	}
+
+	public void setHeld(Entity entity, boolean held)
+	{
+		if(!entity.level().isClientSide())
+		{
+			this.isHeld = held;
+			PacketDistributor.sendToAllPlayers(new ClientboundEntityHeldUpdatePacket(entity.getId(), held));
+		}
+		else this.isHeld = held;
 	}
 
 	@Override
