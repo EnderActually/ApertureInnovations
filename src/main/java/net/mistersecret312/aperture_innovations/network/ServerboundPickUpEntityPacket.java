@@ -82,7 +82,7 @@ public record ServerboundPickUpEntityPacket() implements CustomPacketPayload
 				if(result.getType().equals(HitResult.Type.ENTITY))
 				{
 					Entity entity = result.getEntity();
-					if(entity.getBoundingBox().getSize() >= player.getBoundingBox().getSize())
+					if(entity.getBoundingBox().getSize() > player.getBoundingBox().getSize()*1.5f)
 						return;
 
 					HoldEntityCapability capability = entity.getData(AttachmentTypeInit.HOLD_ENTITY);

@@ -4,12 +4,15 @@ import com.google.common.collect.Lists;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.block_entities.LargeButtonBlockEntity;
 import net.mistersecret312.aperture_innovations.blocks.LargeButtonBlock;
@@ -121,6 +124,16 @@ public class LargeButtonRenderer extends DynamicGeoBlockRenderer<LargeButtonBloc
 				if(facing.getAxis().equals(Direction.Axis.X))
 					poseStack.mulPose(Axis.YP.rotationDegrees(180));
 			}
+
+			boolean facingPos = facing.getAxisDirection().equals(Direction.AxisDirection.POSITIVE);
+			if(facing.getAxis().equals(Direction.Axis.X))
+			{
+				if(!facingPos)
+					poseStack.translate(0f, 0f, 1f);
+				else poseStack.translate(-1f, 0f, 0f);
+			}
+			else if(!facingPos)
+				poseStack.translate(-1f, 0f, 1f);
 		}
 		if(normal.getAxis().isHorizontal())
 		{
@@ -201,4 +214,55 @@ public class LargeButtonRenderer extends DynamicGeoBlockRenderer<LargeButtonBloc
 	}
 
 
+	@Override
+	public void postRender(PoseStack poseStack, LargeButtonBlockEntity animatable, BakedGeoModel model,
+						   MultiBufferSource bufferSource, @Nullable VertexConsumer buffer, boolean isReRender,
+						   float partialTick, int packedLight, int packedOverlay, int colour)
+	{
+		super.postRender(poseStack, animatable, model, bufferSource, buffer, isReRender, partialTick, packedLight,
+				packedOverlay, colour);
+
+	}
+
+	@Override
+	public void render(LargeButtonBlockEntity animatable, float partialTick, PoseStack poseStack,
+					   MultiBufferSource bufferSource, int packedLight, int packedOverlay)
+	{
+		Vec3 centerPos = Vec3.atLowerCornerOf(animatable.getBlockPos()).add(0.5f, 0f, 0.5f);
+
+		AABB box = new AABB(centerPos.x, centerPos.y+0.25, centerPos.z,
+				centerPos.x-1f, centerPos.y+0.5f, centerPos.z+1f);
+		poseStack.pushPose();
+		poseStack.translate(-animatable.getBlockPos().getX(), -animatable.getBlockPos().getY(), -animatable.getBlockPos().getZ());
+		LevelRenderer.renderLineBox(poseStack, bufferSource.getBuffer(RenderType.lines()), box, 1f, 0f, 0f, 1f);
+		poseStack.popPose();
+
+		super.render(animatable, partialTick, poseStack, bufferSource, packedLight, packedOverlay);
+	}
+
+	@Override
+	public void actuallyRender(PoseStack poseStack, LargeButtonBlockEntity animatable, BakedGeoModel model,
+							   @Nullable RenderType renderType, MultiBufferSource bufferSource,
+							   @Nullable VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight,
+							   int packedOverlay, int colour)
+	{
+		super.actuallyRender(poseStack, animatable, model, renderType, bufferSource, buffer, isReRender, partialTick,
+				packedLight, packedOverlay, colour);
+	}
+
+	@Override
+	public boolean shouldRenderOffScreen(LargeButtonBlockEntity blockEntity)
+	{
+
+		return true;
+	}
+
+	@Override
+	public AABB getRenderBoundingBox(LargeButtonBlockEntity blockEntity)
+	{
+		Vec3 centerPos = Vec3.atLowerCornerOf(blockEntity.getBlockPos()).add(1f, 0f, 0);
+
+		return new AABB(centerPos.x, centerPos.y, centerPos.z,
+				centerPos.x-2f, centerPos.y+0.5f, centerPos.z+2f);
+	}
 }

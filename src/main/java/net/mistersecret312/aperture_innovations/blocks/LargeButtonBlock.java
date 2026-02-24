@@ -20,6 +20,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
@@ -61,7 +63,7 @@ public class LargeButtonBlock extends BaseEntityBlock
 	@Override
 	public void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
 		if (!level.isClientSide() && !state.getValue(PRESSED)) {
-			this.checkPressed(entity, level, pos, state);
+
 		}
 	}
 
@@ -73,7 +75,6 @@ public class LargeButtonBlock extends BaseEntityBlock
 				pos.getX() + 0.9, pos.getY() + 0.25, pos.getZ() + 0.9);
 
 		boolean isNowPressed = !level.getEntities(null, detectionBox).isEmpty();
-		List<WeightedStorageCubeEntity> cubes = level.getEntitiesOfClass(WeightedStorageCubeEntity.class, detectionBox);
 
 		if (isNowPressed != wasPressed)
 		{
@@ -133,7 +134,7 @@ public class LargeButtonBlock extends BaseEntityBlock
 	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context)
 	{
 		VoxelShape shape = Shapes.empty();
-		shape = Shapes.join(shape, Shapes.box(0.1875, 0, 0.375, 0.8125, 1.375, 1), BooleanOp.OR);
+		shape = Shapes.join(shape, Shapes.box(-0.6875, 0, 0.3125, 0.6875, 0.25, 1.6875), BooleanOp.OR);
 
 		return shape;
 	}
@@ -183,7 +184,7 @@ public class LargeButtonBlock extends BaseEntityBlock
 	protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random)
 	{
 		if (state.getValue(PRESSED)) {
-			this.checkPressed(null, level, pos, state);
+
 		}
 		super.tick(state, level, pos, random);
 	}
@@ -209,6 +210,20 @@ public class LargeButtonBlock extends BaseEntityBlock
 			return ItemInteractionResult.SUCCESS;
 		}
 		return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+	}
+
+	@Override
+	public @Nullable <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state,
+																			BlockEntityType<T> blockEntityType)
+	{
+		return createTickerHelper(blockEntityType, BlockEntityInit.LARGE_BUTTON.get(), LargeButtonBlockEntity::tick);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Nullable
+	protected static <E extends BlockEntity, A extends BlockEntity> BlockEntityTicker<A> createTickerHelper(BlockEntityType<A> typeA, BlockEntityType<E> typeB, BlockEntityTicker<? super E> ticker)
+	{
+		return typeB == typeA ? (BlockEntityTicker<A>)ticker : null;
 	}
 
 	@Override
