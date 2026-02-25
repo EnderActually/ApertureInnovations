@@ -20,6 +20,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.mistersecret312.aperture_innovations.block_entities.AntlineBlockEntity;
 import net.mistersecret312.aperture_innovations.blocks.enums.ConnectionState;
 import net.mistersecret312.aperture_innovations.data.AntlineData;
@@ -33,6 +36,17 @@ import org.jetbrains.annotations.Nullable;
 
 public class AntlineBlock extends BaseEntityBlock
 {
+	private static final double THICKNESS = 0.0625f;
+
+	protected static final VoxelShape SHAPE_UP = Shapes.box(0.0, 0.0, 0.0, 1.0, THICKNESS, 1.0);
+	protected static final VoxelShape SHAPE_DOWN = Shapes.box(0.0, 1.0 - THICKNESS, 0.0, 1.0, 1.0, 1.0);
+
+	protected static final VoxelShape SHAPE_NORTH = Shapes.box(0.0, 0.0, 1.0 - THICKNESS, 1.0, 1.0, 1.0);
+	protected static final VoxelShape SHAPE_SOUTH = Shapes.box(0.0, 0.0, 0.0, 1.0, 1.0, THICKNESS);
+
+	protected static final VoxelShape SHAPE_EAST = Shapes.box(0.0, 0.0, 0.0, THICKNESS, 1.0, 1.0);
+	protected static final VoxelShape SHAPE_WEST = Shapes.box(1.0 - THICKNESS, 0.0, 0.0, 1.0, 1.0, 1.0);
+
 	public static final MapCodec<AntlineBlock> CODEC = simpleCodec(AntlineBlock::new);
 
 	public static final DirectionProperty NORMAL = DirectionProperty.create("normal");
@@ -173,6 +187,22 @@ public class AntlineBlock extends BaseEntityBlock
 	public boolean canConnectRedstone(BlockState state, BlockGetter level, BlockPos pos, @Nullable Direction direction)
 	{
 		return true;
+	}
+
+	@Override
+	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context)
+	{
+		Direction normal = state.getValue(NORMAL);
+
+		return switch (normal)
+		{
+			case UP -> SHAPE_UP;
+			case DOWN -> SHAPE_DOWN;
+			case NORTH -> SHAPE_NORTH;
+			case SOUTH -> SHAPE_SOUTH;
+			case EAST -> SHAPE_EAST;
+			case WEST -> SHAPE_WEST;
+		};
 	}
 
 	@Override

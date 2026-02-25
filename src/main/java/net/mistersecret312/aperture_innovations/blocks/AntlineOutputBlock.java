@@ -21,14 +21,16 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.ticks.TickPriority;
-import net.mistersecret312.aperture_innovations.block_entities.AntlineBlockEntity;
 import net.mistersecret312.aperture_innovations.block_entities.AntlineOutputBlockEntity;
 import net.mistersecret312.aperture_innovations.init.BlockEntityInit;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.items.ColorfulGelItem;
 import org.jetbrains.annotations.Nullable;
+
+import static net.mistersecret312.aperture_innovations.blocks.AntlineBlock.*;
 
 public class AntlineOutputBlock extends BaseEntityBlock
 {
@@ -99,6 +101,22 @@ public class AntlineOutputBlock extends BaseEntityBlock
 
 	private boolean canSurviveOn(BlockGetter level, BlockPos pos, BlockState state, Direction direction) {
 		return state.isFaceSturdy(level, pos, direction);
+	}
+
+	@Override
+	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context)
+	{
+		Direction normal = state.getValue(NORMAL);
+
+		return switch (normal)
+		{
+			case UP -> SHAPE_UP;
+			case DOWN -> SHAPE_DOWN;
+			case NORTH -> SHAPE_NORTH;
+			case SOUTH -> SHAPE_SOUTH;
+			case EAST -> SHAPE_EAST;
+			case WEST -> SHAPE_WEST;
+		};
 	}
 
 	@Override

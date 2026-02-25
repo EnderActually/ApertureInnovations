@@ -46,7 +46,10 @@ public class LargeButtonRenderer extends DynamicGeoBlockRenderer<LargeButtonBloc
 	{
 		if(bone.getName().equals("ColoredLines"))
 		{
-			Color color = new Color(this.animatable.color, false);
+			boolean active = animatable.getBlockState().getValue(LargeButtonBlock.PRESSED);
+			int intColor = active ? this.animatable.activeColor : this.animatable.color;
+
+			Color color = new Color(intColor, false);
 			renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, color.getRGB());
 			return true;
 		}
@@ -68,7 +71,7 @@ public class LargeButtonRenderer extends DynamicGeoBlockRenderer<LargeButtonBloc
 		if(bone.getName().equals("ColoredLines"))
 		{
 			boolean active = animatable.getBlockState().getValue(LargeButtonBlock.PRESSED);
-			int color = active ? animatable.color : animatable.color;
+			int color = active ? animatable.activeColor : animatable.color;
 			if(color == -1)
 			{
 				if(active)
@@ -222,42 +225,6 @@ public class LargeButtonRenderer extends DynamicGeoBlockRenderer<LargeButtonBloc
 		super.renderChildBones(poseStack, animatable, bone, renderType, bufferSource, buffer, isReRender, partialTick, packedLight, packedOverlay, colour);
 
 		poseStack.popPose();
-	}
-
-
-	@Override
-	public void postRender(PoseStack poseStack, LargeButtonBlockEntity animatable, BakedGeoModel model,
-						   MultiBufferSource bufferSource, @Nullable VertexConsumer buffer, boolean isReRender,
-						   float partialTick, int packedLight, int packedOverlay, int colour)
-	{
-		super.postRender(poseStack, animatable, model, bufferSource, buffer, isReRender, partialTick, packedLight,
-				packedOverlay, colour);
-
-	}
-
-	@Override
-	public void render(LargeButtonBlockEntity animatable, float partialTick, PoseStack poseStack,
-					   MultiBufferSource bufferSource, int packedLight, int packedOverlay)
-	{
-
-		super.render(animatable, partialTick, poseStack, bufferSource, packedLight, packedOverlay);
-	}
-
-	@Override
-	public void actuallyRender(PoseStack poseStack, LargeButtonBlockEntity animatable, BakedGeoModel model,
-							   @Nullable RenderType renderType, MultiBufferSource bufferSource,
-							   @Nullable VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight,
-							   int packedOverlay, int colour)
-	{
-		super.actuallyRender(poseStack, animatable, model, renderType, bufferSource, buffer, isReRender, partialTick,
-				packedLight, packedOverlay, colour);
-	}
-
-	@Override
-	public boolean shouldRenderOffScreen(LargeButtonBlockEntity blockEntity)
-	{
-
-		return true;
 	}
 
 	@Override

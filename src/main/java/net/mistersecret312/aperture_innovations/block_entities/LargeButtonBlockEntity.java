@@ -30,14 +30,13 @@ public class LargeButtonBlockEntity extends BlockEntity implements GeoBlockEntit
 	private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
 	public int color = -1;
+	public int activeColor = -1;
 	public int buttonColor = -1;
 
 	public LargeButtonBlockEntity(BlockPos pos, BlockState blockState)
 	{
 		super(BlockEntityInit.LARGE_BUTTON.get(), pos, blockState);
 	}
-
-
 
 	@Override
 	public ClientboundBlockEntityDataPacket getUpdatePacket()
@@ -56,6 +55,7 @@ public class LargeButtonBlockEntity extends BlockEntity implements GeoBlockEntit
 	{
 		tag.putInt("color", this.color);
 		tag.putInt("button_color", this.buttonColor);
+		tag.putInt("active_color", this.activeColor);
 
 		super.saveAdditional(tag, registries);
 	}
@@ -67,6 +67,7 @@ public class LargeButtonBlockEntity extends BlockEntity implements GeoBlockEntit
 
 		this.color = tag.getInt("color");
 		this.buttonColor = tag.getInt("button_color");
+		this.activeColor = tag.getInt("active_color");
 	}
 
 	@Override
