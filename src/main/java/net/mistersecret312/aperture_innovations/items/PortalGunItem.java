@@ -30,10 +30,7 @@ import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
 import net.mistersecret312.aperture_innovations.client.renderer.PortalGunRenderer;
 import net.mistersecret312.aperture_innovations.config.PortalGunConfig;
-import net.mistersecret312.aperture_innovations.init.AdvancementInit;
-import net.mistersecret312.aperture_innovations.init.DataComponentInit;
-import net.mistersecret312.aperture_innovations.init.ItemInit;
-import net.mistersecret312.aperture_innovations.init.TagInit;
+import net.mistersecret312.aperture_innovations.init.*;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalSoundsPacket;
 import net.mistersecret312.aperture_innovations.data.portal.PortalLink;
 import net.mistersecret312.aperture_innovations.data.PortalLinkData;
@@ -195,6 +192,17 @@ public class PortalGunItem extends Item implements GeoItem
 
 			if(getHeldEntity(stack) != null)
 			{
+				Integer id = getHeldEntity(stack);
+				if(id != null)
+				{
+					Entity heldEntity = level.getEntity(id);
+					if(heldEntity == null)
+						setHeldEntity(stack, null);
+
+					if(heldEntity != null && !heldEntity.getData(AttachmentTypeInit.HOLD_ENTITY).isHeld)
+						setHeldEntity(stack, null);
+				}
+
 				int tick = getZapTick(stack);
 				setZapTick(stack, tick+1);
 			}

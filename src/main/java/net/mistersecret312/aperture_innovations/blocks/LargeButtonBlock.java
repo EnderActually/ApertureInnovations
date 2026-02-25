@@ -17,7 +17,6 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
@@ -26,21 +25,17 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
-import net.minecraft.world.phys.AABB;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.mistersecret312.aperture_innovations.block_entities.LargeButtonBlockEntity;
-import net.mistersecret312.aperture_innovations.entities.WeightedStorageCubeEntity;
 import net.mistersecret312.aperture_innovations.init.BlockEntityInit;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.items.ColorfulGelItem;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
 
 public class LargeButtonBlock extends BaseEntityBlock
 {
@@ -48,6 +43,7 @@ public class LargeButtonBlock extends BaseEntityBlock
 	public static final DirectionProperty NORMAL = DirectionProperty.create("normal");
 
 	public static final BooleanProperty PRESSED = BooleanProperty.create("pressed");
+	public static final IntegerProperty PART = IntegerProperty.create("part", 0, 3);
 
 	public static final MapCodec<LargeButtonBlock> CODEC = simpleCodec(LargeButtonBlock::new);
 
@@ -59,48 +55,6 @@ public class LargeButtonBlock extends BaseEntityBlock
 									  .setValue(FACING, Direction.NORTH)
 									  .setValue(PRESSED, false));
 	}
-
-	@Override
-	public void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
-		if (!level.isClientSide() && !state.getValue(PRESSED)) {
-
-		}
-	}
-
-	private void checkPressed(Entity entity, Level level, BlockPos pos, BlockState state) {
-		boolean wasPressed = state.getValue(PRESSED);
-
-		AABB detectionBox = new AABB(
-				pos.getX() + 0.1, pos.getY(), pos.getZ() + 0.1,
-				pos.getX() + 0.9, pos.getY() + 0.25, pos.getZ() + 0.9);
-
-		boolean isNowPressed = !level.getEntities(null, detectionBox).isEmpty();
-
-		if (isNowPressed != wasPressed)
-		{
-			level.setBlock(pos, state.setValue(PRESSED, isNowPressed), 3);
-
-			if (isNowPressed)
-			{
-				level.playSound(null, pos, SoundInit.LARGE_BUTTON_DOWN.get(), SoundSource.BLOCKS, 0.5F, 1f);
-				BlockEntity blockEntity = level.getBlockEntity(pos);
-				if(blockEntity instanceof LargeButtonBlockEntity pedestal)
-					pedestal.triggerAnim("press", "down");
-			}
-			else
-			{
-				level.playSound(null, pos, SoundInit.LARGE_BUTTON_UP.get(), SoundSource.BLOCKS, 0.5F, 1f);
-				BlockEntity blockEntity = level.getBlockEntity(pos);
-				if(blockEntity instanceof LargeButtonBlockEntity pedestal)
-					pedestal.triggerAnim("press", "up");
-			}
-		}
-
-		if (isNowPressed)
-			level.scheduleTick(pos, this, 10);
-
-	}
-
 
 
 	@Override
@@ -133,8 +87,20 @@ public class LargeButtonBlock extends BaseEntityBlock
 	@Override
 	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context)
 	{
-		VoxelShape shape = Shapes.empty();
-		shape = Shapes.join(shape, Shapes.box(-0.6875, 0, 0.3125, 0.6875, 0.25, 1.6875), BooleanOp.OR);
+		Direction normal = state.getValue(NORMAL);
+		VoxelShape shape = Shapes.box(-0.6875, 0, 0.3125, 0.6875, 0.1875, 1.6875);
+
+		if(normal.equals(Direction.DOWN))
+			shape = Shapes.box(-0.6875, 0.8125, 0.3125, 0.6785, 1, 1.6875);
+
+		if(normal.equals(Direction.EAST))
+			shape = Shapes.box(0, -0.6875, 0.3125, 0.1875, 0.6875, 1.6875);
+		if(normal.equals(Direction.WEST))
+			shape = Shapes.box(0.8125, -0.6875, 0.3125, 1.0, 0.6875, 1.6875);
+		if(normal.equals(Direction.NORTH))
+			shape = Shapes.box(-0.6875, -0.6875, 0.8125, 0.6875, 0.6875, 1.0);
+		if(normal.equals(Direction.SOUTH))
+			shape = Shapes.box(-0.6875, -0.6875, 0, 0.6875, 0.6875, 0.1875);
 
 		return shape;
 	}
@@ -145,7 +111,7 @@ public class LargeButtonBlock extends BaseEntityBlock
 		BlockState state = this.defaultBlockState();
 
 		Direction direction = context.getClickedFace().getAxis().isHorizontal() ?
-									  context.getNearestLookingVerticalDirection().getOpposite()
+									  Direction.UP
 									  : context.getHorizontalDirection();
 
 		state = state.setValue(NORMAL, context.getClickedFace());

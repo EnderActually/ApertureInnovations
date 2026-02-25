@@ -100,8 +100,11 @@ public class LargeButtonRenderer extends DynamicGeoBlockRenderer<LargeButtonBloc
 																MultiBufferSource bufferSource, float partialTick)
 	{
 		List<String> glows = Lists.newArrayList("ColoredLines", "Button");
+		if(bone.getName().equals("Button"))
+			return GLOWING_RENDER_TYPE.apply(getTextureOverrideForBone(bone, animatable, partialTick), false);
 		if(glows.contains(bone.getName()))
-			return PortalRenderTypes.APERTURE_GLOW.apply(getTextureOverrideForBone(bone, animatable, partialTick), RenderStateShard.TRANSLUCENT_TRANSPARENCY);
+			return PortalRenderTypes.APERTURE_GLOW.apply(getTextureOverrideForBone(bone, animatable, partialTick),
+					RenderStateShard.TRANSLUCENT_TRANSPARENCY);
 
 		return super.getRenderTypeOverrideForBone(bone, animatable, texturePath, bufferSource, partialTick);
 	}
@@ -117,6 +120,7 @@ public class LargeButtonRenderer extends DynamicGeoBlockRenderer<LargeButtonBloc
 		Direction facing = animatable.getBlockState().getValue(LargeButtonBlock.FACING);
 		Direction normal = animatable.getBlockState().getValue(LargeButtonBlock.NORMAL);
 		boolean positive = normal.getAxisDirection().equals(Direction.AxisDirection.POSITIVE);
+		boolean facingPos = facing.getAxisDirection().equals(Direction.AxisDirection.POSITIVE);
 
 		if(normal.getAxis().isVertical())
 		{
@@ -125,10 +129,14 @@ public class LargeButtonRenderer extends DynamicGeoBlockRenderer<LargeButtonBloc
 				poseStack.translate(0f, 1f, 0f);
 				poseStack.mulPose(Axis.ZP.rotationDegrees(180));
 				if(facing.getAxis().equals(Direction.Axis.X))
+				{
+					poseStack.translate(0f, 0f, 1f);
 					poseStack.mulPose(Axis.YP.rotationDegrees(180));
+				}
+				else
+					poseStack.translate(1f, 0f, 0f);
 			}
 
-			boolean facingPos = facing.getAxisDirection().equals(Direction.AxisDirection.POSITIVE);
 			if(facing.getAxis().equals(Direction.Axis.X))
 			{
 				if(!facingPos)
@@ -142,14 +150,14 @@ public class LargeButtonRenderer extends DynamicGeoBlockRenderer<LargeButtonBloc
 		{
 			if(normal.getAxis().equals(Direction.Axis.X))
 			{
-				poseStack.translate(positive ? -0.5f : 0.5f, 0.5f, 0f);
+				poseStack.translate(positive ? -0.5f : 0.5f, 0.5f, positive ? 0f: 1f);
 
 				poseStack.mulPose(Axis.ZP.rotationDegrees(normal.toYRot()));
 				poseStack.mulPose(Axis.YP.rotationDegrees(positive ? 180 : 0));
 			}
 			if(normal.getAxis().equals(Direction.Axis.Z))
 			{
-				poseStack.translate(0f, 0.5f, positive ? -0.5f : 0.5f);
+				poseStack.translate(positive ? 0f : -1f, 0.5f, positive ? -0.5f : 0.5f);
 				poseStack.mulPose(Axis.ZP.rotationDegrees(90));
 				poseStack.mulPose(Axis.XP.rotationDegrees(positive ? 90 : -90));
 			}
@@ -231,14 +239,6 @@ public class LargeButtonRenderer extends DynamicGeoBlockRenderer<LargeButtonBloc
 	public void render(LargeButtonBlockEntity animatable, float partialTick, PoseStack poseStack,
 					   MultiBufferSource bufferSource, int packedLight, int packedOverlay)
 	{
-		Vec3 centerPos = Vec3.atLowerCornerOf(animatable.getBlockPos()).add(0.5f, 0f, 0.5f);
-
-		AABB box = new AABB(centerPos.x, centerPos.y+0.25, centerPos.z,
-				centerPos.x-1f, centerPos.y+0.5f, centerPos.z+1f);
-		poseStack.pushPose();
-		poseStack.translate(-animatable.getBlockPos().getX(), -animatable.getBlockPos().getY(), -animatable.getBlockPos().getZ());
-		//LevelRenderer.renderLineBox(poseStack, bufferSource.getBuffer(RenderType.lines()), box, 1f, 0f, 0f, 1f);
-		poseStack.popPose();
 
 		super.render(animatable, partialTick, poseStack, bufferSource, packedLight, packedOverlay);
 	}
@@ -264,8 +264,28 @@ public class LargeButtonRenderer extends DynamicGeoBlockRenderer<LargeButtonBloc
 	public AABB getRenderBoundingBox(LargeButtonBlockEntity blockEntity)
 	{
 		Vec3 centerPos = Vec3.atLowerCornerOf(blockEntity.getBlockPos()).add(1f, 0f, 0);
+		Direction normal = blockEntity.getBlockState().getValue(LargeButtonBlock.NORMAL);
+		if(normal.equals(Direction.UP))
+			return new AABB(centerPos.x, centerPos.y, centerPos.z,
+					centerPos.x-2f, centerPos.y+0.5f, centerPos.z+2f);
+		if(normal.equals(Direction.DOWN))
+			return new AABB(centerPos.x, centerPos.y+0.5F, centerPos.z,
+					centerPos.x-2f, centerPos.y+1f, centerPos.z+2f);
 
-		return new AABB(centerPos.x, centerPos.y, centerPos.z,
-				centerPos.x-2f, centerPos.y+0.5f, centerPos.z+2f);
+		if(normal.equals(Direction.WEST))
+			return new AABB(centerPos.x, centerPos.y-1f, centerPos.z,
+					centerPos.x-0.5F, centerPos.y+1f, centerPos.z+2f);
+		if(normal.equals(Direction.EAST))
+			return new AABB(centerPos.x-0.5f, centerPos.y-1f, centerPos.z,
+					centerPos.x-1F, centerPos.y+1f, centerPos.z+2f);
+
+		if(normal.equals(Direction.NORTH))
+			return new AABB(centerPos.x, centerPos.y-1f, centerPos.z+1f,
+					centerPos.x-2f, centerPos.y+1f, centerPos.z+0.5F);
+		if(normal.equals(Direction.SOUTH))
+			return new AABB(centerPos.x, centerPos.y-1f, centerPos.z,
+					centerPos.x-2f, centerPos.y+1f, centerPos.z+0.5F);
+
+		return new AABB(centerPos, centerPos);
 	}
 }

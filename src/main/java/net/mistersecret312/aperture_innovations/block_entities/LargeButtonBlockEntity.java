@@ -1,6 +1,7 @@
 package net.mistersecret312.aperture_innovations.block_entities;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -94,8 +95,30 @@ public class LargeButtonBlockEntity extends BlockEntity implements GeoBlockEntit
 	{
 		Vec3 centerPos = Vec3.atLowerCornerOf(button.getBlockPos()).add(0.5f, 0f, 0.5f);
 
-		AABB box = new AABB(centerPos.x, centerPos.y+0.25, centerPos.z,
-				centerPos.x-1f, centerPos.y+0.5f, centerPos.z+1f);
+		Direction normal = blockState.getValue(LargeButtonBlock.NORMAL);
+		AABB box = new AABB(centerPos, centerPos);
+
+		if(normal.equals(Direction.UP))
+			box = new AABB(centerPos.x, centerPos.y+0.25, centerPos.z,
+					centerPos.x-1f, centerPos.y+0.5f, centerPos.z+1f);
+		if(normal.equals(Direction.DOWN))
+			box = new AABB(centerPos.x, centerPos.y+0.5, centerPos.z,
+					centerPos.x-1f, centerPos.y+0.75f, centerPos.z+1f);
+
+		if(normal.equals(Direction.SOUTH))
+			box = new AABB(centerPos.x, centerPos.y-0.5f, centerPos.z-0.25F,
+					centerPos.x-1f, centerPos.y+0.5f, centerPos.z);
+		if(normal.equals(Direction.NORTH))
+			box = new AABB(centerPos.x, centerPos.y-0.5f, centerPos.z+0.25F,
+					centerPos.x-1f, centerPos.y+0.5f, centerPos.z);
+
+		if(normal.equals(Direction.WEST))
+			box = new AABB(centerPos.x+0.25f, centerPos.y-0.5f, centerPos.z,
+					centerPos.x, centerPos.y+0.5f, centerPos.z+1f);
+		if(normal.equals(Direction.EAST))
+			box = new AABB(centerPos.x-0.25f, centerPos.y-0.5f, centerPos.z,
+					centerPos.x, centerPos.y+0.5f, centerPos.z+1f);
+
 		List<Entity> entities = level.getEntities((Entity) null, box, entity -> entity.getBoundingBox().getSize() > 0.25);
 
 		boolean isPressed = blockState.getValue(LargeButtonBlock.PRESSED);

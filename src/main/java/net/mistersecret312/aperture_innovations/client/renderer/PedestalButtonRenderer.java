@@ -92,9 +92,11 @@ public class PedestalButtonRenderer extends DynamicGeoBlockRenderer<PedestalButt
 																MultiBufferSource bufferSource, float partialTick)
 	{
 		List<String> glows = Lists.newArrayList("ColoredLines", "Button");
+		if(bone.getName().equals("Button"))
+			return GLOWING_RENDER_TYPE.apply(getTextureOverrideForBone(bone, animatable, partialTick), false);
 		if(glows.contains(bone.getName()))
-			return PortalRenderTypes.APERTURE_GLOW.apply(getTextureOverrideForBone(bone, animatable, partialTick), RenderStateShard.TRANSLUCENT_TRANSPARENCY);
-
+			return PortalRenderTypes.APERTURE_GLOW.apply(getTextureOverrideForBone(bone, animatable, partialTick),
+					RenderStateShard.TRANSLUCENT_TRANSPARENCY);
 		return super.getRenderTypeOverrideForBone(bone, animatable, texturePath, bufferSource, partialTick);
 	}
 

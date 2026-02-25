@@ -18,6 +18,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.AnvilBlock;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.block_entities.LargeButtonBlockEntity;
 import net.mistersecret312.aperture_innovations.blocks.LargeButtonBlock;
@@ -86,6 +88,16 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity
 	public boolean causeFallDamage(float fallDistance, float multiplier, DamageSource source)
 	{
 		Level level = this.level();
+
+		if(fallDistance > 5F)
+		{
+			AABB impactZone = this.getBoundingBox().expandTowards(0f, -0.25f, 0f);
+			for(Entity entity : level.getEntities(this, impactZone))
+			{
+				entity.hurt(entity.damageSources().fallingBlock(this), fallDistance/10);
+			}
+		}
+
 		if(!level.isClientSide())
 			level.playSound(null, blockPosition(), SoundInit.CUBE_IMPACT.get(), SoundSource.NEUTRAL);
 		return false;

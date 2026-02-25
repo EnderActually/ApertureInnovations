@@ -77,6 +77,9 @@ public record ServerboundOpenPortalPacket(boolean isPrimary) implements CustomPa
 			ItemStack gunStack = main.is(ItemInit.PORTAL_GUN.get()) ? main : off;
 			PortalGunItem portalGun = (PortalGunItem) gunStack.getItem();
 
+			if(portalGun.getHeldEntity(gunStack) != null)
+				return;
+
 			if(PortalGunConfig.portal_gun_consume_on_shot.get() && PortalGunConfig.portal_gun_uses_energy.get())
 				if(!consumeEnergy(gunStack, player))
 					return;
