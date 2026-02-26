@@ -40,6 +40,7 @@ public class ItemTabInit
 
 							  output.accept(BlockInit.ANTLINE.get());
 							  output.accept(BlockInit.CHECKMARK.get());
+							  output.accept(BlockInit.TIMER.get());
 
 							  output.accept(ItemInit.WEIGHTED_STORAGE_CUBE.get());
 

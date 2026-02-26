@@ -133,9 +133,14 @@ public class LargeButtonBlock extends BaseEntityBlock {
 			BlockPos[] offsets = getMultiblockOffsets(pos, state.getValue(NORMAL));
 			BlockState dummyState = state.setValue(PRESSED, false);
 
-			level.setBlock(offsets[0], dummyState.setValue(PART, 1), 3);
-			level.setBlock(offsets[1], dummyState.setValue(PART, 2), 3);
-			level.setBlock(offsets[2], dummyState.setValue(PART, 3), 3);
+			level.setBlock(offsets[0], dummyState.setValue(PART, 1), 16 | 2);
+			level.updateNeighborsAt(offsets[0], dummyState.getBlock());
+
+			level.setBlock(offsets[1], dummyState.setValue(PART, 2), 16 | 2);
+			level.updateNeighborsAt(offsets[1], dummyState.getBlock());
+
+			level.setBlock(offsets[2], dummyState.setValue(PART, 3), 16 | 2);
+			level.updateNeighborsAt(offsets[2], dummyState.getBlock());
 		}
 	}
 
@@ -159,9 +164,9 @@ public class LargeButtonBlock extends BaseEntityBlock {
 		else
 		{
 			BlockPos[] offsets = getMultiblockOffsets(currentPos, state.getValue(NORMAL));
-			for (BlockPos p : offsets)
+			for (BlockPos pos : offsets)
 			{
-				if (!level.getBlockState(p).is(this))
+				if (!level.getBlockState(pos).is(this))
 					return Blocks.AIR.defaultBlockState();
 			}
 		}
@@ -181,7 +186,8 @@ public class LargeButtonBlock extends BaseEntityBlock {
 
 				for (BlockPos p : offsets)
 				{
-					if (!p.equals(pos) && level.getBlockState(p).is(this)) {
+					if (!p.equals(pos) && level.getBlockState(p).is(this))
+					{
 						level.setBlock(p, Blocks.AIR.defaultBlockState(), 35);
 						level.levelEvent(player, 2001, p, Block.getId(masterState));
 					}
@@ -215,40 +221,12 @@ public class LargeButtonBlock extends BaseEntityBlock {
 
 			return 0;
 		}
-		if (state.getValue(PRESSED)) return 15;
+		if (state.getValue(PRESSED))
+			return 15;
+
 		return super.getSignal(state, level, pos, direction);
 	}
 
-	@Override
-	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult)
-	{
-		if (state.getValue(PART) != 0)
-		{
-			BlockPos masterPos = getMasterPos(pos, state);
-			BlockState masterState = level.getBlockState(masterPos);
-			if (masterState.is(this) && masterState.getValue(PART) == 0)
-				return this.useWithoutItem(masterState, level, masterPos, player, hitResult.withPosition(masterPos));
-
-			return InteractionResult.PASS;
-		}
-
-		BlockEntity blockEntity = level.getBlockEntity(pos);
-		if (state.getValue(PRESSED))
-			return InteractionResult.PASS;
-
-		if (blockEntity instanceof LargeButtonBlockEntity pedestalButton)
-		{
-			pedestalButton.triggerAnim("press", "down");
-			level.setBlock(pos, state.setValue(PRESSED, true), 3);
-			level.scheduleTick(pos, this, 15);
-			if (!level.isClientSide())
-			{
-				level.playSound(null, pos, SoundInit.LARGE_BUTTON_DOWN.get(), SoundSource.BLOCKS);
-			}
-			return InteractionResult.SUCCESS;
-		}
-		return InteractionResult.PASS;
-	}
 
 	@Override
 	protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult)

@@ -26,7 +26,9 @@ import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.block_entities.AntlineBlockEntity;
 import net.mistersecret312.aperture_innovations.block_entities.AntlineOutputBlockEntity;
+import net.mistersecret312.aperture_innovations.block_entities.AntlineTimerBlockEntity;
 import net.mistersecret312.aperture_innovations.blocks.AntlineOutputBlock;
+import net.mistersecret312.aperture_innovations.blocks.AntlineTimerBlock;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
 import net.mistersecret312.aperture_innovations.capabilities.HoldEntityCapability;
@@ -287,16 +289,7 @@ public class CommonEvents
 			return;
 
 		BlockState activatedBlockState = level.getBlockState(activatedBlockPos);
-		if(activatedBlockState.getBlock().equals(Blocks.REDSTONE_LAMP))
-		{
-			activatedBlockState = activatedBlockState.setValue(RedstoneLampBlock.LIT, signal != 0);
-			level.setBlock(activatedBlockPos, activatedBlockState, 16 | 2);
-		}
-		if(activatedBlockState.getBlock() instanceof PistonBaseBlock)
-		{
-			activatedBlockState = activatedBlockState.setValue(PistonBaseBlock.EXTENDED, signal != 0);
-			level.setBlock(activatedBlockPos, activatedBlockState, 16 | 2);
-		}
+
 		if(activatedBlockState.getBlock() instanceof AntlineOutputBlock)
 		{
 			activatedBlockState = activatedBlockState.setValue(AntlineOutputBlock.ACTIVE, signal != 0);
@@ -304,8 +297,29 @@ public class CommonEvents
 			if(blockEntity instanceof AntlineOutputBlockEntity output)
 				output.signal = signal;
 
-			level.setBlock(activatedBlockPos, activatedBlockState, 2);
+			level.setBlock(activatedBlockPos, activatedBlockState, 16 | 2);
 			BlockPos relativePos = activatedBlockPos.relative(activatedBlockState.getValue(AntlineOutputBlock.NORMAL).getOpposite());
+			level.updateNeighborsAt(relativePos, activatedBlockState.getBlock());
+		}
+
+		if(activatedBlockState.getBlock() instanceof AntlineTimerBlock)
+		{
+			if(signal == 0)
+				return;
+			if(activatedBlockState.getValue(AntlineTimerBlock.ACTIVE))
+				return;
+
+			activatedBlockState = activatedBlockState.setValue(AntlineTimerBlock.ACTIVE, true);
+			BlockEntity blockEntity = level.getBlockEntity(activatedBlockPos);
+			if(blockEntity instanceof AntlineTimerBlockEntity output)
+			{
+				output.signal = signal;
+				output.time = output.maxTime;
+				output.soundTime = 20;
+			}
+
+			level.setBlock(activatedBlockPos, activatedBlockState, 16 | 2);
+			BlockPos relativePos = activatedBlockPos.relative(activatedBlockState.getValue(AntlineTimerBlock.NORMAL).getOpposite());
 			level.updateNeighborsAt(relativePos, activatedBlockState.getBlock());
 		}
 

@@ -131,6 +131,7 @@ public class PortalRenderTypes extends RenderType
 				VertexFormat.Mode.QUADS, 256, true, true,
 				CompositeState.builder()
 						.setShaderState(POSITION_TEX_COLOR_SHADER)
+						.setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
 						.setTextureState(new TextureStateShard(location, false, false))
 						.createCompositeState(true));
 	}

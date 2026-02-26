@@ -120,6 +120,8 @@ public class ApertureInnovations
 		{
 			event.registerBlockEntityRenderer(BlockEntityInit.ANTLINE.get(), AntlineRenderer::new);
 			event.registerBlockEntityRenderer(BlockEntityInit.CHECKMARK.get(), AntlineOutputRenderer::new);
+			event.registerBlockEntityRenderer(BlockEntityInit.TIMER.get(), AntlineTimerRenderer::new);
+
 			event.registerBlockEntityRenderer(BlockEntityInit.PEDESTAL_BUTTON.get(), PedestalButtonRenderer::new);
 			event.registerBlockEntityRenderer(BlockEntityInit.LARGE_BUTTON.get(), LargeButtonRenderer::new);
 

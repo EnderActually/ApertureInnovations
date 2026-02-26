@@ -111,5 +111,11 @@
     "sounds": [
       "aperture_innovations:large_button_up"
     ]
+  },
+  "timer_tick": {
+    "subtitle": "sound.aperture_innovations.timer_tick",
+    "sounds": [
+      "aperture_innovations:synth_tick_tock_01"
+    ]
   }
 }

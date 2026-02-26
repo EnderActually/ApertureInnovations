@@ -11,6 +11,7 @@
 
   "block.aperture_innovations.antline": "Antline",
   "block.aperture_innovations.antline_checkmark": "Antline Checkmark",
+  "block.aperture_innovations.antline_timer": "Antline Timer",
 
   "block.aperture_innovations.pedestal_button": "Pedestal Button",
   "block.aperture_innovations.large_button": "Large Button",
@@ -61,6 +62,7 @@
   "sound.aperture_innovations.pedestal_button_up": "Pedestal Button unpressed",
   "sound.aperture_innovations.large_button_down": "Large Button pressed",
   "sound.aperture_innovations.large_button_up": "Large Button unpressed",
+  "sound.aperture_innovations.timer_tick": "Timer ticks",
 
   "advancements.aperture_innovations.aperture.root.title": "Aperture Science Innovators",
   "advancements.aperture_innovations.aperture.root.description": "Obtain the Aperture Science Handheld Portal Device",

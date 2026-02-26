@@ -39,6 +39,8 @@ public class BlockInit
 
     public static final DeferredBlock<Block> CHECKMARK = registerBlock("antline_checkmark",
             () -> new AntlineOutputBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.REDSTONE_WIRE)));
+    public static final DeferredBlock<Block> TIMER = registerBlock("antline_timer",
+            () -> new AntlineTimerBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.REDSTONE_WIRE)));
 
     public static final DeferredBlock<Block> PEDESTAL_BUTTON = registerBlock("pedestal_button",
             () -> new PedestalButtonBlock(BlockBehaviour.Properties.of().noOcclusion()));

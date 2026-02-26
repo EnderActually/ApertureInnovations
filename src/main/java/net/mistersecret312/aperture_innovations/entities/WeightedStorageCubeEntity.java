@@ -186,6 +186,27 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity
 		}
 	}
 
+	public void fizzle()
+	{
+		this.setNoGravity(true);
+
+		//TODO - Fizzling
+
+		super.kill();
+	}
+
+	@Override
+	public void kill()
+	{
+		for(ItemStack stack : this.container.getItems())
+		{
+			ItemEntity item = new ItemEntity(level(), position().x, position().y, position().z, stack);
+			level().addFreshEntity(item);
+		}
+		
+		super.kill();
+	}
+
 	@Override
 	public void lerpTo(double x, double y, double z, float yRot, float xRot, int steps) {
 		this.lerpX = x;

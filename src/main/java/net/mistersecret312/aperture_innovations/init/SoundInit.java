@@ -33,6 +33,8 @@ public class SoundInit
 	public static DeferredHolder<SoundEvent, SoundEvent> LARGE_BUTTON_DOWN = registerSoundEvent("large_button_down");
 	public static DeferredHolder<SoundEvent, SoundEvent> LARGE_BUTTON_UP = registerSoundEvent("large_button_up");
 
+	public static DeferredHolder<SoundEvent, SoundEvent> TIMER_TICK = registerSoundEvent("timer_tick");
+
     private static DeferredHolder<SoundEvent, SoundEvent> registerSoundEvent(String sound)
     {
         return SOUNDS.register(sound, () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, sound)));
