@@ -85,8 +85,54 @@ public class PedestalButtonBlock extends BaseEntityBlock
 	@Override
 	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context)
 	{
+		Direction facing = state.getValue(FACING);
+		Direction normal = state.getValue(NORMAL);
+
 		VoxelShape shape = Shapes.empty();
-		shape = Shapes.join(shape, Shapes.box(0.1875, 0, 0.375, 0.8125, 1.375, 1), BooleanOp.OR);
+		if(normal.getAxis().isVertical())
+		{
+			if(normal.equals(Direction.UP))
+			{
+				shape = Shapes.box(0.1875, 0, 0.375, 0.8125, 1.375, 1);
+				if(facing.equals(Direction.NORTH)) shape = Shapes.box(0.1875, 0, 0, 0.8125, 1.375, 0.625);
+				if(facing.equals(Direction.EAST)) shape = Shapes.box(0.375, 0, 0.1875, 1, 1.375, 0.8125);
+				if(facing.equals(Direction.WEST)) shape = Shapes.box(0, 0, 0.1875, 0.625, 1.375, 0.8125);
+			}
+			else
+			{
+				shape = Shapes.box(0.1875, -0.375, 0.375, 0.8125, 1, 1);
+				if(facing.equals(Direction.NORTH)) shape = Shapes.box(0.1875, -0.375, 0, 0.8125, 1, 0.625);
+				if(facing.equals(Direction.EAST)) shape = Shapes.box(0.375, -0.375, 0.1875, 1, 1, 0.8125);
+				if(facing.equals(Direction.WEST)) shape = Shapes.box(0, -0.375, 0.1875, 0.625, 1, 0.8125);
+			}
+		}
+
+		if(normal.getAxis().isHorizontal())
+		{
+			if(facing.equals(Direction.UP))
+			{
+				if(normal.equals(Direction.NORTH))
+					shape = Shapes.box(0.1875, 0.0, -0.375, 0.8125, 0.625, 1.0);
+				if(normal.equals(Direction.SOUTH))
+					shape = Shapes.box(0.1875, 0.0, 0.0, 0.8125, 0.625, 1.375);
+				if(normal.equals(Direction.EAST))
+					shape = Shapes.box(0.0, 0.0, 0.1875, 1.375, 0.625, 0.8125);
+				if(normal.equals(Direction.WEST))
+					shape = Shapes.box(-0.375, 0.0, 0.1875, 1.0, 0.625, 0.8125);
+			}
+
+			if(facing.equals(Direction.DOWN))
+			{
+				if(normal.equals(Direction.NORTH))
+					shape = Shapes.box(0.1875, 0.375, -0.375, 0.8125, 1.0, 1.0);
+				if(normal.equals(Direction.SOUTH))
+					shape = Shapes.box(0.1875, 0.375, 0.0, 0.8125, 1.0, 1.375);
+				if(normal.equals(Direction.EAST))
+					shape = Shapes.box(0.0, 0.375, 0.1875, 1.375, 1.0, 0.8125);
+				if(normal.equals(Direction.WEST))
+					shape = Shapes.box(-0.375, 0.375, 0.1875, 1.0, 1.0, 0.8125);
+			}
+		}
 
 		return shape;
 	}
