@@ -14,10 +14,7 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.block.BaseEntityBlock;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -143,11 +140,35 @@ public class AntlineTimerBlock extends BaseEntityBlock
 	protected int getDirectSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction)
 	{
 		BlockEntity blockEntity = level.getBlockEntity(pos);
-		if(blockEntity instanceof AntlineTimerBlockEntity output)
+		if(blockEntity instanceof AntlineTimerBlockEntity timer)
 		{
-			if(state.getValue(ACTIVE) && direction.equals(state.getValue(NORMAL)))
-				return output.signal;
+			if(timer.isActive() && direction.equals(state.getValue(NORMAL)))
+				return timer.signal;
 		}
+		return 0;
+	}
+
+	@Override
+	protected boolean hasAnalogOutputSignal(BlockState state)
+	{
+		return true;
+	}
+
+	@Override
+	protected int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos)
+	{
+		BlockEntity blockEntity = level.getBlockEntity(pos);
+		if(blockEntity instanceof AntlineTimerBlockEntity timer)
+		{
+			if(timer.isActive())
+			{
+				float timerProgress = ((float) timer.time / (float) timer.maxTime);
+				int power = (int) (timer.signal * timerProgress);
+
+				return power;
+			}
+		}
+
 		return 0;
 	}
 

@@ -128,7 +128,9 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem> {
                                                                 ResourceLocation texturePath,
                                                                 MultiBufferSource bufferSource, float partialTick) {
         List<String> gunCore = Lists.newArrayList("CoreOuter", "CoreInner", "PortalLight", "Muzzle");
-        if (gunCore.contains(bone.getName()) || bone.getName().equals("Zap")) {
+        if(bone.getName().equals("Zap"))
+            return RenderType.EYES.apply(getTextureOverrideForBone(bone, animatable, partialTick), RenderStateShard.TRANSLUCENT_TRANSPARENCY);
+        if (gunCore.contains(bone.getName())) {
             return PortalRenderTypes.APERTURE_GLOW.apply(getTextureOverrideForBone(bone, animatable, partialTick), RenderStateShard.TRANSLUCENT_TRANSPARENCY);
         }
         return super.getRenderTypeOverrideForBone(bone, animatable, texturePath, bufferSource, partialTick);

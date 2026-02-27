@@ -135,12 +135,15 @@ public class LargeButtonBlock extends BaseEntityBlock {
 
 			level.setBlock(offsets[0], dummyState.setValue(PART, 1), 16 | 2);
 			level.updateNeighborsAt(offsets[0], dummyState.getBlock());
+			level.scheduleTick(offsets[0], dummyState.getBlock(), 2);
 
 			level.setBlock(offsets[1], dummyState.setValue(PART, 2), 16 | 2);
 			level.updateNeighborsAt(offsets[1], dummyState.getBlock());
+			level.scheduleTick(offsets[1], dummyState.getBlock(), 2);
 
 			level.setBlock(offsets[2], dummyState.setValue(PART, 3), 16 | 2);
 			level.updateNeighborsAt(offsets[2], dummyState.getBlock());
+			level.scheduleTick(offsets[2], dummyState.getBlock(), 2);
 		}
 	}
 
