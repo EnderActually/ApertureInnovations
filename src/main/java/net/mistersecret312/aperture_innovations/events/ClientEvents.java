@@ -191,6 +191,12 @@ public class ClientEvents
 
 		while(ApertureInnovations.ClientModEvents.PICK_UP.get().consumeClick())
 			PacketDistributor.sendToServer(new ServerboundPickUpEntityPacket());
+
+		while(ApertureInnovations.ClientModEvents.PRIMARY_FIRE.get().consumeClick())
+			PacketDistributor.sendToServer(new ServerboundOpenPortalPacket(true));
+
+		while(ApertureInnovations.ClientModEvents.SECONDARY_FIRE.get().consumeClick())
+			PacketDistributor.sendToServer(new ServerboundOpenPortalPacket(false));
 	}
 
 }

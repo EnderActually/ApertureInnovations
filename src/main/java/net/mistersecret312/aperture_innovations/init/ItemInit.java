@@ -5,10 +5,7 @@ import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterials;
 import net.minecraft.world.item.Item;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
-import net.mistersecret312.aperture_innovations.items.ColorfulGelItem;
-import net.mistersecret312.aperture_innovations.items.CubeItem;
-import net.mistersecret312.aperture_innovations.items.LongFallBootsItem;
-import net.mistersecret312.aperture_innovations.items.PortalGunItem;
+import net.mistersecret312.aperture_innovations.items.*;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -27,6 +24,8 @@ public class ItemInit
 
 	public static final DeferredItem<CubeItem> WEIGHTED_STORAGE_CUBE = ITEMS.register("weighted_storage_cube",
 			() -> new CubeItem(EntityInit.WEIGHTED_STORAGE_CUBE.get(), new Item.Properties().stacksTo(64)));
+	public static final DeferredItem<CompanionCubeItem> WEIGHTED_COMPANION_CUBE = ITEMS.register("weighted_companion_cube",
+			() -> new CompanionCubeItem(EntityInit.WEIGHTED_COMPANION_CUBE.get(), new Item.Properties().stacksTo(64)));
 
 	public static void register(IEventBus bus)
 	{

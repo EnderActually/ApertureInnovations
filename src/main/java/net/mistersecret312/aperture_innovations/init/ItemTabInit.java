@@ -43,6 +43,7 @@ public class ItemTabInit
 							  output.accept(BlockInit.TIMER.get());
 
 							  output.accept(ItemInit.WEIGHTED_STORAGE_CUBE.get());
+							  output.accept(ItemInit.WEIGHTED_COMPANION_CUBE.get());
 
 							  output.accept(BlockInit.PEDESTAL_BUTTON.get());
 							  output.accept(BlockInit.LARGE_BUTTON.get());

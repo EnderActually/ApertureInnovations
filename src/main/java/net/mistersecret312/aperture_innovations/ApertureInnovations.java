@@ -36,6 +36,7 @@ import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.client.settings.KeyConflictContext;
 import net.neoforged.neoforge.client.settings.KeyModifier;
 import net.neoforged.neoforge.common.util.Lazy;
+import net.neoforged.neoforge.internal.NeoForgeBindings;
 import net.neoforged.neoforge.registries.*;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
@@ -104,6 +105,11 @@ public class ApertureInnovations
 		public static final Lazy<KeyMapping> PICK_UP = Lazy.of(() -> new KeyMapping("aperture_innovations.portal_gun.pick_up",
 				KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_F, "key.category.aperture_innovations"));
 
+		public static final Lazy<KeyMapping> PRIMARY_FIRE = Lazy.of(() -> new KeyMapping("aperture_innovations.portal_gun.primary_fire",
+				KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.MOUSE, GLFW.GLFW_MOUSE_BUTTON_LEFT, "key.category.aperture_innovations"));
+		public static final Lazy<KeyMapping> SECONDARY_FIRE = Lazy.of(() -> new KeyMapping("aperture_innovations.portal_gun.secondary_fire",
+				KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.MOUSE, GLFW.GLFW_MOUSE_BUTTON_RIGHT, "key.category.aperture_innovations"));
+
 
 		@SubscribeEvent
 		public static void onClientSetup(FMLClientSetupEvent event)
@@ -126,6 +132,7 @@ public class ApertureInnovations
 			event.registerBlockEntityRenderer(BlockEntityInit.LARGE_BUTTON.get(), LargeButtonRenderer::new);
 
 			event.registerEntityRenderer(EntityInit.WEIGHTED_STORAGE_CUBE.get(), WeightedStorageCubeRenderer::new);
+			event.registerEntityRenderer(EntityInit.WEIGHTED_COMPANION_CUBE.get(), WeightedCompanionCubeRenderer::new);
 		}
 
 		@SubscribeEvent
@@ -162,6 +169,8 @@ public class ApertureInnovations
 		{
 			event.register(RESET_PORTAL_GUN.get());
 			event.register(PICK_UP.get());
+			event.register(PRIMARY_FIRE.get());
+			event.register(SECONDARY_FIRE.get());
 		}
 
 		@SubscribeEvent

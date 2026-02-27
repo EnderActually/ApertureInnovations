@@ -6,6 +6,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.item.ItemStack;
@@ -18,7 +19,9 @@ import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.capabilities.HoldEntityCapability;
 import net.mistersecret312.aperture_innovations.init.AttachmentTypeInit;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
+import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import software.bernie.geckolib.animatable.GeoItem;
 
@@ -67,6 +70,12 @@ public record ServerboundPickUpEntityPacket() implements CustomPacketPayload
 				if(portalGun.getHeldEntity(gunStack) != null)
 				{
 					portalGun.setHeldEntity(gunStack, null);
+					PacketDistributor.sendToAllPlayers(
+							new ClientboundGunZapSoundPacket(player.getUUID(), true));
+
+					level.playSound(null, player.blockPosition(), SoundInit.PORTAL_GUN_HOLD_STOP.get(), SoundSource.PLAYERS);
+					portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level),
+							"main", "let_go");
 					return;
 				}
 				Vec3 startPos = player.getEyePosition(1F);
@@ -78,7 +87,10 @@ public record ServerboundPickUpEntityPacket() implements CustomPacketPayload
 				if(result == null)
 				{
 					portalGun.setHeldEntity(gunStack, null);
-					portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "reset");
+					level.playSound(null, player.blockPosition(),
+							SoundInit.PORTAL_GUN_HOLD_FAIL.get(), SoundSource.PLAYERS);
+					portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level),
+							"main", "reset");
 					return;
 				}
 
@@ -91,6 +103,9 @@ public record ServerboundPickUpEntityPacket() implements CustomPacketPayload
 					HoldEntityCapability capability = entity.getData(AttachmentTypeInit.HOLD_ENTITY);
 					capability.setHeld(entity, true);
 					portalGun.setHeldEntity(gunStack, entity);
+					portalGun.setZapSoundTick(gunStack, 0);
+					portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "hold");
+					level.playSound(null, player.blockPosition(), SoundInit.PORTAL_GUN_HOLD_START.get(), SoundSource.PLAYERS);
 					entity.setData(AttachmentTypeInit.HOLD_ENTITY.get(), capability);
 				}
 				else portalGun.setHeldEntity(gunStack, null);

@@ -37,6 +37,7 @@
   "item.aperture_innovations.long_fall_boots.energy": "Energy: ",
 
   "item.aperture_innovations.weighted_storage_cube": "Weighted Storage Cube",
+  "item.aperture_innovations.weighted_companion_cube": "Weighted Companion Cube",
 
   "aperture_innovations.portal_gun.variant_chell": "Chell Variant",
   "aperture_innovations.portal_gun.variant_pbody": "P-Body Variant",
@@ -45,6 +46,9 @@
 
   "key.category.aperture_innovations": "Aperture Innovations",
   "aperture_innovations.portal_gun.reset": "Reset Portal Gun",
+  "aperture_innovations.portal_gun.pick_up": "Pick Up via Portal Gun",
+  "aperture_innovations.portal_gun.primary_fire": "Primary Fire",
+  "aperture_innovations.portal_gun.secondary_fire": "Secondary Fire",
 
   "sound.aperture_innovations.portal_ambient": "Portal Ambient",
   "sound.aperture_innovations.portal_enter": "Portal travel",
@@ -63,6 +67,10 @@
   "sound.aperture_innovations.large_button_down": "Large Button pressed",
   "sound.aperture_innovations.large_button_up": "Large Button unpressed",
   "sound.aperture_innovations.timer_tick": "Timer ticks",
+  "sound.aperture_innovations.portal_gun_hold_stop": "Portal Gun stops holding something",
+  "sound.aperture_innovations.portal_gun_hold_start": "Portal Gun picks up something",
+  "sound.aperture_innovations.portal_gun_hold_loop": "Portal Gun swirls as it holds something",
+  "sound.aperture_innovations.portal_gun_hold_fail": "Portal Gun fails to pick up something",
 
   "advancements.aperture_innovations.aperture.root.title": "Aperture Science Innovators",
   "advancements.aperture_innovations.aperture.root.description": "Obtain the Aperture Science Handheld Portal Device",
@@ -88,8 +96,10 @@
   "stat.aperture_innovations.times_used_portals": "Times travelled by Portal",
 
   "entity.aperture_innovations.weighted_storage_cube": "Weighted Storage Cube",
+  "entity.aperture_innovations.weighted_companion_cube": "Weighted Companion Cube",
 
   "container.aperture_innovations.weighted_storage_cube": "Weighted Storage Cube",
+  "container.aperture_innovations.weighted_companion_cube": "Weighted Companion Cube",
 
   "aperture_innovations.configuration.portal_gun": "Portal Gun",
   "aperture_innovations.configuration.portalable_tag": "Use Portalable Tag",

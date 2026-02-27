@@ -3,9 +3,12 @@ package net.mistersecret312.aperture_innovations.sounds;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortalGunVariant;
 import net.mistersecret312.aperture_innovations.data.portal.ClientPortalLink;
+import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.utilities.ClientPortalUtilities;
 import net.mistersecret312.aperture_innovations.utilities.PortalUtilities;
 
@@ -46,6 +49,31 @@ public class SoundAccess
 				ambientSound.playSound();
 			}
 		}
+	}
+
+	public static void playGunZap(UUID playerID, boolean stop)
+	{
+		GunSoundWrapper.ZapSound ambientSound = ClientPortalUtilities.getPlayerZapSound(playerID);
+		Level level = Minecraft.getInstance().level;
+		if(level == null)
+			return;
+
+		Player player = level.getPlayerByUUID(playerID);
+		if(ambientSound == null)
+		{
+			ambientSound = new GunSoundWrapper.ZapSound(player);
+			ClientPortalUtilities.setPlayerZapSound(ambientSound, playerID);
+		}
+
+		if(stop)
+		{
+			ambientSound.stopSound();
+			ClientPortalUtilities.setPlayerZapSound(null, playerID);
+			return;
+		}
+
+		if(!ambientSound.isPlaying())
+			ambientSound.playSound();
 	}
 
 	public static void playOpenPortalSound(UUID linkID, boolean isPrimary)

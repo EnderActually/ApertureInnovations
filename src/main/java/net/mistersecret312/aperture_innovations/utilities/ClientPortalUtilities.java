@@ -5,6 +5,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.mistersecret312.aperture_innovations.client.ColorUtil;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortalGunVariant;
 import net.mistersecret312.aperture_innovations.data.portal.ClientPortalLink;
+import net.mistersecret312.aperture_innovations.sounds.GunSoundWrapper;
+import net.mistersecret312.aperture_innovations.sounds.GunZapSound;
 import net.mistersecret312.aperture_innovations.sounds.PortalSoundWrapper;
 
 import java.awt.*;
@@ -14,6 +16,8 @@ import java.util.UUID;
 public class ClientPortalUtilities
 {
 	public static HashMap<UUID, Pair<PortalSoundWrapper.PortalAmbient, PortalSoundWrapper.PortalAmbient>> AMBIENTS = new HashMap<>();
+	public static HashMap<UUID, GunSoundWrapper.ZapSound> PLAYERS = new HashMap<>();
+
 	public static HashMap<UUID, Pair<Float, Float>> OPENING_ANIMATIONS = new HashMap<>();
 
 	public static ColorUtil.RGBA getPortalColor(ClientPortalLink link, boolean isPrimary)
@@ -147,6 +151,16 @@ public class ClientPortalUtilities
 		else pair = new Pair<>(pair.getFirst(), ambient);
 
 		AMBIENTS.put(uuid, pair);
+	}
+
+	public static GunSoundWrapper.ZapSound getPlayerZapSound(UUID uuid)
+	{
+		return PLAYERS.getOrDefault(uuid, null);
+	}
+
+	public static void setPlayerZapSound(GunSoundWrapper.ZapSound ambient, UUID uuid)
+	{
+		PLAYERS.put(uuid, ambient);
 	}
 
 	public static float getPortalOpeningAnimationProgress(UUID uuid, boolean isPrimary)

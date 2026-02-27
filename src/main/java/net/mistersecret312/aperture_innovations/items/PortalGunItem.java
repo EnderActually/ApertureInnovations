@@ -7,6 +7,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
@@ -31,6 +32,7 @@ import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
 import net.mistersecret312.aperture_innovations.client.renderer.PortalGunRenderer;
 import net.mistersecret312.aperture_innovations.config.PortalGunConfig;
 import net.mistersecret312.aperture_innovations.init.*;
+import net.mistersecret312.aperture_innovations.network.ClientboundGunZapSoundPacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalSoundsPacket;
 import net.mistersecret312.aperture_innovations.data.portal.PortalLink;
 import net.mistersecret312.aperture_innovations.data.PortalLinkData;
@@ -63,8 +65,8 @@ public class PortalGunItem extends Item implements GeoItem
 
 		protected static final RawAnimation SHOOT = RawAnimation.begin().thenPlay("shoot");
 		protected static final RawAnimation RESET = RawAnimation.begin().thenPlay("reset");
-		protected static final RawAnimation HOLD = RawAnimation.begin().thenLoop("hold");
-
+		protected static final RawAnimation HOLD = RawAnimation.begin().thenPlayAndHold("hold");
+		protected static final RawAnimation LET_GO = RawAnimation.begin().thenPlay("let_go");
 
 		private Animations() {}
 	}
@@ -205,8 +207,24 @@ public class PortalGunItem extends Item implements GeoItem
 
 				int tick = getZapTick(stack);
 				setZapTick(stack, tick+1);
+
+				int soundTick = getZapSoundTick(stack);
+				if(soundTick == 47)
+					setZapSoundTick(stack, 0);
+
+				if(soundTick == 0)
+				{
+					PacketDistributor.sendToAllPlayers(
+							new ClientboundGunZapSoundPacket(player.getUUID(), false));
+				}
+
+				setZapSoundTick(stack, soundTick+1);
 			}
-			else setZapTick(stack, -1);
+			else
+			{
+				setZapTick(stack, -1);
+				setZapSoundTick(stack, -1);
+			}
 
 			if(link != null && isSelected && (getPair(stack) == null || getDualityState(stack) == 2) )
 			{
@@ -432,6 +450,18 @@ public class PortalGunItem extends Item implements GeoItem
 		stack.set(DataComponentInit.PORTAL_GUN_VARIANT, variantKey);
 	}
 
+	public int getZapSoundTick(ItemStack stack)
+	{
+		return stack.getOrDefault(DataComponentInit.ZAP_SOUND_TICK, -1);
+	}
+
+	public void setZapSoundTick(ItemStack stack, int tick)
+	{
+		if(tick > 40)
+			tick = 0;
+		stack.set(DataComponentInit.ZAP_SOUND_TICK, tick);
+	}
+
 	public int getLastShotPortal(ItemStack stack)
 	{
 		return stack.getOrDefault(DataComponentInit.LAST_PORTAL, -1);
@@ -481,6 +511,7 @@ public class PortalGunItem extends Item implements GeoItem
 		controller.triggerableAnim("shoot", Animations.SHOOT);
 		controller.triggerableAnim("reset", Animations.RESET);
 		controller.triggerableAnim("hold", Animations.HOLD);
+		controller.triggerableAnim("let_go", Animations.LET_GO);
 		controllers.add(controller);
 	}
 

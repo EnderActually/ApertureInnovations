@@ -87,8 +87,8 @@ public class AntlineTimerBlockEntity extends BlockEntity
 			{
 				if(!level.isClientSide() && timer.soundTime == 20)
 				{
-					level.playSound(null, timer.getBlockPos(), SoundInit.TIMER_TICK.get(), SoundSource.BLOCKS, 0.5f,
-							1f);
+					level.playSound(null, timer.getBlockPos(), SoundInit.TIMER_TICK.get(), SoundSource.BLOCKS,
+							0.25f, 1f);
 				}
 				timer.time--;
 				if(!level.isClientSide())
@@ -110,6 +110,7 @@ public class AntlineTimerBlockEntity extends BlockEntity
 				level.setBlock(pos, blockState.setValue(AntlineTimerBlock.ACTIVE, false), 16 | 2);
 				BlockPos relativePos = pos.relative(blockState.getValue(AntlineTimerBlock.NORMAL).getOpposite());
 				level.updateNeighborsAt(relativePos, blockState.getBlock());
+				level.scheduleTick(relativePos, blockState.getBlock(), 2);
 			}
 		}
 	}

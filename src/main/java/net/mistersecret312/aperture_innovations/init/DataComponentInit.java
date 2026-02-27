@@ -36,6 +36,10 @@ public class DataComponentInit
 			Codec.INT
 	));
 
+	public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> ZAP_SOUND_TICK = register("zap_sound_tick", builder -> builder.persistent(
+			Codec.INT
+	));
+
 	public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> PRIMARY_PORTAL_COLOR = register("primary_portal_color", builder -> builder.persistent(
 			Codec.INT));
 	public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> SECONDARY_PORTAL_COLOR = register("secondary_portal_color", builder -> builder.persistent(

@@ -24,7 +24,12 @@ public class SoundInit
     public static DeferredHolder<SoundEvent, SoundEvent> PORTAL_GUN_FIRE_SECONDARY = registerSoundEvent("portal_gun_fire_secondary");
     public static DeferredHolder<SoundEvent, SoundEvent> PORTAL_GUN_RESET = registerSoundEvent("portal_gun_reset");
 
-    public static DeferredHolder<SoundEvent, SoundEvent> LONG_FALL_BOOTS_LAND = registerSoundEvent("long_fall_boots_land");
+	public static DeferredHolder<SoundEvent, SoundEvent> PORTAL_GUN_HOLD_START = registerSoundEvent("portal_gun_hold_start");
+	public static DeferredHolder<SoundEvent, SoundEvent> PORTAL_GUN_HOLD_FAIL = registerSoundEvent("portal_gun_hold_fail");
+	public static DeferredHolder<SoundEvent, SoundEvent> PORTAL_GUN_HOLD_STOP = registerSoundEvent("portal_gun_hold_stop");
+	public static DeferredHolder<SoundEvent, SoundEvent> PORTAL_GUN_HOLD_LOOP = registerSoundEvent("portal_gun_hold_loop");
+
+	public static DeferredHolder<SoundEvent, SoundEvent> LONG_FALL_BOOTS_LAND = registerSoundEvent("long_fall_boots_land");
 
 	public static DeferredHolder<SoundEvent, SoundEvent> CUBE_IMPACT = registerSoundEvent("cube_impact");
 

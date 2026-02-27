@@ -122,5 +122,11 @@ public class NetworkInit
 				ClientboundEntityHeldUpdatePacket.STREAM_CODEC,
 				ClientboundEntityHeldUpdatePacket::handle
 		);
+
+		registrar.playToClient(
+				ClientboundGunZapSoundPacket.TYPE,
+				ClientboundGunZapSoundPacket.STREAM_CODEC,
+				ClientboundGunZapSoundPacket::handle
+		);
 	}
 }
