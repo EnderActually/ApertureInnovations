@@ -36,17 +36,15 @@ public class BlockInit
     public static final DeferredBlock<Block> ANTLINE = registerBlock("antline",
             () -> new AntlineBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.REDSTONE_WIRE)
                  .isRedstoneConductor((state, getter, pos) -> true)));
-
     public static final DeferredBlock<Block> CHECKMARK = registerBlock("antline_checkmark",
             () -> new AntlineOutputBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.REDSTONE_WIRE)));
     public static final DeferredBlock<Block> TIMER = registerBlock("antline_timer",
             () -> new AntlineTimerBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.REDSTONE_WIRE)));
 
     public static final DeferredBlock<Block> PEDESTAL_BUTTON = registerBlock("pedestal_button",
-            () -> new PedestalButtonBlock(BlockBehaviour.Properties.of().noOcclusion()));
-
+            () -> new PedestalButtonBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CONCRETE)));
     public static final DeferredBlock<Block> LARGE_BUTTON = registerBlock("large_button",
-            () -> new LargeButtonBlock(BlockBehaviour.Properties.of().noOcclusion()));
+            () -> new LargeButtonBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CONCRETE)));
 
 
     private static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block)

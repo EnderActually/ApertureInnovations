@@ -62,6 +62,9 @@ public record ServerboundResetPortalLinkPacket() implements CustomPacketPayload
 				ItemStack gunStack = main.is(ItemInit.PORTAL_GUN.get()) ? main : off;
 				PortalGunItem portalGun = (PortalGunItem) gunStack.getItem();
 
+				if(portalGun.getHeldEntity(gunStack) != null)
+					return;
+
 				int dualityState = portalGun.getDualityState(gunStack);
 
 				UUID linkID = portalGun.getUUID(gunStack, true);

@@ -8,6 +8,9 @@
 
     "aperture_innovations:metal_surface_block",
     "aperture_innovations:metal_surface_tile_block",
-    "aperture_innovations:metal_surface_1x2_block"
+    "aperture_innovations:metal_surface_1x2_block",
+
+    "aperture_innovations:pedestal_button",
+    "aperture_innovations:large_button"
   ]
 }
