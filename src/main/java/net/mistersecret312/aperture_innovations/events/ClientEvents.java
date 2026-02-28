@@ -238,6 +238,15 @@ public class ClientEvents
 				{
 					NetworkInit.INSTANCE.sendToServer(new ServerboundResetPortalLinkPacket());
 				}
+
+				while(ApertureInnovations.ClientModEvents.PORTAL_GUN_PRIMARY_FIRE.get().consumeClick())
+				{
+					NetworkInit.INSTANCE.sendToServer(new ServerboundOpenPortalPacket(true));
+				}
+				while(ApertureInnovations.ClientModEvents.PORTAL_GUN_SECONDARY_FIRE.get().consumeClick())
+				{
+					NetworkInit.INSTANCE.sendToServer(new ServerboundOpenPortalPacket(false));
+				}
 			}
 		}
 	}

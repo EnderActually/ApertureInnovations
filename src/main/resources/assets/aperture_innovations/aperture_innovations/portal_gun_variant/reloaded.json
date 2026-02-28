@@ -15,7 +15,7 @@
 
   "primary_portal":
   {
-    "closed_texture": "aperture_innovations:textures/block/portal/time/green_portal.png",
+    "closed_texture": "aperture_innovations:textures/block/portal/time/green_portal_closed.png",
     "highlight_texture": "aperture_innovations:textures/block/portal/time/green_portal_highlight.png",
     "vortex_texture": "aperture_innovations:block/portal/time/green_portal_vortex",
     "core_texture": "aperture_innovations:textures/item/time/time_core.png",
@@ -35,7 +35,7 @@
 
   "secondary_portal":
   {
-    "closed_texture": "aperture_innovations:textures/block/portal/time/green_portal.png",
+    "closed_texture": "aperture_innovations:textures/block/portal/time/green_portal_closed.png",
     "highlight_texture": "aperture_innovations:textures/block/portal/time/green_portal_highlight.png",
     "vortex_texture": "aperture_innovations:block/portal/time/green_portal_vortex",
     "core_texture": "aperture_innovations:textures/item/time/time_core.png",
