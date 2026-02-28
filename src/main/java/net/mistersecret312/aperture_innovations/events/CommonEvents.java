@@ -190,7 +190,7 @@ public class CommonEvents
 					}
 					ServerLevel level = (ServerLevel) living.level();
 					level.playSound(null, living.blockPosition(), SoundInit.LONG_FALL_BOOTS_LAND.get(),
-							SoundSource.PLAYERS, 0.15F, 1F);
+							SoundSource.PLAYERS, 0.05f, 1F);
 					event.setInvulnerable(true);
 					return;
 				}

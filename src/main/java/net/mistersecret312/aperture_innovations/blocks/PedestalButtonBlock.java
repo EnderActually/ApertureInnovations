@@ -170,7 +170,7 @@ public class PedestalButtonBlock extends BaseEntityBlock
 		{
 			pedestalButton.triggerAnim("press", "press");
 			level.setBlock(pos, state.setValue(PRESSED, true), 3);
-			level.scheduleTick(pos, this, 40);
+			level.scheduleTick(pos, this, 25);
 			if(!level.isClientSide())
 				level.playSound(null, pos, SoundInit.PEDESTAL_BUTTON_DOWN.get(), SoundSource.BLOCKS);
 			return InteractionResult.SUCCESS;
