@@ -193,6 +193,19 @@ public class AntlineTimerBlock extends BaseEntityBlock
 	}
 
 	@Override
+	protected BlockState rotate(BlockState state, Rotation rotation)
+	{
+		state = state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
+		return state.setValue(NORMAL, rotation.rotate(state.getValue(NORMAL)));
+	}
+
+	@Override
+	protected BlockState mirror(BlockState state, Mirror mirror)
+	{
+		return state.rotate(mirror.getRotation(state.getValue(NORMAL)));
+	}
+
+	@Override
 	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder)
 	{
 		builder.add(NORMAL, FACING, ACTIVE);

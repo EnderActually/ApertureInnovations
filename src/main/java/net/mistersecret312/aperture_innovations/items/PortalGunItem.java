@@ -21,6 +21,7 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.SlimeBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -199,17 +200,28 @@ public class PortalGunItem extends Item implements GeoItem
 				{
 					Entity heldEntity = level.getEntity(id);
 					if(heldEntity == null)
+					{
 						setHeldEntity(stack, null);
+						level.playSound(null, player.blockPosition(), SoundInit.PORTAL_GUN_HOLD_STOP.get(), SoundSource.PLAYERS);
+						this.triggerAnim(player, GeoItem.getOrAssignId(stack, (ServerLevel) level),
+								"main", "let_go");
+					}
 
 					if(heldEntity != null && !heldEntity.getData(AttachmentTypeInit.HOLD_ENTITY).isHeld)
+					{
 						setHeldEntity(stack, null);
+						level.playSound(null, player.blockPosition(), SoundInit.PORTAL_GUN_HOLD_STOP.get(), SoundSource.PLAYERS);
+						this.triggerAnim(player, GeoItem.getOrAssignId(stack, (ServerLevel) level),
+								"main", "let_go");
+
+					}
 				}
 
 				int tick = getZapTick(stack);
 				setZapTick(stack, tick+1);
 
 				int soundTick = getZapSoundTick(stack);
-				if(soundTick == 47)
+				if(soundTick == 20)
 					setZapSoundTick(stack, 0);
 
 				if(soundTick == 0)

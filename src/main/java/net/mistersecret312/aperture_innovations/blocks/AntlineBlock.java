@@ -108,6 +108,18 @@ public class AntlineBlock extends BaseEntityBlock
 	}
 
 	@Override
+	protected BlockState rotate(BlockState state, Rotation rotation)
+	{
+		return state.setValue(NORMAL, rotation.rotate(state.getValue(NORMAL)));
+	}
+
+	@Override
+	protected BlockState mirror(BlockState state, Mirror mirror)
+	{
+		return state.rotate(mirror.getRotation(state.getValue(NORMAL)));
+	}
+
+	@Override
 	protected void updateIndirectNeighbourShapes(BlockState state, LevelAccessor level, BlockPos pos, int flags,
 												 int recursionLeft)
 	{

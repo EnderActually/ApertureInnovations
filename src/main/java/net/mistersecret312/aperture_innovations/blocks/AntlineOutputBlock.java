@@ -127,6 +127,19 @@ public class AntlineOutputBlock extends BaseEntityBlock
 	}
 
 	@Override
+	protected BlockState rotate(BlockState state, Rotation rotation)
+	{
+		state = state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
+		return state.setValue(NORMAL, rotation.rotate(state.getValue(NORMAL)));
+	}
+
+	@Override
+	protected BlockState mirror(BlockState state, Mirror mirror)
+	{
+		return state.rotate(mirror.getRotation(state.getValue(NORMAL)));
+	}
+
+	@Override
 	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context)
 	{
 		Direction normal = state.getValue(NORMAL);

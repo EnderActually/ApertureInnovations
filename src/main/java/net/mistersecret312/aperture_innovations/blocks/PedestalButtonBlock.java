@@ -17,10 +17,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.BaseEntityBlock;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.ButtonBlock;
-import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -74,6 +71,19 @@ public class PedestalButtonBlock extends BaseEntityBlock
 			components.add(Component.translatable("tooltip.aperture_innovations.is_colorable").withStyle((style -> style.withColor(
 					hsbColor.getRGB()))));
 		}
+	}
+
+	@Override
+	protected BlockState rotate(BlockState state, Rotation rotation)
+	{
+		state = state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
+		return state.setValue(NORMAL, rotation.rotate(state.getValue(NORMAL)));
+	}
+
+	@Override
+	protected BlockState mirror(BlockState state, Mirror mirror)
+	{
+		return state.rotate(mirror.getRotation(state.getValue(NORMAL)));
 	}
 
 	@Override

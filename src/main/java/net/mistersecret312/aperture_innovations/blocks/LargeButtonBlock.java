@@ -143,6 +143,19 @@ public class LargeButtonBlock extends BaseEntityBlock {
 	}
 
 	@Override
+	protected BlockState rotate(BlockState state, Rotation rotation)
+	{
+		state = state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
+		return state.setValue(NORMAL, rotation.rotate(state.getValue(NORMAL)));
+	}
+
+	@Override
+	protected BlockState mirror(BlockState state, Mirror mirror)
+	{
+		return state.rotate(mirror.getRotation(state.getValue(NORMAL)));
+	}
+
+	@Override
 	public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack)
 	{
 		super.setPlacedBy(level, pos, state, placer, stack);
