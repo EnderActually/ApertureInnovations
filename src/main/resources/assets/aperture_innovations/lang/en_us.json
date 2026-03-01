@@ -29,6 +29,12 @@
 
   "item.aperture_innovations.portal_gun.not_enough_energy": "Not enough energy!",
 
+  "tooltip.aperture_innovations.antline": "Used for instantaneous signal transfer between testing elements, does not output redstone signal without a Checkmark or a Timer connected",
+  "tooltip.aperture_innovations.antline_checkmark": "Outputs a Strong Redstone Signal to the back of itself while it is activated",
+  "tooltip.aperture_innovations.antline_timer": "Outputs a Strong Redstone Signal to the back of itself while it is activated and until the clock runs out",
+
+  "tooltip.aperture_innovations.is_colorable": "Colorful Gel Compatible",
+
   "item.aperture_innovations.colorful_gel": "Colorful Gel",
   "item.aperture_innovations.colorful_gel.color": "Color: %s",
   "item.aperture_innovations.colorful_gel.tooltip": "Color the Colorful Gel with dye to then apply it to your Portal Device!",

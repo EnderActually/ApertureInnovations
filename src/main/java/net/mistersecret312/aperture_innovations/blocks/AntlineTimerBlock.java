@@ -1,14 +1,18 @@
 package net.mistersecret312.aperture_innovations.blocks;
 
 import com.mojang.serialization.MapCodec;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -34,6 +38,9 @@ import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.items.ColorfulGelItem;
 import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
+import java.util.List;
+
 import static net.mistersecret312.aperture_innovations.blocks.AntlineBlock.*;
 
 public class AntlineTimerBlock extends BaseEntityBlock
@@ -54,6 +61,22 @@ public class AntlineTimerBlock extends BaseEntityBlock
 	}
 
 	@Override
+	public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> components,
+								TooltipFlag tooltipFlag)
+	{
+		super.appendHoverText(stack, context, components, tooltipFlag);
+		components.add(Component.translatable("tooltip.aperture_innovations.antline_timer").withStyle(ChatFormatting.DARK_PURPLE));
+
+		Level level = context.level();
+		if(level != null)
+		{
+			Color hsbColor = Color.getHSBColor(level.getTimeOfDay(1f)*50, 1f, 1f);
+			components.add(Component.translatable("tooltip.aperture_innovations.is_colorable").withStyle((style -> style.withColor(
+					hsbColor.getRGB()))));
+		}
+	}
+
+	@Override
 	protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
 											  Player player, InteractionHand hand, BlockHitResult hitResult)
 	{
@@ -62,7 +85,7 @@ public class AntlineTimerBlock extends BaseEntityBlock
 			ColorfulGelItem gel = (ColorfulGelItem) stack.getItem();
 			int color = gel.getColor(stack);
 
-			AntlineOutputBlockEntity antline = (AntlineOutputBlockEntity) level.getBlockEntity(pos);
+			AntlineTimerBlockEntity antline = (AntlineTimerBlockEntity) level.getBlockEntity(pos);
 			if(antline == null)
 				return ItemInteractionResult.FAIL;
 
@@ -71,6 +94,22 @@ public class AntlineTimerBlock extends BaseEntityBlock
 			else antline.color = color;
 
 			return ItemInteractionResult.sidedSuccess(level.isClientSide());
+		}
+		else
+		{
+			AntlineTimerBlockEntity antline = (AntlineTimerBlockEntity) level.getBlockEntity(pos);
+			if(antline == null)
+				return ItemInteractionResult.FAIL;
+			if(antline.isActive())
+				return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+
+			if(player.isCrouching() && antline.maxTime > 10)
+				antline.maxTime -= 5;
+			else antline.maxTime += 5;
+
+			antline.time = antline.maxTime;
+
+			player.displayClientMessage(Component.literal("Set Timer countdown to " + (antline.maxTime / 20f) + " seconds"), true);
 		}
 
 		return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
@@ -142,30 +181,11 @@ public class AntlineTimerBlock extends BaseEntityBlock
 		BlockEntity blockEntity = level.getBlockEntity(pos);
 		if(blockEntity instanceof AntlineTimerBlockEntity timer)
 		{
-			if(timer.isActive() && direction.equals(state.getValue(NORMAL)))
-				return timer.signal;
-		}
-		return 0;
-	}
-
-	@Override
-	protected boolean hasAnalogOutputSignal(BlockState state)
-	{
-		return true;
-	}
-
-	@Override
-	protected int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos)
-	{
-		BlockEntity blockEntity = level.getBlockEntity(pos);
-		if(blockEntity instanceof AntlineTimerBlockEntity timer)
-		{
 			if(timer.isActive())
 			{
 				float timerProgress = ((float) timer.time / (float) timer.maxTime);
-				int power = (int) (timer.signal * timerProgress);
 
-				return power;
+				return (int) (timer.signal * timerProgress);
 			}
 		}
 

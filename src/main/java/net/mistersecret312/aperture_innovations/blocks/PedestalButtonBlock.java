@@ -3,6 +3,7 @@ package net.mistersecret312.aperture_innovations.blocks;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
@@ -10,7 +11,9 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -37,6 +40,9 @@ import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.items.ColorfulGelItem;
 import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
+import java.util.List;
+
 public class PedestalButtonBlock extends BaseEntityBlock
 {
 	public static final DirectionProperty FACING = DirectionProperty.create("facing");
@@ -53,6 +59,21 @@ public class PedestalButtonBlock extends BaseEntityBlock
 									  .setValue(NORMAL, Direction.UP)
 									  .setValue(FACING, Direction.NORTH)
 									  .setValue(PRESSED, false));
+	}
+
+	@Override
+	public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> components,
+								TooltipFlag tooltipFlag)
+	{
+		super.appendHoverText(stack, context, components, tooltipFlag);
+
+		Level level = context.level();
+		if(level != null)
+		{
+			Color hsbColor = Color.getHSBColor(level.getTimeOfDay(1f)*50, 1f, 1f);
+			components.add(Component.translatable("tooltip.aperture_innovations.is_colorable").withStyle((style -> style.withColor(
+					hsbColor.getRGB()))));
+		}
 	}
 
 	@Override

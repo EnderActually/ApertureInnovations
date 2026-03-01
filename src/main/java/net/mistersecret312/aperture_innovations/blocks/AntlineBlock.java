@@ -1,14 +1,20 @@
 package net.mistersecret312.aperture_innovations.blocks;
 
 import com.mojang.serialization.MapCodec;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -34,6 +40,9 @@ import net.mistersecret312.aperture_innovations.neo_events.AntlineActivateEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
+import java.util.List;
+
 public class AntlineBlock extends BaseEntityBlock
 {
 	private static final double THICKNESS = 0.0625f;
@@ -58,10 +67,28 @@ public class AntlineBlock extends BaseEntityBlock
 	}
 
 	@Override
+	public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> components,
+								TooltipFlag tooltipFlag)
+	{
+		super.appendHoverText(stack, context, components, tooltipFlag);
+
+		components.add(Component.translatable("tooltip.aperture_innovations.antline").withStyle(ChatFormatting.DARK_PURPLE));
+
+		Level level = context.level();
+		if(level != null)
+		{
+			Color hsbColor = Color.getHSBColor(level.getTimeOfDay(1f)*50, 1f, 1f);
+			components.add(Component.translatable("tooltip.aperture_innovations.is_colorable").withStyle((style -> style.withColor(
+					hsbColor.getRGB()))));
+		}
+	}
+
+	@Override
 	public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack)
 	{
 		super.setPlacedBy(level, pos, state, placer, stack);
 		updateAntline(level, pos);
+		toggleAntline(level, pos);
 	}
 
 	@Override
@@ -69,8 +96,14 @@ public class AntlineBlock extends BaseEntityBlock
 								   BlockPos neighborPos, boolean movedByPiston)
 	{
 		super.neighborChanged(state, level, pos, neighborBlock, neighborPos, movedByPiston);
-		updateAntline(level, pos);
+		level.scheduleTick(pos, state.getBlock(), 1);
+	}
 
+	@Override
+	protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random)
+	{
+		super.tick(state, level, pos, random);
+		updateAntline(level, pos);
 		toggleAntline(level, pos);
 	}
 
@@ -81,7 +114,10 @@ public class AntlineBlock extends BaseEntityBlock
 		super.updateIndirectNeighbourShapes(state, level, pos, flags, recursionLeft);
 		BlockEntity blockEntity = level.getBlockEntity(pos);
 		if(blockEntity != null && blockEntity.getLevel() != null && blockEntity instanceof AntlineBlockEntity)
+		{
 			updateAntline(blockEntity.getLevel(), pos);
+			toggleAntline(blockEntity.getLevel(), pos);
+		}
 	}
 
 	@Override
@@ -91,11 +127,13 @@ public class AntlineBlock extends BaseEntityBlock
 		{
 			AntlineData.get(level).removeAntline(level, pos);
 			this.updateAntline(level, pos);
+			this.toggleAntline(level, pos);
 			super.onRemove(state, level, pos, newState, movedByPiston);
 		}
 		else
 		{
 			this.updateAntline(level, pos);
+			this.toggleAntline(level, pos);
 			super.onRemove(state, level, pos, newState, movedByPiston);
 		}
 	}

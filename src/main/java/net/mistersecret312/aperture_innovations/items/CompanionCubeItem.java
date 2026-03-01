@@ -2,18 +2,23 @@ package net.mistersecret312.aperture_innovations.items;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.mistersecret312.aperture_innovations.entities.WeightedCompanionCubeEntity;
 import net.mistersecret312.aperture_innovations.entities.WeightedStorageCubeEntity;
+
+import java.awt.*;
+import java.util.List;
 
 public class CompanionCubeItem extends Item
 {
@@ -22,6 +27,21 @@ public class CompanionCubeItem extends Item
 	{
 		super(properties);
 		this.entityType = cubeType;
+	}
+
+	@Override
+	public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> components,
+								TooltipFlag tooltipFlag)
+	{
+		super.appendHoverText(stack, context, components, tooltipFlag);
+
+		Level level = context.level();
+		if(level != null)
+		{
+			Color hsbColor = Color.getHSBColor(level.getTimeOfDay(1f)*50, 1f, 1f);
+			components.add(Component.translatable("tooltip.aperture_innovations.is_colorable").withStyle((style -> style.withColor(
+					hsbColor.getRGB()))));
+		}
 	}
 
 	@Override

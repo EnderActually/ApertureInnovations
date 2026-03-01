@@ -103,7 +103,7 @@ public class ApertureInnovations
 				KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.category.aperture_innovations"));
 
 		public static final Lazy<KeyMapping> PICK_UP = Lazy.of(() -> new KeyMapping("aperture_innovations.portal_gun.pick_up",
-				KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_F, "key.category.aperture_innovations"));
+				KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_G, "key.category.aperture_innovations"));
 
 		public static final Lazy<KeyMapping> PRIMARY_FIRE = Lazy.of(() -> new KeyMapping("aperture_innovations.portal_gun.primary_fire",
 				KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.MOUSE, GLFW.GLFW_MOUSE_BUTTON_LEFT, "key.category.aperture_innovations"));

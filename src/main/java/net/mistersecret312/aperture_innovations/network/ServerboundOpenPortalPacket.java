@@ -103,7 +103,7 @@ public record ServerboundOpenPortalPacket(boolean isPrimary) implements CustomPa
 				PortalLink link = linkData.getLink(gunStack);
 				if(link == null)
 				{
-					linkData.addFreshLink(linkID);
+					linkData.addFreshLink(linkID,portalGun.getVariant(gunStack));
 					link = linkData.getLink(linkID);
 				}
 				portalGun.stopTriggeredAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "shoot");
@@ -153,7 +153,7 @@ public record ServerboundOpenPortalPacket(boolean isPrimary) implements CustomPa
 				PortalLink link = linkData.getLink(gunStack);
 				if(link == null)
 				{
-					linkData.addFreshLink(linkID);
+					linkData.addFreshLink(linkID, portalGun.getVariant(gunStack));
 					link = linkData.getLink(linkID);
 				}
 				Direction facing = result.getDirection();

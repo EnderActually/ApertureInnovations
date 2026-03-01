@@ -73,7 +73,7 @@ public class PortalLinkData extends SavedData
 		}
 	}
 
-	public void addFreshLink(UUID uuid)
+	public void addFreshLinkRandomVariant(UUID uuid)
 	{
 		Registry<PortalGunVariant> registry = server.registryAccess().registryOrThrow(PortalGunVariant.REGISTRY_KEY);
 
@@ -84,6 +84,13 @@ public class PortalLinkData extends SavedData
 											.location();
 
 		this.portalLinks.put(uuid, new PortalLink(uuid, location));
+		this.setDirty(uuid, true);
+		this.setDirty(uuid, false);
+	}
+
+	public void addFreshLink(UUID uuid, ResourceLocation variant)
+	{
+		this.portalLinks.put(uuid, new PortalLink(uuid, variant));
 		this.setDirty(uuid, true);
 		this.setDirty(uuid, false);
 	}

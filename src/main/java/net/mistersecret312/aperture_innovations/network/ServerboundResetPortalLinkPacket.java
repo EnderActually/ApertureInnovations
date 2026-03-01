@@ -79,7 +79,7 @@ public record ServerboundResetPortalLinkPacket() implements CustomPacketPayload
 
 				if(link == null)
 				{
-					linkData.addFreshLink(linkID);
+					linkData.addFreshLink(linkID, portalGun.getVariant(gunStack));
 					link = linkData.getLink(linkID);
 				}
 				if(!link.getPrimaryPortal().isOpen() && !link.getSecondaryPortal().isOpen())

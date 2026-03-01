@@ -136,17 +136,17 @@ public class PortalGunItem extends Item implements GeoItem
 		if(primaryPortalColor != -1 || primaryStripeColor != -1 || secondaryPortalColor != -1 || secondaryStripeColor != -1)
 			components.add(Component.literal(""));
 
-		if(primaryPortalColor != -1)
+		if(primaryPortalColor != -1 || flag.hasShiftDown())
 			components.add(Component.translatable("item.aperture_innovations.portal_gun.portal_primary_color", Integer.toHexString(primaryPortalColor).toUpperCase()).withStyle(style -> style.withColor(primaryPortalColor)));
 
-		if(secondaryPortalColor != -1)
+		if(secondaryPortalColor != -1 || flag.hasShiftDown())
 			components.add(Component.translatable("item.aperture_innovations.portal_gun.portal_secondary_color", Integer.toHexString(secondaryPortalColor).toUpperCase()).withStyle(style -> style.withColor(secondaryPortalColor)));
 
 
-		if(primaryStripeColor != -1)
+		if(primaryStripeColor != -1 || flag.hasShiftDown())
 			components.add(Component.translatable("item.aperture_innovations.portal_gun.stripe_primary_color", Integer.toHexString(primaryStripeColor).toUpperCase()).withStyle(style -> style.withColor(primaryStripeColor)));
 
-		if(secondaryStripeColor != -1)
+		if(secondaryStripeColor != -1 || flag.hasShiftDown())
 			components.add(Component.translatable("item.aperture_innovations.portal_gun.stripe_secondary_color", Integer.toHexString(secondaryStripeColor).toUpperCase()).withStyle(style -> style.withColor(secondaryStripeColor)));
 
 	}
@@ -166,7 +166,7 @@ public class PortalGunItem extends Item implements GeoItem
 
 			PortalLink link = data.getLink(linkID);
 			if (link == null) {
-				data.addFreshLink(linkID);
+				data.addFreshLink(linkID, getVariant(stack));
 
 				PacketDistributor.sendToPlayersTrackingChunk((ServerLevel) level, new ChunkPos(player.blockPosition()),
 						new ClientboundPortalSoundsPacket.GunActivate(linkID, player.blockPosition()));

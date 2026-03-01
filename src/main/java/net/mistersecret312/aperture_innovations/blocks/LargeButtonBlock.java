@@ -3,6 +3,7 @@ package net.mistersecret312.aperture_innovations.blocks;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
@@ -12,15 +13,14 @@ import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.block.BaseEntityBlock;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -42,6 +42,9 @@ import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.items.ColorfulGelItem;
 import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
+import java.util.List;
+
 public class LargeButtonBlock extends BaseEntityBlock {
 	public static final DirectionProperty FACING = DirectionProperty.create("facing");
 	public static final DirectionProperty NORMAL = DirectionProperty.create("normal");
@@ -58,6 +61,21 @@ public class LargeButtonBlock extends BaseEntityBlock {
 									  .setValue(FACING, Direction.NORTH)
 									  .setValue(PRESSED, false)
 									  .setValue(PART, 0));
+	}
+
+	@Override
+	public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> components,
+								TooltipFlag tooltipFlag)
+	{
+		super.appendHoverText(stack, context, components, tooltipFlag);
+
+		Level level = context.level();
+		if(level != null)
+		{
+			Color hsbColor = Color.getHSBColor(level.getTimeOfDay(1f)*50, 1f, 1f);
+			components.add(Component.translatable("tooltip.aperture_innovations.is_colorable").withStyle((style -> style.withColor(
+					hsbColor.getRGB()))));
+		}
 	}
 
 	public static BlockPos[] getMultiblockOffsets(BlockPos pos, Direction normal) {
@@ -128,23 +146,21 @@ public class LargeButtonBlock extends BaseEntityBlock {
 	public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack)
 	{
 		super.setPlacedBy(level, pos, state, placer, stack);
-		if (!level.isClientSide())
-		{
-			BlockPos[] offsets = getMultiblockOffsets(pos, state.getValue(NORMAL));
-			BlockState dummyState = state.setValue(PRESSED, false);
 
-			level.setBlock(offsets[0], dummyState.setValue(PART, 1), 16 | 2);
-			level.updateNeighborsAt(offsets[0], dummyState.getBlock());
-			level.scheduleTick(offsets[0], dummyState.getBlock(), 2);
+		BlockPos[] offsets = getMultiblockOffsets(pos, state.getValue(NORMAL));
+		BlockState dummyState = state.setValue(PRESSED, false);
 
-			level.setBlock(offsets[1], dummyState.setValue(PART, 2), 16 | 2);
-			level.updateNeighborsAt(offsets[1], dummyState.getBlock());
-			level.scheduleTick(offsets[1], dummyState.getBlock(), 2);
+		level.setBlock(offsets[0], dummyState.setValue(PART, 1), 1 | 2);
+		level.updateNeighborsAt(offsets[0], dummyState.getBlock());
+		level.scheduleTick(offsets[0], dummyState.getBlock(), 2);
 
-			level.setBlock(offsets[2], dummyState.setValue(PART, 3), 16 | 2);
-			level.updateNeighborsAt(offsets[2], dummyState.getBlock());
-			level.scheduleTick(offsets[2], dummyState.getBlock(), 2);
-		}
+		level.setBlock(offsets[1], dummyState.setValue(PART, 2), 1 | 2);
+		level.updateNeighborsAt(offsets[1], dummyState.getBlock());
+		level.scheduleTick(offsets[1], dummyState.getBlock(), 2);
+
+		level.setBlock(offsets[2], dummyState.setValue(PART, 3), 1 | 2);
+		level.updateNeighborsAt(offsets[2], dummyState.getBlock());
+		level.scheduleTick(offsets[2], dummyState.getBlock(), 2);
 	}
 
 	@Override
@@ -160,7 +176,7 @@ public class LargeButtonBlock extends BaseEntityBlock {
 			if (state.getValue(PRESSED) != masterState.getValue(PRESSED))
 			{
 				BlockState newState = state.setValue(PRESSED, masterState.getValue(PRESSED));
-				level.setBlock(currentPos, newState, 3);
+				level.setBlock(currentPos, newState, 1 | 2);
 				return newState;
 			}
 		}
@@ -177,32 +193,37 @@ public class LargeButtonBlock extends BaseEntityBlock {
 	}
 
 	@Override
-	public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
-		if (!level.isClientSide())
+	public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player)
+	{
+		BlockPos masterPos = getMasterPos(pos, state);
+		BlockState masterState = level.getBlockState(masterPos);
+
+		if(masterState.is(this) && masterState.getValue(PART) == 0)
 		{
-			BlockPos masterPos = getMasterPos(pos, state);
-			BlockState masterState = level.getBlockState(masterPos);
+			BlockPos[] offsets = getMultiblockOffsets(masterPos, masterState.getValue(NORMAL));
+			BlockPos[] allParts = new BlockPos[]{masterPos, offsets[0], offsets[1], offsets[2]};
 
-			if (masterState.is(this) && masterState.getValue(PART) == 0)
+			if(!player.isCreative())
 			{
-				BlockPos[] offsets = getMultiblockOffsets(masterPos, masterState.getValue(NORMAL));
+				BlockEntity be = level.getBlockEntity(masterPos);
+				Block.dropResources(masterState, level, masterPos, be, player, player.getMainHandItem());
+			}
 
-				for (BlockPos p : offsets)
+			for(BlockPos part : allParts)
+			{
+				if(level.getBlockState(part).is(this))
 				{
-					if (!p.equals(pos) && level.getBlockState(p).is(this))
-					{
-						level.setBlock(p, Blocks.AIR.defaultBlockState(), 35);
-						level.levelEvent(player, 2001, p, Block.getId(masterState));
-					}
-				}
-
-				if (!masterPos.equals(pos))
-				{
-					level.setBlock(masterPos, Blocks.AIR.defaultBlockState(), 35);
-					level.levelEvent(player, 2001, masterPos, Block.getId(masterState));
+					level.setBlock(part, Blocks.AIR.defaultBlockState(), 3);
+					level.levelEvent(player, 2001, part, Block.getId(masterState));
 				}
 			}
+
+			for(BlockPos p : allParts)
+			{
+				level.updateNeighborsAt(p, Blocks.AIR.defaultBlockState().getBlock());
+			}
 		}
+
 		return super.playerWillDestroy(level, pos, state, player);
 	}
 
