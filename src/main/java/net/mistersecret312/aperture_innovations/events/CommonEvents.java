@@ -85,7 +85,7 @@ public class CommonEvents
 					if(!portalDim.equals(event.getLevel().dimension()))
 						continue;
 
-					List<Entity> entities = level.getEntitiesOfClass(Entity.class, new AABB(portal.getPosition(), portal.getPosition()).inflate(5));
+					List<Entity> entities = level.getEntitiesOfClass(Entity.class, new AABB(portal.getPosition(), portal.getPosition()).inflate(3));
 					for(Entity entity : entities)
 					{
 						ApertureCapability aperture = entity.getData(AttachmentTypeInit.APERTURE);

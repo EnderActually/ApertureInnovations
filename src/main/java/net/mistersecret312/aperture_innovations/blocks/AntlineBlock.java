@@ -227,6 +227,14 @@ public class AntlineBlock extends BaseEntityBlock
 				antline.activeColor = color;
 			else antline.color = color;
 
+			level.scheduleTick(pos, state.getBlock(), 0);
+			for(Direction connectedSide : antline.getConnectedSides())
+			{
+				level.scheduleTick(pos.relative(connectedSide),
+						level.getBlockState(pos.relative(connectedSide)).getBlock(), 0);
+			}
+			level.updateNeighborsAt(pos, state.getBlock());
+
 			return ItemInteractionResult.sidedSuccess(level.isClientSide());
 		}
 

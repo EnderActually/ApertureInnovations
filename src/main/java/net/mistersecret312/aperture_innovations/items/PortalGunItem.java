@@ -202,6 +202,9 @@ public class PortalGunItem extends Item implements GeoItem
 					if(heldEntity == null)
 					{
 						setHeldEntity(stack, null);
+						PacketDistributor.sendToAllPlayers(
+								new ClientboundGunZapSoundPacket(player.getUUID(), true));
+
 						level.playSound(null, player.blockPosition(), SoundInit.PORTAL_GUN_HOLD_STOP.get(), SoundSource.PLAYERS);
 						this.triggerAnim(player, GeoItem.getOrAssignId(stack, (ServerLevel) level),
 								"main", "let_go");
@@ -210,6 +213,9 @@ public class PortalGunItem extends Item implements GeoItem
 					if(heldEntity != null && !heldEntity.getData(AttachmentTypeInit.HOLD_ENTITY).isHeld)
 					{
 						setHeldEntity(stack, null);
+						PacketDistributor.sendToAllPlayers(
+								new ClientboundGunZapSoundPacket(player.getUUID(), true));
+
 						level.playSound(null, player.blockPosition(), SoundInit.PORTAL_GUN_HOLD_STOP.get(), SoundSource.PLAYERS);
 						this.triggerAnim(player, GeoItem.getOrAssignId(stack, (ServerLevel) level),
 								"main", "let_go");
