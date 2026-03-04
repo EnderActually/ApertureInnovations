@@ -84,6 +84,7 @@ dependencies {
 
     implementation "software.bernie.geckolib:geckolib-neoforge-${minecraft_version}:${geckolib_version}"
     implementation "curse.maven:mekanism-268560:7132168"
+    implementation "curse.maven:sodium-394468:6382651"
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
@@ -102,6 +103,10 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
     expand replaceProperties
     from "src/main/templates"
     into "build/generated/sources/modMetadata"
+}
+
+tasks.named('createMinecraftArtifacts').configure {
+    dependsOn 'generateModMetadata'
 }
 
 sourceSets.main.resources.srcDir generateModMetadata

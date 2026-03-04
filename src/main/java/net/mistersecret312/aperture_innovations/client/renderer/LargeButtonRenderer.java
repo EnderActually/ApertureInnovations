@@ -102,10 +102,10 @@ public class LargeButtonRenderer extends DynamicGeoBlockRenderer<LargeButtonBloc
 																ResourceLocation texturePath,
 																MultiBufferSource bufferSource, float partialTick)
 	{
-		List<String> glows = Lists.newArrayList("ColoredLines", "Button");
 		if(bone.getName().equals("Button"))
 			return GLOWING_RENDER_TYPE.apply(getTextureOverrideForBone(bone, animatable, partialTick), false);
-		if(glows.contains(bone.getName()))
+
+		if(bone.getName().equals("ColoredLines"))
 			return PortalRenderTypes.APERTURE_GLOW.apply(getTextureOverrideForBone(bone, animatable, partialTick),
 					RenderStateShard.TRANSLUCENT_TRANSPARENCY);
 
@@ -215,7 +215,7 @@ public class LargeButtonRenderer extends DynamicGeoBlockRenderer<LargeButtonBloc
 			super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, colour);
 
 		if (renderTypeOverride != null)
-			buffer = bufferSource.getBuffer(renderType);
+			buffer = bufferSource.getBuffer(renderTypeOverride);
 
 		if (!isReRender)
 			applyRenderLayersForBone(poseStack, animatable, bone, renderTypeOverride, bufferSource, buffer, partialTick, packedLight, packedOverlay);

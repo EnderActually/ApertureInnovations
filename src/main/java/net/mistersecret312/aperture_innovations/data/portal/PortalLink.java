@@ -315,6 +315,20 @@ public class PortalLink
 				PacketDistributor.sendToPlayersTrackingChunk(portalLevel, new ChunkPos(x, z),
 						new ClientboundPortalSoundsPacket.FizzlePortal(linkID, true));
 			}
+
+			if(isOpen())
+			{
+				AABB box = PortalUtilities.getPortalBoundingBox(primaryPortal.getPosition(),
+						primaryPortal.getXRotation(), primaryPortal.getYRotation()).deflate(0.05);
+				for(Entity entity : level.getEntitiesOfClass(Entity.class, box))
+				{
+					Direction portalDirection = PortalUtilities.getPortalDirection(level, linkID, true);
+					entity.push(Vec3.atLowerCornerOf(portalDirection.getNormal()).multiply(0.75f, 0.75f, 0.75f));
+					if(entity instanceof ServerPlayer player) PacketDistributor.sendToPlayer(player,
+							new ClientboundTeleportMomentumPacket(player.getDeltaMovement().toVector3f()));
+
+				}
+			}
 		}
 		int color = primaryPortal.getColor();
 
@@ -337,6 +351,19 @@ public class PortalLink
 				PacketDistributor.sendToPlayersTrackingChunk(portalLevel, new ChunkPos(x, z),
 						new ClientboundPortalSoundsPacket.FizzlePortal(linkID, false));
 
+			}
+
+			if(isOpen())
+			{
+				AABB box = PortalUtilities.getPortalBoundingBox(secondaryPortal.getPosition(),
+						secondaryPortal.getXRotation(), secondaryPortal.getYRotation()).deflate(0.05);
+				for(Entity entity : level.getEntitiesOfClass(Entity.class, box))
+				{
+					Direction portalDirection = PortalUtilities.getPortalDirection(level, linkID, false);
+					entity.push(Vec3.atLowerCornerOf(portalDirection.getNormal()).multiply(0.75f, 0.75f, 0.75f));
+					if(entity instanceof ServerPlayer player) PacketDistributor.sendToPlayer(player,
+							new ClientboundTeleportMomentumPacket(player.getDeltaMovement().toVector3f()));
+				}
 			}
 		}
 		int color = secondaryPortal.getColor();
