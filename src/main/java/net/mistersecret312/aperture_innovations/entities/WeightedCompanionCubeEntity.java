@@ -115,7 +115,7 @@ public class WeightedCompanionCubeEntity extends Entity implements GeoEntity
 		}
 
 		if(!level.isClientSide())
-			level.playSound(null, blockPosition(), SoundInit.CUBE_IMPACT.get(), SoundSource.NEUTRAL);
+			level.playSound(null, blockPosition(), SoundInit.CUBE_IMPACT.get(), SoundSource.NEUTRAL, 0.5f, 1f);
 		return false;
 	}
 

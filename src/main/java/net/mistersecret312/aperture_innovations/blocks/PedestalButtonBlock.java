@@ -203,7 +203,7 @@ public class PedestalButtonBlock extends BaseEntityBlock
 			level.setBlock(pos, state.setValue(PRESSED, true), 3);
 			level.scheduleTick(pos, this, 25);
 			if(!level.isClientSide())
-				level.playSound(null, pos, SoundInit.PEDESTAL_BUTTON_DOWN.get(), SoundSource.BLOCKS);
+				level.playSound(null, pos, SoundInit.PEDESTAL_BUTTON_DOWN.get(), SoundSource.BLOCKS, 0.5f, 1f);
 			return InteractionResult.SUCCESS;
 		}
 		return InteractionResult.PASS;
@@ -213,7 +213,7 @@ public class PedestalButtonBlock extends BaseEntityBlock
 	protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random)
 	{
 		level.setBlock(pos, state.setValue(PRESSED, false), 3);
-		level.playSound(null, pos, SoundInit.PEDESTAL_BUTTON_UP.get(), SoundSource.BLOCKS);
+		level.playSound(null, pos, SoundInit.PEDESTAL_BUTTON_UP.get(), SoundSource.BLOCKS, 0.5f, 1f);
 		super.tick(state, level, pos, random);
 	}
 
