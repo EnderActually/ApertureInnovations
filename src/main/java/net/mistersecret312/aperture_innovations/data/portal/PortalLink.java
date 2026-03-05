@@ -28,10 +28,12 @@ import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
 import net.mistersecret312.aperture_innovations.init.AdvancementInit;
 import net.mistersecret312.aperture_innovations.init.StatisticsInit;
 import net.mistersecret312.aperture_innovations.init.TagInit;
+import net.mistersecret312.aperture_innovations.neo_events.PortalTravelEvent;
 import net.mistersecret312.aperture_innovations.network.ClientboundEntityPortalLerpPacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalSoundsPacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundTeleportMomentumPacket;
 import net.mistersecret312.aperture_innovations.utilities.PortalUtilities;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -539,7 +541,6 @@ public class PortalLink
 
 				float yaw = (float) Math.atan2(-(rot.x * rot.z + rot.y * rot.w) * 2,
 						2 * (rot.y * rot.y + rot.z * rot.z) - 1);
-				entity.setPos(targetPos);
 
 				Vec2 portalRot = PortalUtilities.getPortalRotation(level, linkID, isPrimary);
 				Vec2 otherPortalRot = PortalUtilities.getPortalRotation(level, linkID, !isPrimary);
@@ -550,11 +551,21 @@ public class PortalLink
 						new ChunkPos(BlockPos.containing(portal.getPosition())),
 						new ClientboundPortalSoundsPacket.EnterPortal(link.linkID, isPrimary));
 
+				boolean eventCanceled = NeoForge.EVENT_BUS.post(new PortalTravelEvent.Pre(link, portal, isPrimary, level,
+						targetLevel, currentPos, targetPos, otherPortal.isMoonshot())).isCanceled();
+				if(eventCanceled)
+					return false;
+
+				entity.setPos(targetPos);
 				entity.teleportTo(targetLevel, targetPos.x, targetPos.y, targetPos.z, Set.of(),
 						(float) Math.toDegrees(yaw) + (direction.getAxis().isVertical() ? 180 : 0),
 						entity instanceof LivingEntity && ((LivingEntity) entity).isFallFlying()
 								  ? otherPortal.getXRotation() : entity.getXRot());
 				entity.setOldPosAndRot();
+
+				NeoForge.EVENT_BUS.post(new PortalTravelEvent.Post(link, portal, isPrimary, level,
+						targetLevel, currentPos, targetPos, otherPortal.isMoonshot()));
+
 
 				PacketDistributor.sendToPlayersTrackingChunk(targetLevel,
 						new ChunkPos(BlockPos.containing(targetPos)),
