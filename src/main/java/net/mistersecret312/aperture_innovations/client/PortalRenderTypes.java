@@ -55,6 +55,19 @@ public class PortalRenderTypes extends RenderType
 		);
 	}
 
+	public static RenderType fizzler(ResourceLocation texture)
+	{
+		return RenderType.create("fizzler",
+				DefaultVertexFormat.POSITION_TEX_COLOR,
+				VertexFormat.Mode.QUADS,
+				1536, false, false,
+				RenderType.CompositeState.builder()
+						.setShaderState(new ShaderStateShard(() -> ApertureInnovations.ClientModEvents.portalFizzleShaderInstance))
+						.setTextureState(new TextureStateShard(texture, false, false))
+						.setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
+										 .createCompositeState(false));
+	}
+
 	public static RenderType portalCorridor(ResourceLocation texture) {
 		return RenderType.create("portal_corridor",
 				DefaultVertexFormat.POSITION_TEX_COLOR,

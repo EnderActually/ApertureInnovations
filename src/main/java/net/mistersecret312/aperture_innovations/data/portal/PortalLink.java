@@ -426,7 +426,7 @@ public class PortalLink
 		Vec3 speed = entity.getDeltaMovement();
 		Vec3 nextPos = currentPos.add(speed.multiply(2f, 2f, 2f));
 
-		AABB movementBox = entity.getBoundingBox().expandTowards(speed);
+		AABB movementBox = entity.getBoundingBox().expandTowards(nextPos);
 		if(link == null || !link.isOpen())
 			return false;
 
@@ -448,6 +448,10 @@ public class PortalLink
 			entity.push(pushVector);
 			if(entity instanceof ServerPlayer player) PacketDistributor.sendToPlayer(player,
 					new ClientboundTeleportMomentumPacket(player.getDeltaMovement().toVector3f()));
+		}
+		else if(distance < 3)
+		{
+			aperture.setFrictionlessTime(4);
 		}
 
 		AABB teleportBox = PortalUtilities.getPortalTeleportBox(portal.getPosition(), portal.getXRotation(),
@@ -551,8 +555,13 @@ public class PortalLink
 						new ChunkPos(BlockPos.containing(portal.getPosition())),
 						new ClientboundPortalSoundsPacket.EnterPortal(link.linkID, isPrimary));
 
-				boolean eventCanceled = NeoForge.EVENT_BUS.post(new PortalTravelEvent.Pre(link, portal, isPrimary, level,
-						targetLevel, currentPos, targetPos, otherPortal.isMoonshot())).isCanceled();
+				PortalTravelEvent.Pre event = NeoForge.EVENT_BUS.post(new PortalTravelEvent.Pre(link, portal, isPrimary, level,
+						targetLevel, currentPos, targetPos, otherPortal.isMoonshot()));
+
+				targetLevel = (ServerLevel) event.getTargetLevel();
+				targetPos = event.getTargetPos();
+
+				boolean eventCanceled = event.isCanceled();
 				if(eventCanceled)
 					return false;
 
@@ -565,7 +574,6 @@ public class PortalLink
 
 				NeoForge.EVENT_BUS.post(new PortalTravelEvent.Post(link, portal, isPrimary, level,
 						targetLevel, currentPos, targetPos, otherPortal.isMoonshot()));
-
 
 				PacketDistributor.sendToPlayersTrackingChunk(targetLevel,
 						new ChunkPos(BlockPos.containing(targetPos)),

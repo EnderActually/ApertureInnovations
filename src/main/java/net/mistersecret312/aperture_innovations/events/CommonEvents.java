@@ -90,7 +90,7 @@ public class CommonEvents
 					{
 						ApertureCapability aperture = entity.getData(AttachmentTypeInit.APERTURE);
 						if(aperture.ignorePortalsTime != 0)
-							return;
+							break;
 
 						if(link.teleportLogic(entity, aperture, link, level, isPrimary))
 							break portals;

@@ -98,6 +98,7 @@ public class ApertureInnovations
 	public static class ClientModEvents
 	{
 		public static ShaderInstance portalCorridorShaderInstance;
+		public static ShaderInstance portalFizzleShaderInstance;
 
 		public static final Lazy<KeyMapping> RESET_PORTAL_GUN = Lazy.of(() -> new KeyMapping("aperture_innovations.portal_gun.reset",
 				KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.category.aperture_innovations"));
@@ -145,10 +146,15 @@ public class ApertureInnovations
 		@SubscribeEvent
 		public static void registerShaders(RegisterShadersEvent event) throws IOException
 		{
+//			event.registerShader(new ShaderInstance(event.getResourceProvider(),
+//					ResourceLocation.fromNamespaceAndPath(MODID, "portal_corridor"),
+//					DefaultVertexFormat.POSITION_TEX_COLOR),
+//					shaderInstance -> portalCorridorShaderInstance = shaderInstance);
+
 			event.registerShader(new ShaderInstance(event.getResourceProvider(),
-					ResourceLocation.fromNamespaceAndPath(MODID, "portal_corridor"),
+					ResourceLocation.fromNamespaceAndPath(MODID, "portal_fizzler"),
 					DefaultVertexFormat.POSITION_TEX_COLOR),
-					shaderInstance -> portalCorridorShaderInstance = shaderInstance);
+					shaderInstance -> portalFizzleShaderInstance = shaderInstance);
 		}
 
 		@SubscribeEvent
