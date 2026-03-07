@@ -15,6 +15,7 @@ import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.network.ClientboundApertureCapabilityPacket;
+import net.mistersecret312.aperture_innovations.utilities.PortalUtilities;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.EntityCapability;
 import net.neoforged.neoforge.capabilities.ICapabilityProvider;
@@ -53,21 +54,9 @@ public class ApertureCapability implements INBTSerializable<CompoundTag>
 		if(ignorePortalsTime > 0)
 			ignorePortalsTime--;
 
-		if(entity.onGround())
-			reset();
-		if(entity instanceof LivingEntity && ((LivingEntity) entity).isFallFlying())
-			reset();
-		if(entity instanceof ServerPlayer && ((ServerPlayer) entity).getAbilities().flying)
+		if(shouldReset(level, entity))
 			reset();
 
-		if(entity.onGround() || (entity instanceof LivingEntity && ((LivingEntity) entity).isFallFlying()))
-		{
-			portal = null;
-			this.distanceVec = new Vector3d();
-			this.horizontalDistance = 0;
-			this.verticalDistance = 0;
-			this.frictionlessTime = 0;
-		}
 		else if(portal != null)
 		{
 			Vec3 speed = entity.getDeltaMovement();
@@ -75,6 +64,24 @@ public class ApertureCapability implements INBTSerializable<CompoundTag>
 					speed.y > 0 ? (float) speed.y : (float) -speed.y, speed.z > 0 ? (float) speed.z : (float) -speed.z);
 			this.distanceVec.add(movementVector);
 		}
+	}
+
+	public boolean shouldReset(Level level, Entity entity)
+	{
+		if(portal != null)
+		{
+			Vec3 pos = PortalUtilities.getPortalPos(level, portal.getFirst(), portal.getSecond());
+			if(pos != null && pos.distanceTo(entity.position()) < 2)
+				return false;
+		}
+		if(entity.onGround())
+			return true;
+		if(entity instanceof LivingEntity && ((LivingEntity) entity).isFallFlying())
+			return true;
+		if(entity instanceof ServerPlayer && ((ServerPlayer) entity).getAbilities().flying)
+			return true;
+
+		return false;
 	}
 
 	public void reset()

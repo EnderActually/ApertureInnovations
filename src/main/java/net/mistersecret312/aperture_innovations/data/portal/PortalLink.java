@@ -32,6 +32,7 @@ import net.mistersecret312.aperture_innovations.neo_events.PortalTravelEvent;
 import net.mistersecret312.aperture_innovations.network.ClientboundEntityPortalLerpPacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalSoundsPacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundTeleportMomentumPacket;
+import net.mistersecret312.aperture_innovations.utilities.CoordUtil;
 import net.mistersecret312.aperture_innovations.utilities.PortalUtilities;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -92,6 +93,8 @@ public class PortalLink
 		this.primaryPortal.setPosition(pos);
 		this.primaryPortal.setYRotation(yRot);
 		this.primaryPortal.setXRotation(xRot);
+		this.primaryPortal.setDirection(direction);
+		this.primaryPortal.setFacing(facing);
 		this.primaryPortal.setDimension(dimension);
 		this.primaryPortal.setMoonshot(false);
 		this.primaryPortal.setReplaceShapes(PortalUtilities.calculatePortalVoxels(level, pos, xRot, yRot));
@@ -129,6 +132,8 @@ public class PortalLink
 		this.secondaryPortal.setPosition(pos);
 		this.secondaryPortal.setYRotation(yRot);
 		this.secondaryPortal.setXRotation(xRot);
+		this.secondaryPortal.setDirection(direction);
+		this.secondaryPortal.setFacing(facing);
 		this.secondaryPortal.setDimension(dimension);
 		this.secondaryPortal.setMoonshot(false);
 		this.secondaryPortal.setReplaceShapes(PortalUtilities.calculatePortalVoxels(level, pos, xRot, yRot));
@@ -426,7 +431,7 @@ public class PortalLink
 		Vec3 speed = entity.getDeltaMovement();
 		Vec3 nextPos = currentPos.add(speed.multiply(2f, 2f, 2f));
 
-		AABB movementBox = entity.getBoundingBox().expandTowards(nextPos);
+		AABB movementBox = entity.getBoundingBox().expandTowards(speed);
 		if(link == null || !link.isOpen())
 			return false;
 
@@ -480,7 +485,7 @@ public class PortalLink
 			boolean fast = relativePos > 0 && nextRelativePos <= 0;
 
 			AABB boundingBox = PortalUtilities.getPortalBoundingBox(portal.getPosition(), portal.getXRotation(), portal.getYRotation());
-			boolean full = portal.getXRotation() == -90 && boundingBox.contains(entity.getBoundingBox().getCenter().add(0, entity.getBbHeight()/2f, 0));
+			boolean full = portal.getXRotation() == -90 && boundingBox.inflate(0f, 0.25f, 0f).contains(entity.getBoundingBox().getCenter());
 
  			if(slow || fast || full)
 			{
@@ -528,7 +533,10 @@ public class PortalLink
 							otherDirection.getStepY() * 0.1f, otherDirection.getStepZ() * 0.1f);
 				}
 
-				entity.setDeltaMovement(new Vec3(newSpeed));
+				double xSpeed = entity.getX()-entity.xOld;
+				double ySpeed = entity.getY()-entity.yOld;
+				double zSpeed = entity.getZ()-entity.zOld;
+
 				entity.hasImpulse = true;
 				entity.resetFallDistance();
 
@@ -565,37 +573,51 @@ public class PortalLink
 				if(eventCanceled)
 					return false;
 
-				entity.setPos(targetPos);
-				entity.teleportTo(targetLevel, targetPos.x, targetPos.y, targetPos.z, Set.of(),
-						(float) Math.toDegrees(yaw) + (direction.getAxis().isVertical() ? 180 : 0),
-						entity instanceof LivingEntity && ((LivingEntity) entity).isFallFlying()
-								  ? otherPortal.getXRotation() : entity.getXRot());
+				Vec3 relativePosition = new Vec3(-0.15,
+						portal.isOnWall() ? -entity.getBoundingBox().getYsize()/2 : 0, 0);
+
+				Vec3 relativeMomentum;
+				if(direction.getAxis().isHorizontal())
+					relativeMomentum = CoordUtil.toPortalCoords(portal, new Vec3(xSpeed, 0, zSpeed));
+				else relativeMomentum = CoordUtil.toPortalCoords(portal, new Vec3(0, entity.getDeltaMovement().y(), 0));
+
+				Vec3 relativeLookAngle = CoordUtil.toPortalCoords(portal, entity.getLookAngle());
+
+				Vec3 destinationPosition = CoordUtil.fromPortalCoords(otherPortal, relativePosition, true).add(otherPortal.getPosition());
+				Vec3 destinationMomentum = CoordUtil.fromPortalCoords(otherPortal, relativeMomentum, true);
+				Vec3 destinationLookAngle = CoordUtil.fromPortalCoords(otherPortal, relativeLookAngle, true);
+
+				entity.teleportTo(targetLevel, destinationPosition.x(), destinationPosition.y(), destinationPosition.z(),
+						Set.of(),
+						CoordUtil.CoordinateSystems.lookAngleY(destinationLookAngle), entity.getXRot());
+				entity.setDeltaMovement(destinationMomentum);
 				entity.setOldPosAndRot();
 
 				NeoForge.EVENT_BUS.post(new PortalTravelEvent.Post(link, portal, isPrimary, level,
-						targetLevel, currentPos, targetPos, otherPortal.isMoonshot()));
+						targetLevel, currentPos, destinationPosition, otherPortal.isMoonshot()));
 
 				PacketDistributor.sendToPlayersTrackingChunk(targetLevel,
-						new ChunkPos(BlockPos.containing(targetPos)),
+						new ChunkPos(BlockPos.containing(destinationPosition)),
 						new ClientboundPortalSoundsPacket.EnterPortal(link.linkID, !isPrimary));
 				if(entity instanceof ServerPlayer player)
 				{
 					player.awardStat(StatisticsInit.TIMES_USED_PORTALS.get(), 1);
-					PacketDistributor.sendToPlayer(player, new ClientboundTeleportMomentumPacket(newSpeed));
+					PacketDistributor.sendToPlayer(player, new ClientboundTeleportMomentumPacket(
+							destinationMomentum.toVector3f()));
 
 					aperture.setPortal(Pair.of(linkID, isPrimary));
 					aperture.updateDistance();
 					aperture.setFrictionlessTime(100 * 20);
 					AdvancementInit.PORTAL_TRAVEL.get().trigger(player, portal.getDimension().location(),
-							targetLevel.dimension().location(), portal.getPosition().distanceToSqr(targetPos),
+							targetLevel.dimension().location(), portal.getPosition().distanceToSqr(destinationPosition),
 							aperture.verticalDistance, aperture.horizontalDistance, otherPortal.isMoonshot());
 				}
 				else
 				{
 					PacketDistributor.sendToPlayersTrackingEntity(entity,
-							new ClientboundEntityPortalLerpPacket(entity.getId(), targetPos.toVector3f(),
-									(float) Math.toDegrees(yaw) + (direction.getAxis().isVertical() ? 180 : 0),
-									entity.getXRot()));
+							new ClientboundEntityPortalLerpPacket(entity.getId(), destinationPosition.toVector3f(),
+									entity.getXRot(),
+									CoordUtil.CoordinateSystems.lookAngleY(destinationLookAngle)));
 				}
 
 				return true;

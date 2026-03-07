@@ -1,6 +1,7 @@
 package net.mistersecret312.aperture_innovations.data.portal;
 
 import io.netty.buffer.ByteBuf;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Utf8String;
@@ -20,6 +21,9 @@ public class Portal
 
 	private float xRot = 0;
 	private float yRot = 0;
+
+	private Direction direction = null;
+	private Direction facing = null;
 
 	private boolean moonshot = false;
 	private int color = -1;
@@ -48,6 +52,9 @@ public class Portal
 		tag.putFloat("xRot", xRot);
 		tag.putFloat("yRot", yRot);
 
+		tag.putInt("direction", direction.get3DDataValue());
+		tag.putInt("facing", facing.get3DDataValue());
+
 		tag.putBoolean("moonshot", moonshot);
 		tag.putInt("color", color);
 
@@ -72,6 +79,9 @@ public class Portal
 		float xRot = tag.getFloat("xRot");
 		float yRot = tag.getFloat("yRot");
 
+		Direction direction = Direction.from3DDataValue(tag.getInt("direction"));
+		Direction facing = Direction.from3DDataValue(tag.getInt("facing"));
+
 		boolean moonshot = tag.getBoolean("moonshot");
 		int color = tag.getInt("color");
 
@@ -79,6 +89,8 @@ public class Portal
 		this.setDimension(dimension);
 		this.setXRotation(xRot);
 		this.setYRotation(yRot);
+		this.setDirection(direction);
+		this.setFacing(facing);
 		this.setMoonshot(moonshot);
 		this.setColor(color);
 	}
@@ -101,6 +113,9 @@ public class Portal
 		Utf8String.write(buffer, dimension.location().toString(), 32767);
 		buffer.writeFloat(xRot);
 		buffer.writeFloat(yRot);
+
+		buffer.writeInt(direction.get3DDataValue());
+		buffer.writeInt(facing.get3DDataValue());
 
 		buffer.writeBoolean(moonshot);
 		buffer.writeInt(color);
@@ -127,6 +142,9 @@ public class Portal
 
 		float xRot = buffer.readFloat();
 		float yRot = buffer.readFloat();
+
+		Direction direction = Direction.from3DDataValue(buffer.readInt());
+		Direction facing = Direction.from3DDataValue(buffer.readInt());
 
 		boolean moonshot = buffer.readBoolean();
 		int color = buffer.readInt();
@@ -178,6 +196,26 @@ public class Portal
 	public float getYRotation()
 	{
 		return yRot;
+	}
+
+	public Direction getDirection()
+	{
+		return direction;
+	}
+
+	public Direction getFacing()
+	{
+		return facing;
+	}
+
+	public void setDirection(Direction direction)
+	{
+		this.direction = direction;
+	}
+
+	public void setFacing(Direction facing)
+	{
+		this.facing = facing;
 	}
 
 	public ResourceKey<Level> getDimension()

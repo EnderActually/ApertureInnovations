@@ -92,6 +92,8 @@ public class CommonEvents
 						if(aperture.ignorePortalsTime != 0)
 							break;
 
+						aperture.setFrictionlessTime(4);
+
 						if(link.teleportLogic(entity, aperture, link, level, isPrimary))
 							break portals;
 					}
