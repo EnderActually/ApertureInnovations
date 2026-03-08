@@ -346,6 +346,12 @@ public class LargeButtonBlock extends BaseEntityBlock {
 		return getMasterShape(state);
 	}
 
+	@Override
+	protected boolean isSignalSource(BlockState state)
+	{
+		return true;
+	}
+
 	private VoxelShape getMasterShape(BlockState state)
 	{
 		Direction normal = state.getValue(NORMAL);

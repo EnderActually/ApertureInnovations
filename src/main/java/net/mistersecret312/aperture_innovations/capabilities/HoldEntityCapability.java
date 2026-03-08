@@ -1,43 +1,23 @@
 package net.mistersecret312.aperture_innovations.capabilities;
 
-import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.targeting.TargetingConditions;
-import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.mistersecret312.aperture_innovations.ApertureInnovations;
-import net.mistersecret312.aperture_innovations.entities.WeightedStorageCubeEntity;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
-import net.mistersecret312.aperture_innovations.network.ClientboundApertureCapabilityPacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundEntityHeldUpdatePacket;
-import net.mistersecret312.aperture_innovations.network.ClientboundTeleportMomentumPacket;
-import net.neoforged.neoforge.capabilities.EntityCapability;
 import net.neoforged.neoforge.common.util.INBTSerializable;
 import net.neoforged.neoforge.network.PacketDistributor;
-import org.joml.Vector3d;
-import org.joml.Vector3f;
-import software.bernie.geckolib.animatable.GeoItem;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class HoldEntityCapability implements INBTSerializable<CompoundTag>
 {
-	public static final EntityCapability<HoldEntityCapability, Void> APERTURE_CAPABILITY = EntityCapability.createVoid(
-		ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "hold_entity"), HoldEntityCapability.class);
 
 	public boolean isHeld = false;
 

@@ -218,6 +218,12 @@ public class PedestalButtonBlock extends BaseEntityBlock
 	}
 
 	@Override
+	protected boolean isSignalSource(BlockState state)
+	{
+		return true;
+	}
+
+	@Override
 	protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
 											  Player player, InteractionHand hand, BlockHitResult hitResult)
 	{

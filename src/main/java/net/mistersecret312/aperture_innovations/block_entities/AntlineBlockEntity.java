@@ -276,7 +276,7 @@ public class AntlineBlockEntity extends BlockEntity
 		if(blockState.is(TagInit.Blocks.CONNECTS_TO_ANTLINE))
 			return ConnectionState.LINK;
 
-		if(blockState.canRedstoneConnectTo(level, relativePos, direction))
+		if(blockState.isSignalSource())
 			return ConnectionState.LINK;
 
 		return ConnectionState.NONE;
