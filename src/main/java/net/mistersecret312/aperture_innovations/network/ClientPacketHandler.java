@@ -128,6 +128,15 @@ public class ClientPacketHandler
 		ApertureCapability aperture = player.getData(AttachmentTypeInit.APERTURE);
 		aperture.frictionlessTime = frictionlessTime;
 		player.setData(AttachmentTypeInit.APERTURE, aperture);
+
+		if(frictionlessTime != 0 && !player.onGround())
+		{
+			player.setDiscardFriction(true);
+		}
+		else
+		{
+			player.setDiscardFriction(false);
+		}
 	}
 
 	public static void handleEntityHeldUpdate(int id, boolean held)

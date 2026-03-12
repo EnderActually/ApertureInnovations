@@ -312,7 +312,7 @@ public record ServerboundOpenPortalPacket(boolean isPrimary) implements CustomPa
 					VoxelShape shape = state.getCollisionShape(level, pos)
 											.move(pos.getX(), pos.getY(), pos.getZ());
 
-					if(state.is(TagInit.Blocks.IMPORTALABLE))
+					if(state.is(TagInit.Blocks.IMPORTALABLE) || (PortalGunConfig.use_portalable_tag.get() && !state.is(TagInit.Blocks.PORTALABLE)))
 						shape = Shapes.create(shape.bounds().inflate(0.025));
 
 					if(!placementShape.get().isEmpty())

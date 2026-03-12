@@ -1,10 +1,13 @@
 package net.mistersecret312.aperture_innovations.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
+import net.mistersecret312.aperture_innovations.init.AttachmentTypeInit;
 import net.mistersecret312.aperture_innovations.utilities.PortalUtilities;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -34,4 +37,20 @@ public class EntityMixin
 		if(box.intersects(entity.getBoundingBox()))
 			cir.setReturnValue(false);
 	}
+
+	@ModifyExpressionValue(method = "move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V",
+			at = @At(
+					value = "INVOKE",
+					target = "Lnet/minecraft/world/entity/Entity;getBlockSpeedFactor()F"
+			)
+	)
+	private float modifyFrictionValue(float original)
+		{
+			Entity entity = (Entity) (Object) this;
+			float frictionlessTime = entity.getData(AttachmentTypeInit.APERTURE.get()).frictionlessTime;
+			if(frictionlessTime != 0 && !entity.onGround())
+				return 0.98f;
+
+			return original;
+		}
 }

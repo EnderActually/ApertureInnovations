@@ -46,6 +46,13 @@ public class ApertureCapability implements INBTSerializable<CompoundTag>
 		if(level.isClientSide())
 			return;
 
+		if(entity instanceof LivingEntity living)
+		{
+			if(frictionlessTime != 0)
+				living.setDiscardFriction(true);
+			else living.setDiscardFriction(false);
+		}
+
 		if(entity instanceof ServerPlayer player)
 			PacketDistributor.sendToPlayer(player, new ClientboundApertureCapabilityPacket(frictionlessTime));
 
@@ -77,9 +84,13 @@ public class ApertureCapability implements INBTSerializable<CompoundTag>
 		if(entity.onGround())
 			return true;
 		if(entity instanceof LivingEntity && ((LivingEntity) entity).isFallFlying())
+		{
 			return true;
+		}
 		if(entity instanceof ServerPlayer && ((ServerPlayer) entity).getAbilities().flying)
+		{
 			return true;
+		}
 
 		return false;
 	}
@@ -91,6 +102,7 @@ public class ApertureCapability implements INBTSerializable<CompoundTag>
 		this.horizontalDistance = 0;
 		this.verticalDistance = 0;
 		this.frictionlessTime = 0;
+		this.ignorePortalsTime = 0;
 	}
 
 	public void updateDistance()
@@ -109,6 +121,9 @@ public class ApertureCapability implements INBTSerializable<CompoundTag>
 
 	public void setFrictionlessTime(int frictionlessTime)
 	{
+		if(this.frictionlessTime > frictionlessTime)
+			return;
+
 		this.frictionlessTime = frictionlessTime;
 	}
 

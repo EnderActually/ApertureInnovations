@@ -1,6 +1,7 @@
 package net.mistersecret312.aperture_innovations.data.portal;
 
 import com.mojang.datafixers.util.Pair;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
@@ -13,6 +14,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.Chicken;
+import net.minecraft.world.entity.animal.FlyingAnimal;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -24,6 +27,7 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
+import net.mistersecret312.aperture_innovations.config.PortalGunConfig;
 import net.mistersecret312.aperture_innovations.data.PortalLinkData;
 import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
 import net.mistersecret312.aperture_innovations.init.AdvancementInit;
@@ -233,7 +237,7 @@ public class PortalLink
 					VoxelShape shape = state.getCollisionShape(level, pos)
 											   .move(pos.getX(), pos.getY(), pos.getZ());
 
-					if(state.is(TagInit.Blocks.IMPORTALABLE))
+					if(state.is(TagInit.Blocks.IMPORTALABLE) || (PortalGunConfig.use_portalable_tag.get() && !state.is(TagInit.Blocks.PORTALABLE)))
 						shape = Shapes.create(shape.bounds().inflate(0.025));
 
 					if(!placementReference.get().isEmpty())
@@ -480,13 +484,14 @@ public class PortalLink
 			double relativePos = offsetFromPortal.dot(new Vec3(normal));
 			double nextRelativePos = nextOffsetFromPortal.dot(new Vec3(normal));
 
-			boolean slow = portalPos.closerThan(currentPos, 0.45f) && relativePos > 0;
+			boolean slow = portalPos.closerThan(currentPos, 0.5f) && relativePos >= 0;
 			boolean fast = relativePos > 0 && nextRelativePos <= 0;
 
 			AABB boundingBox = PortalUtilities.getPortalBoundingBox(portal.getPosition(), portal.getXRotation(), portal.getYRotation());
 			boolean full = portal.getXRotation() == -90 && boundingBox.contains(entity.getBoundingBox().getCenter().add(0, entity.getBbHeight()/2f, 0));
  			if(slow || fast || full)
 			{
+				aperture.setIgnorePortalsTime(2);
 				if(direction.getAxis().isHorizontal())
 					aperture.setIgnorePortalsTime(5);
 				if(link.isInWorld() && link.isInterdimensionalLink())
@@ -496,7 +501,6 @@ public class PortalLink
 				double ySpeed = entity.position().y()-entity.yOld;
 				double zSpeed = entity.position().z()-entity.zOld;
 
-				entity.hasImpulse = true;
 				entity.resetFallDistance();
 
 				ServerLevel targetLevel;
@@ -505,8 +509,9 @@ public class PortalLink
 				if(targetLevel == null)
 					return false;
 
-				Vec3 relativePosition = new Vec3(-0.15,
-						portal.isOnWall() ? -entity.getBoundingBox().getYsize()/2 : 0, 0);
+				boolean smallEntity = entity.getBoundingBox().getYsize() < 1.5f;
+				Vec3 relativePosition = new Vec3(otherPortal.isOnWall() ? -0.15 : portal.isOnWall() ? 0 : smallEntity ? -entity.getBoundingBox().getYsize() : entity.getBoundingBox().getYsize(),
+						otherPortal.isOnWall() ? -entity.getBoundingBox().getYsize()/2 : 0, 0);
 
 				Vec3 relativeMomentum;
 				if(direction.getAxis().isHorizontal())
@@ -515,9 +520,22 @@ public class PortalLink
 
 				Vec3 relativeLookAngle = CoordUtil.toPortalCoords(portal, entity.getLookAngle());
 
-				Vec3 destinationPosition = CoordUtil.fromPortalCoords(otherPortal, relativePosition, true).add(otherPortal.getPosition());
-				Vec3 destinationMomentum = CoordUtil.fromPortalCoords(otherPortal, relativeMomentum, true);
-				Vec3 destinationLookAngle = CoordUtil.fromPortalCoords(otherPortal, relativeLookAngle, true);
+				Vec3 destinationPosition;
+				Vec3 destinationMomentum;
+				Vec3 destinationLookAngle;
+				if(!otherPortal.isMoonshot())
+				{
+					destinationPosition = CoordUtil.fromPortalCoords(otherPortal, relativePosition, true).add(otherPortal.getPosition());
+					destinationMomentum = CoordUtil.fromPortalCoords(otherPortal, relativeMomentum, true);
+					destinationLookAngle = CoordUtil.fromPortalCoords(otherPortal, relativeLookAngle, true);
+				}
+				else
+				{
+					destinationPosition = portal.getPosition().add(0, 1000, 0);
+					destinationMomentum = new Vec3(0, 0, 0);
+					destinationLookAngle = entity.getLookAngle();
+				}
+
 
 				PortalTravelEvent.Pre event = NeoForge.EVENT_BUS.post(new PortalTravelEvent.Pre(link, portal, isPrimary, level,
 						targetLevel, currentPos, destinationPosition, otherPortal.isMoonshot()));
@@ -533,16 +551,22 @@ public class PortalLink
 						new ChunkPos(BlockPos.containing(portal.getPosition())),
 						new ClientboundPortalSoundsPacket.EnterPortal(link.linkID, isPrimary));
 
+				System.out.println("Pre Momentum - " + entity.getDeltaMovement());
+
+				entity.hasImpulse = false;
+				System.out.println("Teleport tick - " + level.getGameTime());
 				entity.teleportTo(targetLevel, destinationPosition.x(), destinationPosition.y(), destinationPosition.z(),
 						Set.of(),
 						CoordUtil.CoordinateSystems.lookAngleY(destinationLookAngle), entity.getXRot());
 				entity.setDeltaMovement(destinationMomentum);
 				entity.setOldPosAndRot();
+				System.out.println("Post Momentum - " + entity.getDeltaMovement());
 
 				PacketDistributor.sendToPlayersTrackingChunk(targetLevel,
 						new ChunkPos(BlockPos.containing(destinationPosition)),
 						new ClientboundPortalSoundsPacket.EnterPortal(link.linkID, !isPrimary));
 
+				aperture.setFrictionlessTime(100 * 20);
 				NeoForge.EVENT_BUS.post(new PortalTravelEvent.Post(link, portal, isPrimary, level,
 						targetLevel, currentPos, destinationPosition, otherPortal.isMoonshot()));
 
@@ -550,10 +574,8 @@ public class PortalLink
 				{
 					player.awardStat(StatisticsInit.TIMES_USED_PORTALS.get(), 1);
 					player.connection.send(new ClientboundSetEntityMotionPacket(player));
-
 					aperture.setPortal(Pair.of(linkID, isPrimary));
 					aperture.updateDistance();
-					aperture.setFrictionlessTime(100 * 20);
 					AdvancementInit.PORTAL_TRAVEL.get().trigger(player, portal.getDimension().location(),
 							targetLevel.dimension().location(), portal.getPosition().distanceToSqr(destinationPosition),
 							aperture.verticalDistance, aperture.horizontalDistance, otherPortal.isMoonshot());
