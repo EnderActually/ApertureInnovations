@@ -35,6 +35,12 @@ public class LongFallBootsItem extends ArmorItem
 	}
 
 	@Override
+	public boolean isEnchantable(ItemStack stack)
+	{
+		return true;
+	}
+
+	@Override
 	public boolean isBarVisible(ItemStack stack)
 	{
 		return LongFallBootsConfig.long_fall_boots_use_energy.get() && getEnergy(stack) != getCapacity();

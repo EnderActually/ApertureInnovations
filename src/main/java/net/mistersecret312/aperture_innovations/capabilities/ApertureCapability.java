@@ -46,11 +46,19 @@ public class ApertureCapability implements INBTSerializable<CompoundTag>
 		if(level.isClientSide())
 			return;
 
+		if(frictionlessTime > 0)
+			entity.setOnGround(false);
+
 		if(entity instanceof LivingEntity living)
 		{
-			if(frictionlessTime != 0)
+			if(frictionlessTime != 0 && !entity.onGround())
+			{
 				living.setDiscardFriction(true);
-			else living.setDiscardFriction(false);
+			}
+			else
+			{
+				living.setDiscardFriction(false);
+			}
 		}
 
 		if(entity instanceof ServerPlayer player)

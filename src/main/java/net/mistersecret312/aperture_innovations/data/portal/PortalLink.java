@@ -488,10 +488,10 @@ public class PortalLink
 			boolean fast = relativePos > 0 && nextRelativePos <= 0;
 
 			AABB boundingBox = PortalUtilities.getPortalBoundingBox(portal.getPosition(), portal.getXRotation(), portal.getYRotation());
-			boolean full = portal.getXRotation() == -90 && boundingBox.contains(entity.getBoundingBox().getCenter().add(0, entity.getBbHeight()/2f, 0));
+			boolean full = portal.getDirection().equals(Direction.UP) && boundingBox.contains(entity.getBoundingBox().getCenter().add(0, entity.getBbHeight()/2f, 0));
  			if(slow || fast || full)
 			{
-				aperture.setIgnorePortalsTime(2);
+
 				if(direction.getAxis().isHorizontal())
 					aperture.setIgnorePortalsTime(5);
 				if(link.isInWorld() && link.isInterdimensionalLink())
@@ -510,8 +510,12 @@ public class PortalLink
 					return false;
 
 				boolean smallEntity = entity.getBoundingBox().getYsize() < 1.5f;
-				Vec3 relativePosition = new Vec3(otherPortal.isOnWall() ? -0.15 : portal.isOnWall() ? 0 : smallEntity ? -entity.getBoundingBox().getYsize() : entity.getBoundingBox().getYsize(),
+				Vec3 relativePosition = new Vec3(otherPortal.isOnWall() ? -0.15 : portal.isOnWall() ? 0 : smallEntity ? -entity.getBoundingBox().getYsize() :
+																												  otherPortal.isOnCeiling() ? -entity.getBoundingBox().getYsize()/2 : entity.getBoundingBox().getYsize(),
 						otherPortal.isOnWall() ? -entity.getBoundingBox().getYsize()/2 : 0, 0);
+
+//				relativePosition = new Vec3(otherPortal.isOnWall() ? -0.15 : -0.15,
+//						otherPortal.isOnWall() ? -entity.getBoundingBox().getYsize()/2 : 0, 0);
 
 				Vec3 relativeMomentum;
 				if(direction.getAxis().isHorizontal())
@@ -551,16 +555,13 @@ public class PortalLink
 						new ChunkPos(BlockPos.containing(portal.getPosition())),
 						new ClientboundPortalSoundsPacket.EnterPortal(link.linkID, isPrimary));
 
-				System.out.println("Pre Momentum - " + entity.getDeltaMovement());
 
 				entity.hasImpulse = false;
-				System.out.println("Teleport tick - " + level.getGameTime());
 				entity.teleportTo(targetLevel, destinationPosition.x(), destinationPosition.y(), destinationPosition.z(),
 						Set.of(),
 						CoordUtil.CoordinateSystems.lookAngleY(destinationLookAngle), entity.getXRot());
 				entity.setDeltaMovement(destinationMomentum);
 				entity.setOldPosAndRot();
-				System.out.println("Post Momentum - " + entity.getDeltaMovement());
 
 				PacketDistributor.sendToPlayersTrackingChunk(targetLevel,
 						new ChunkPos(BlockPos.containing(destinationPosition)),

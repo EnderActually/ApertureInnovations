@@ -21,6 +21,7 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AnvilBlock;
+import net.minecraft.world.level.block.entity.EnchantingTableBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -86,14 +87,12 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity
 		else this.setActive(false);
 
 		float friction = 0.85f;
+		if(!this.onGround())
+			friction = 0.95f;
 		if(this.getData(AttachmentTypeInit.APERTURE.get()).frictionlessTime > 0)
 			friction = 1f;
 
-		if(!this.onGround())
-			friction = 	0.95f;
-
 		this.setDeltaMovement(this.getDeltaMovement().multiply(friction, 1f, friction));
-
 		this.move(MoverType.SELF, this.getDeltaMovement());
 	}
 

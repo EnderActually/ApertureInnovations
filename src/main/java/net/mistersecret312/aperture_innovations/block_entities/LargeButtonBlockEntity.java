@@ -7,6 +7,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -94,6 +95,17 @@ public class LargeButtonBlockEntity extends BlockEntity implements GeoBlockEntit
 	public static void tick(Level level, BlockPos pos, BlockState blockState,
 							LargeButtonBlockEntity button)
 	{
+		if(!level.isClientSide())
+		{
+			if(blockState.getValue(LargeButtonBlock.UPDATE))
+			{
+				level.setBlock(pos, blockState.setValue(LargeButtonBlock.UPDATE, false), 1 | 2);
+				blockState.getBlock().setPlacedBy(level, pos, blockState, null, ItemStack.EMPTY);
+			}
+
+			level.getBlockTint()
+		}
+
 		Vec3 centerPos = Vec3.atLowerCornerOf(button.getBlockPos()).add(0.5f, 0f, 0.5f);
 
 		Direction normal = blockState.getValue(LargeButtonBlock.NORMAL);

@@ -51,6 +51,7 @@ public class LargeButtonBlock extends BaseEntityBlock {
 	public static final BooleanProperty PRESSED = BooleanProperty.create("pressed");
 
 	public static final IntegerProperty PART = IntegerProperty.create("part", 0, 3);
+	public static final BooleanProperty UPDATE = BooleanProperty.create("update");
 
 	public static final MapCodec<LargeButtonBlock> CODEC = simpleCodec(LargeButtonBlock::new);
 
@@ -60,6 +61,7 @@ public class LargeButtonBlock extends BaseEntityBlock {
 									  .setValue(NORMAL, Direction.UP)
 									  .setValue(FACING, Direction.NORTH)
 									  .setValue(PRESSED, false)
+									  .setValue(UPDATE, false)
 									  .setValue(PART, 0));
 	}
 
@@ -145,8 +147,12 @@ public class LargeButtonBlock extends BaseEntityBlock {
 	@Override
 	protected BlockState rotate(BlockState state, Rotation rotation)
 	{
+		if(state.getValue(PART) != 0)
+			return Blocks.AIR.defaultBlockState();
+
 		state = state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
-		return state.setValue(NORMAL, rotation.rotate(state.getValue(NORMAL)));
+		state = state.setValue(NORMAL, rotation.rotate(state.getValue(NORMAL)));
+		return state.setValue(UPDATE, true);
 	}
 
 	@Override
@@ -198,6 +204,11 @@ public class LargeButtonBlock extends BaseEntityBlock {
 			BlockPos[] offsets = getMultiblockOffsets(currentPos, state.getValue(NORMAL));
 			for (BlockPos pos : offsets)
 			{
+				if(state.getValue(UPDATE) && level instanceof Level lvl)
+				{
+					state.getBlock().setPlacedBy(lvl, currentPos, state, null, ItemStack.EMPTY);
+					return state;
+				}
 				if (!level.getBlockState(pos).is(this))
 					return Blocks.AIR.defaultBlockState();
 			}
@@ -381,7 +392,7 @@ public class LargeButtonBlock extends BaseEntityBlock {
 	@Override
 	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder)
 	{
-		builder.add(NORMAL, FACING, PRESSED, PART);
+		builder.add(NORMAL, FACING, PRESSED, PART, UPDATE);
 	}
 
 	@Override
