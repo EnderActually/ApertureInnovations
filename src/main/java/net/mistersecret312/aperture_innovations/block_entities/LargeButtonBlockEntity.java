@@ -103,7 +103,6 @@ public class LargeButtonBlockEntity extends BlockEntity implements GeoBlockEntit
 				blockState.getBlock().setPlacedBy(level, pos, blockState, null, ItemStack.EMPTY);
 			}
 
-			level.getBlockTint()
 		}
 
 		Vec3 centerPos = Vec3.atLowerCornerOf(button.getBlockPos()).add(0.5f, 0f, 0.5f);

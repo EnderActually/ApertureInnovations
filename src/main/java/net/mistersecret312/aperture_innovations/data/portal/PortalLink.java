@@ -234,14 +234,16 @@ public class PortalLink
 				}
 				if(!state.isAir())
 				{
-					VoxelShape shape = state.getCollisionShape(level, pos)
-											   .move(pos.getX(), pos.getY(), pos.getZ());
+					VoxelShape shape = state.getCollisionShape(level, pos).move(pos.getX(), pos.getY(), pos.getZ());
 
-					if(state.is(TagInit.Blocks.IMPORTALABLE) || (PortalGunConfig.use_portalable_tag.get() && !state.is(TagInit.Blocks.PORTALABLE)))
-						shape = Shapes.create(shape.bounds().inflate(0.025));
+					if(!shape.isEmpty())
+					{
+						if(state.is(TagInit.Blocks.IMPORTALABLE) || (PortalGunConfig.use_portalable_tag.get() && !state.is(TagInit.Blocks.PORTALABLE)))
+							shape = Shapes.create(shape.bounds().inflate(0.025));
 
-					if(!placementReference.get().isEmpty())
-						placementReference.set(Shapes.join(placementReference.get(), shape, BooleanOp.ONLY_FIRST));
+						if(!placementReference.get().isEmpty())
+							placementReference.set(Shapes.join(placementReference.get(), shape, BooleanOp.ONLY_FIRST));
+					}
 				}
 			});
 
