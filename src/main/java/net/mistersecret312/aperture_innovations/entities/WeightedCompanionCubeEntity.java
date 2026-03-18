@@ -1,6 +1,7 @@
 package net.mistersecret312.aperture_innovations.entities;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.dispenser.DispenseItemBehavior;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
@@ -92,7 +93,7 @@ public class WeightedCompanionCubeEntity extends Entity implements GeoEntity
 		float friction = 0.85f;
 		if(!this.onGround())
 			friction = 	0.95f;
-		if(this.getData(AttachmentTypeInit.APERTURE.get()).frictionlessTime > 0)
+		if(this.getData(AttachmentTypeInit.APERTURE.get()).frictionlessTime > 0 && !this.onGround())
 			friction = 1f;
 
 		this.setDeltaMovement(this.getDeltaMovement().multiply(friction, 1f, friction));

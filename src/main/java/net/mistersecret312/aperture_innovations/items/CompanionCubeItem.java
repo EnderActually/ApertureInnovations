@@ -2,9 +2,11 @@ package net.mistersecret312.aperture_innovations.items;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.dispenser.DispenseItemBehavior;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.item.Item;
@@ -12,10 +14,13 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.DispenserBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.entities.WeightedCompanionCubeEntity;
 import net.mistersecret312.aperture_innovations.entities.WeightedStorageCubeEntity;
+import net.mistersecret312.aperture_innovations.init.EntityInit;
 
 import java.awt.*;
 import java.util.List;
@@ -27,6 +32,28 @@ public class CompanionCubeItem extends Item
 	{
 		super(properties);
 		this.entityType = cubeType;
+	}
+
+	public static DispenseItemBehavior getDispenserBehaviour()
+	{
+		return (blockSource, item) ->
+			{
+				Level level = blockSource.level();
+				Vec3 dirVec = Vec3.atLowerCornerOf(blockSource.state().getValue(DispenserBlock.FACING).getNormal());
+
+				EntityType<?> entitytype = EntityInit.WEIGHTED_COMPANION_CUBE.get();
+				Entity entity = entitytype.spawn((ServerLevel)level, null, null,
+						BlockPos.containing(blockSource.center().add(dirVec)), MobSpawnType.SPAWN_EGG,
+						true, false);
+				if (entity instanceof WeightedCompanionCubeEntity cube)
+				{
+					cube.setDeltaMovement(
+							dirVec.multiply(0.5, dirVec.y < 0 ? 0 : 0.5, 0.5));
+					item.shrink(1);
+					return item;
+				}
+				return ItemStack.EMPTY;
+			};
 	}
 
 	@Override

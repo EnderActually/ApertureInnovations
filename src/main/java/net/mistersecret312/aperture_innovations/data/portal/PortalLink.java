@@ -461,9 +461,9 @@ public class PortalLink
 			if(entity instanceof ServerPlayer player) PacketDistributor.sendToPlayer(player,
 					new ClientboundTeleportMomentumPacket(player.getDeltaMovement().toVector3f()));
 		}
-		else if(distance < 3)
+		else if(distance < 0.5D)
 		{
-			aperture.setFrictionlessTime(4);
+			aperture.setFrictionlessTime(2);
 		}
 
 		AABB teleportBox = PortalUtilities.getPortalTeleportBox(portal.getPosition(), portal.getXRotation(),

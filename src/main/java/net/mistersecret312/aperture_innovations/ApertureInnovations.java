@@ -8,16 +8,14 @@ import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
+import net.minecraft.world.level.block.DispenserBlock;
 import net.mistersecret312.aperture_innovations.client.Layers;
 import net.mistersecret312.aperture_innovations.client.overlay.CrosshairOverlay;
 import net.mistersecret312.aperture_innovations.client.renderer.*;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ResourcePackReloadListener;
 import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
 import net.mistersecret312.aperture_innovations.init.*;
-import net.mistersecret312.aperture_innovations.items.ColorfulGelItem;
-import net.mistersecret312.aperture_innovations.items.ColorfulGelItemProperty;
-import net.mistersecret312.aperture_innovations.items.LongFallBootsItem;
-import net.mistersecret312.aperture_innovations.items.PortalGunItem;
+import net.mistersecret312.aperture_innovations.items.*;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -27,6 +25,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.client.event.*;
@@ -72,6 +71,7 @@ public class ApertureInnovations
 		modEventBus.addListener(Layers::registerLayers);
 		modEventBus.addListener(NetworkInit::registerPackets);
 		modEventBus.addListener(ApertureInnovations::registerCapabilities);
+		modEventBus.addListener(ApertureInnovations::commonSetup);
 
 		modEventBus.addListener((DataPackRegistryEvent.NewRegistry event) ->
 			{
@@ -81,6 +81,15 @@ public class ApertureInnovations
 		modContainer.registerConfig(ModConfig.Type.COMMON, Config.COMMON_CONFIG, "aperture_innovations-common.toml");
 		if(dist.isClient())
 			modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+	}
+
+	public static void commonSetup(FMLCommonSetupEvent event)
+	{
+		event.enqueueWork(() ->
+			{
+				DispenserBlock.registerBehavior(ItemInit.WEIGHTED_COMPANION_CUBE.get(), CompanionCubeItem.getDispenserBehaviour());
+				DispenserBlock.registerBehavior(ItemInit.WEIGHTED_STORAGE_CUBE.get(), CubeItem.getDispenserBehaviour());
+			});
 	}
 
 	public static void registerCapabilities(RegisterCapabilitiesEvent event)
