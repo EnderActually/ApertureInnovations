@@ -52,7 +52,7 @@ public class CompanionCubeItem extends Item
 					item.shrink(1);
 					return item;
 				}
-				return ItemStack.EMPTY;
+				return item;
 			};
 	}
 
