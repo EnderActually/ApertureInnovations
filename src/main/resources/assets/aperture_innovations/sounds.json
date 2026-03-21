@@ -111,5 +111,35 @@
     "sounds": [
       "aperture_innovations:large_button_up"
     ]
+  },
+  "timer_tick": {
+    "subtitle": "sound.aperture_innovations.timer_tick",
+    "sounds": [
+      "aperture_innovations:synth_tick_tock_01"
+    ]
+  },
+  "portal_gun_hold_start": {
+    "subtitle": "sound.aperture_innovations.portal_gun_hold_start",
+    "sounds": [
+      "aperture_innovations:portal_gun_hold_start"
+    ]
+  },
+  "portal_gun_hold_fail": {
+    "subtitle": "sound.aperture_innovations.portal_gun_hold_fail",
+    "sounds": [
+      "aperture_innovations:portal_gun_hold_fail"
+    ]
+  },
+  "portal_gun_hold_loop": {
+    "subtitle": "sound.aperture_innovations.portal_gun_hold_loop",
+    "sounds": [
+      "aperture_innovations:portal_gun_hold_loop"
+    ]
+  },
+  "portal_gun_hold_stop": {
+    "subtitle": "sound.aperture_innovations.portal_gun_hold_stop",
+    "sounds": [
+      "aperture_innovations:portal_gun_hold_stop"
+    ]
   }
 }

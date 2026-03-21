@@ -11,8 +11,8 @@ import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 import net.mistersecret312.aperture_innovations.client.ColorUtil;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
-import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
-import net.mistersecret312.aperture_innovations.portal.ClientPortalUtilities;
+import net.mistersecret312.aperture_innovations.data.portal.ClientPortalLink;
+import net.mistersecret312.aperture_innovations.utilities.ClientPortalUtilities;
 
 import static net.mistersecret312.aperture_innovations.client.renderer.PortalRenderer.LINKS;
 

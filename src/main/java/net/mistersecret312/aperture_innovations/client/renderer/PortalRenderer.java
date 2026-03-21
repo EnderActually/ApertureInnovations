@@ -19,8 +19,8 @@ import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.compat.iris.IrisCompat;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
-import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
-import net.mistersecret312.aperture_innovations.portal.ClientPortalUtilities;
+import net.mistersecret312.aperture_innovations.data.portal.ClientPortalLink;
+import net.mistersecret312.aperture_innovations.utilities.ClientPortalUtilities;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 

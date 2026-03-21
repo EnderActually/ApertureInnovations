@@ -22,24 +22,40 @@ public class ItemTabInit
 			() -> CreativeModeTab.builder()
 						  .icon(() -> new ItemStack(ItemInit.PORTAL_GUN.get()))
 						  .title(Component.translatable("tabs.aperture_innovations"))
-						  .displayItems((parameters, output) -> {
-							  output.accept(PortalGunItem.createPortalGun(ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "chell")));
-							  output.accept(PortalGunItem.createPortalGun(ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "atlas")));
-							  output.accept(PortalGunItem.createPortalGun(ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "pbody")));
-							  output.accept(PortalGunItem.createPortalGun(ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "reloaded")));
+						  .displayItems((parameters, output) ->
+							  {
+								  output.accept(PortalGunItem.createPortalGun(
+										  ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "chell")));
+								  output.accept(PortalGunItem.createPortalGun(
+										  ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "atlas")));
+								  output.accept(PortalGunItem.createPortalGun(
+										  ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "pbody")));
+								  output.accept(PortalGunItem.createPortalGun(
+										  ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+												  "reloaded")));
 
-							  output.accept(ItemInit.LONG_FALL_BOOTS.get());
+								  output.accept(ItemInit.LONG_FALL_BOOTS.get());
 
-							  output.accept(ItemInit.COLORFUL_GEL.get());
+								  output.accept(ItemInit.COLORFUL_GEL.get());
 
-							  output.accept(BlockInit.CONCRETE_SURFACE_BLOCK.get());
-							  output.accept(BlockInit.CONCRETE_SURFACE_TILE_BLOCK.get());
-							  output.accept(BlockInit.CONCRETE_SURFACE_1x2_BLOCK.get());
+								  output.accept(BlockInit.CONCRETE_SURFACE_BLOCK.get());
+								  output.accept(BlockInit.CONCRETE_SURFACE_TILE_BLOCK.get());
+								  output.accept(BlockInit.CONCRETE_SURFACE_1x2_BLOCK.get());
 
-							  output.accept(BlockInit.METAL_SURFACE_BLOCK.get());
-							  output.accept(BlockInit.METAL_SURFACE_TILE_BLOCK.get());
-							  output.accept(BlockInit.METAL_SURFACE_1x2_BLOCK.get());
-						  }
+								  output.accept(BlockInit.METAL_SURFACE_BLOCK.get());
+								  output.accept(BlockInit.METAL_SURFACE_TILE_BLOCK.get());
+								  output.accept(BlockInit.METAL_SURFACE_1x2_BLOCK.get());
+
+								  output.accept(BlockInit.ANTLINE.get());
+								  output.accept(BlockInit.CHECKMARK.get());
+								  output.accept(BlockInit.TIMER.get());
+
+								  output.accept(ItemInit.WEIGHTED_STORAGE_CUBE.get());
+								  output.accept(ItemInit.WEIGHTED_COMPANION_CUBE.get());
+
+								  output.accept(BlockInit.PEDESTAL_BUTTON.get());
+								  output.accept(BlockInit.LARGE_BUTTON.get());
+							  }
 						  ).build());
 
 	public static void register(IEventBus bus)

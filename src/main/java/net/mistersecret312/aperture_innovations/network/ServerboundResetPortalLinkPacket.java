@@ -5,15 +5,13 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.Tags;
-import net.minecraftforge.common.data.ForgeItemTagsProvider;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.PacketDistributor;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
-import net.mistersecret312.aperture_innovations.portal.PortalLink;
-import net.mistersecret312.aperture_innovations.portal.PortalLinkData;
+import net.mistersecret312.aperture_innovations.data.portal.PortalLink;
+import net.mistersecret312.aperture_innovations.data.PortalLinkData;
 import software.bernie.geckolib.animatable.GeoItem;
 
 import java.util.UUID;
@@ -45,6 +43,9 @@ public class ServerboundResetPortalLinkPacket
 
 				ItemStack gunStack = main.is(ItemInit.PORTAL_GUN.get()) ? main : off;
 				PortalGunItem portalGun = (PortalGunItem) gunStack.getItem();
+
+				if(portalGun.getHeldEntity(gunStack) != null)
+					return;
 
 				int dualityState = portalGun.getDualityState(gunStack);
 

@@ -11,7 +11,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.*;
@@ -19,20 +18,22 @@ import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.energy.EnergyStorage;
 import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.PacketDistributor;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
 import net.mistersecret312.aperture_innovations.config.PortalGunConfig;
+import net.mistersecret312.aperture_innovations.data.PortalLinkData;
+import net.mistersecret312.aperture_innovations.data.portal.ClientPortalLink;
+import net.mistersecret312.aperture_innovations.data.portal.Portal;
+import net.mistersecret312.aperture_innovations.data.portal.PortalLink;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
+import net.mistersecret312.aperture_innovations.init.TagInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
-import net.mistersecret312.aperture_innovations.portal.*;
+import net.mistersecret312.aperture_innovations.utilities.PortalUtilities;
 import org.joml.Vector3f;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.bernie.geckolib.animatable.GeoItem;
 
 import java.util.List;
@@ -77,6 +78,9 @@ public class ServerboundOpenPortalPacket
 				if(!consumeEnergy(gunStack, player))
 					return;
 
+			if(portalGun.getHeldEntity(gunStack) != null)
+				return;
+
 			boolean moonshot = portalGun.isLookingAtMoon(player, level);
 			if(moonshot)
 			{
@@ -113,10 +117,10 @@ public class ServerboundOpenPortalPacket
 			{
 				UUID linkID = portalGun.getUUID(gunStack, false);
 
-				if(linkID != null && !level.getBlockState(result.getBlockPos()).is(ApertureInnovations.SHOOT_THROUGH) &&
-						   (level.getBlockState(result.getBlockPos()).is(ApertureInnovations.IMPORTALABLE)
+				if(linkID != null && !level.getBlockState(result.getBlockPos()).is(TagInit.Blocks.SHOOT_THROUGH) &&
+						   (level.getBlockState(result.getBlockPos()).is(TagInit.Blocks.IMPORTALABLE)
 									|| !level.getFluidState(result.getBlockPos()).isEmpty() ||
-									(PortalGunConfig.use_portalable_tag.get() && !level.getBlockState(result.getBlockPos()).is(ApertureInnovations.PORTALABLE))))
+									(PortalGunConfig.use_portalable_tag.get() && !level.getBlockState(result.getBlockPos()).is(TagInit.Blocks.PORTALABLE))))
 				{
 					if(!PortalGunConfig.portal_gun_consume_on_shot.get() && PortalGunConfig.portal_gun_uses_energy.get())
 						if(!consumeEnergy(gunStack, player))
@@ -296,7 +300,7 @@ public class ServerboundOpenPortalPacket
 					VoxelShape shape = state.getCollisionShape(level, pos)
 											.move(pos.getX(), pos.getY(), pos.getZ());
 
-					if(state.is(ApertureInnovations.IMPORTALABLE))
+					if(state.is(TagInit.Blocks.IMPORTALABLE))
 						shape = Shapes.create(shape.bounds().inflate(0.025));
 
 					if(!placementShape.get().isEmpty())

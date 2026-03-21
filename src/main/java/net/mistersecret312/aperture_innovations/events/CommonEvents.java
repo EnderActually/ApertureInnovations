@@ -1,7 +1,6 @@
 package net.mistersecret312.aperture_innovations.events;
 
 import com.mojang.datafixers.util.Pair;
-import com.mojang.math.Axis;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceKey;
@@ -14,9 +13,9 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
@@ -32,28 +31,28 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.network.PacketDistributor;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.advancements.NearPortalDeathCriterion;
-import net.mistersecret312.aperture_innovations.advancements.PortalTravelCriterion;
+import net.mistersecret312.aperture_innovations.block_entities.AntlineBlockEntity;
+import net.mistersecret312.aperture_innovations.block_entities.AntlineOutputBlockEntity;
+import net.mistersecret312.aperture_innovations.block_entities.AntlineTimerBlockEntity;
+import net.mistersecret312.aperture_innovations.blocks.AntlineOutputBlock;
+import net.mistersecret312.aperture_innovations.blocks.AntlineTimerBlock;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
 import net.mistersecret312.aperture_innovations.capabilities.GenericProvider;
 import net.mistersecret312.aperture_innovations.config.LongFallBootsConfig;
+import net.mistersecret312.aperture_innovations.forge_events.AntlineActivateEvent;
 import net.mistersecret312.aperture_innovations.init.CapabilityInit;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
-import net.mistersecret312.aperture_innovations.init.StatisticsInit;
 import net.mistersecret312.aperture_innovations.items.LongFallBootsItem;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.network.ClientBoundPortalSyncPacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalAmbientSoundPacket;
-import net.mistersecret312.aperture_innovations.network.ClientboundPortalSoundsPacket;
-import net.mistersecret312.aperture_innovations.network.ClientboundTeleportMomentumPacket;
-import net.mistersecret312.aperture_innovations.portal.Portal;
-import net.mistersecret312.aperture_innovations.portal.PortalLink;
-import net.mistersecret312.aperture_innovations.portal.PortalLinkData;
-import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
+import net.mistersecret312.aperture_innovations.data.portal.Portal;
+import net.mistersecret312.aperture_innovations.data.portal.PortalLink;
+import net.mistersecret312.aperture_innovations.data.PortalLinkData;
+import net.mistersecret312.aperture_innovations.utilities.PortalUtilities;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
 
 import java.util.*;
 
@@ -307,6 +306,54 @@ public class CommonEvents
 			{
 				entity.getCapability(CapabilityInit.APERTURE).ifPresent(cap -> cap.tick(level, entity));
 			}
+		}
+	}
+
+	@SubscribeEvent
+	public static void antlineActivate(AntlineActivateEvent event)
+	{
+		Level level = event.getLevel();
+		BlockPos antlinePos = event.getAntlinePos();
+		BlockPos activatedBlockPos = event.getActivatedBlockPos();
+		int signal = event.getSignal();
+
+		AntlineBlockEntity antline = (AntlineBlockEntity) level.getBlockEntity(antlinePos);
+		if(antline == null)
+			return;
+
+		BlockState activatedBlockState = level.getBlockState(activatedBlockPos);
+
+		if(activatedBlockState.getBlock() instanceof AntlineOutputBlock)
+		{
+			activatedBlockState = activatedBlockState.setValue(AntlineOutputBlock.ACTIVE, signal != 0);
+			BlockEntity blockEntity = level.getBlockEntity(activatedBlockPos);
+			if(blockEntity instanceof AntlineOutputBlockEntity output)
+				output.signal = signal;
+
+			level.setBlock(activatedBlockPos, activatedBlockState, 16 | 2);
+			BlockPos relativePos = activatedBlockPos.relative(activatedBlockState.getValue(AntlineOutputBlock.NORMAL).getOpposite());
+			level.updateNeighborsAt(relativePos, activatedBlockState.getBlock());
+		}
+
+		if(activatedBlockState.getBlock() instanceof AntlineTimerBlock)
+		{
+			if(signal == 0)
+				return;
+			if(activatedBlockState.getValue(AntlineTimerBlock.ACTIVE))
+				return;
+
+			activatedBlockState = activatedBlockState.setValue(AntlineTimerBlock.ACTIVE, true);
+			BlockEntity blockEntity = level.getBlockEntity(activatedBlockPos);
+			if(blockEntity instanceof AntlineTimerBlockEntity output)
+			{
+				output.signal = signal;
+				output.time = output.maxTime;
+				output.soundTime = 20;
+			}
+
+			level.setBlock(activatedBlockPos, activatedBlockState, 16 | 2);
+			BlockPos relativePos = activatedBlockPos.relative(activatedBlockState.getValue(AntlineTimerBlock.NORMAL).getOpposite());
+			level.updateNeighborsAt(relativePos, activatedBlockState.getBlock());
 		}
 	}
 

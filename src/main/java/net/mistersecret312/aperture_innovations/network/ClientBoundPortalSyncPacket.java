@@ -4,7 +4,7 @@ package net.mistersecret312.aperture_innovations.network;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkEvent;
-import net.mistersecret312.aperture_innovations.portal.Portal;
+import net.mistersecret312.aperture_innovations.data.portal.Portal;
 
 import java.util.UUID;
 import java.util.function.Supplier;

@@ -1,16 +1,21 @@
 package net.mistersecret312.aperture_innovations.network;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
+import net.mistersecret312.aperture_innovations.block_entities.AntlineBlockEntity;
+import net.mistersecret312.aperture_innovations.block_entities.AntlineOutputBlockEntity;
 import net.mistersecret312.aperture_innovations.client.renderer.PortalRenderer;
 import net.mistersecret312.aperture_innovations.init.CapabilityInit;
-import net.mistersecret312.aperture_innovations.portal.ClientPortalLink;
-import net.mistersecret312.aperture_innovations.portal.ClientPortalUtilities;
-import net.mistersecret312.aperture_innovations.portal.Portal;
-import net.mistersecret312.aperture_innovations.portal.PortalUtilities;
+import net.mistersecret312.aperture_innovations.data.portal.ClientPortalLink;
+import net.mistersecret312.aperture_innovations.utilities.ClientAntlineUtilities;
+import net.mistersecret312.aperture_innovations.utilities.ClientPortalUtilities;
+import net.mistersecret312.aperture_innovations.data.portal.Portal;
+import net.mistersecret312.aperture_innovations.utilities.PortalUtilities;
 import org.joml.Vector3f;
 
 import java.util.UUID;
@@ -74,6 +79,51 @@ public class ClientPacketHandler
 
 			entity.setOldPosAndRot();
 			entity.lerpTo(pos.x, pos.y, pos.z, yRot, xRot, 0, true);
+		}
+	}
+
+	public static void handleAntlineUpdate(BlockPos pos, boolean active, int color, int activeColor)
+	{
+		BlockEntity blockEntity = Minecraft.getInstance().level.getBlockEntity(pos);
+		if(blockEntity != null)
+		{
+			if(blockEntity instanceof AntlineBlockEntity antlineBlockEntity)
+			{
+				antlineBlockEntity.updateConnections();
+				antlineBlockEntity.trimConnections();
+				antlineBlockEntity.active = active;
+
+				antlineBlockEntity.color = color;
+				antlineBlockEntity.activeColor = activeColor;
+
+				ClientAntlineUtilities.setActive(antlineBlockEntity.getNetworkID(), active);
+
+				antlineBlockEntity.setChanged();
+			}
+		}
+	}
+
+	public static void handleAntlineOutputUpdate(BlockPos pos, int color, int activeColor)
+	{
+		BlockEntity blockEntity = Minecraft.getInstance().level.getBlockEntity(pos);
+		if(blockEntity != null)
+		{
+			if(blockEntity instanceof AntlineOutputBlockEntity output)
+			{
+				output.color = color;
+				output.activeColor = activeColor;
+
+				output.setChanged();
+			}
+		}
+	}
+
+	public static void handleEntityHeldUpdate(int id, boolean held)
+	{
+		Entity entity = Minecraft.getInstance().level.getEntity(id);
+		if(entity != null)
+		{
+			entity.getCapability(CapabilityInit.HOLD).ifPresent(cap -> cap.setHeld(entity, held));
 		}
 	}
 

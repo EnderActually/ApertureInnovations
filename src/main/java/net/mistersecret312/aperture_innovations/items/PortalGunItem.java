@@ -8,7 +8,9 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
@@ -32,13 +34,16 @@ import net.minecraftforge.network.PacketDistributor;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.advancements.ThrownIntoFluidCriterion;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
+import net.mistersecret312.aperture_innovations.capabilities.HoldEntityCapability;
 import net.mistersecret312.aperture_innovations.capabilities.item.ItemEnergyProvider;
 import net.mistersecret312.aperture_innovations.client.renderer.PortalGunRenderer;
 import net.mistersecret312.aperture_innovations.config.PortalGunConfig;
-import net.mistersecret312.aperture_innovations.init.ItemInit;
-import net.mistersecret312.aperture_innovations.init.NetworkInit;
+import net.mistersecret312.aperture_innovations.data.PortalLinkData;
+import net.mistersecret312.aperture_innovations.data.portal.PortalLink;
+import net.mistersecret312.aperture_innovations.init.*;
+import net.mistersecret312.aperture_innovations.network.ClientboundGunZapSoundPacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalSoundsPacket;
-import net.mistersecret312.aperture_innovations.portal.*;
+import net.mistersecret312.aperture_innovations.utilities.PortalUtilities;
 import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.GeoItem;
 import software.bernie.geckolib.animatable.SingletonGeoAnimatable;
@@ -51,8 +56,6 @@ import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.awt.*;
-import java.math.RoundingMode;
-import java.text.NumberFormat;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -197,6 +200,61 @@ public class PortalGunItem extends Item implements GeoItem
 				});
 			}
 
+			if(getHeldEntity(stack) != null)
+			{
+				Integer id = getHeldEntity(stack);
+				if(id != null)
+				{
+					Entity heldEntity = level.getEntity(id);
+					if(heldEntity == null)
+					{
+						setHeldEntity(stack, null);
+						NetworkInit.INSTANCE.send(PacketDistributor.ALL.noArg(),
+								new ClientboundGunZapSoundPacket(player.getUUID(), true));
+
+						level.playSound(null, player.blockPosition(), SoundInit.PORTAL_GUN_HOLD_STOP.get(), SoundSource.PLAYERS);
+						this.triggerAnim(player, GeoItem.getOrAssignId(stack, (ServerLevel) level),
+								"main", "let_go");
+					}
+
+					if(heldEntity != null && heldEntity.getCapability(CapabilityInit.HOLD).isPresent())
+					{
+						HoldEntityCapability cap = heldEntity.getCapability(CapabilityInit.HOLD).resolve().get();
+						if(cap.isHeld)
+						{
+							setHeldEntity(stack, null);
+							NetworkInit.INSTANCE.send(PacketDistributor.ALL.noArg(),
+									new ClientboundGunZapSoundPacket(player.getUUID(), true));
+
+							level.playSound(null, player.blockPosition(), SoundInit.PORTAL_GUN_HOLD_STOP.get(),
+									SoundSource.PLAYERS);
+							this.triggerAnim(player, GeoItem.getOrAssignId(stack, (ServerLevel) level), "main",
+									"let_go");
+						}
+					}
+				}
+
+				int tick = getZapTick(stack);
+				setZapTick(stack, tick+1);
+
+				int soundTick = getZapSoundTick(stack);
+				if(soundTick == 20)
+					setZapSoundTick(stack, 0);
+
+				if(soundTick == 0)
+				{
+					NetworkInit.INSTANCE.send(PacketDistributor.ALL.noArg(),
+							new ClientboundGunZapSoundPacket(player.getUUID(), false));
+				}
+
+				setZapSoundTick(stack, soundTick+1);
+			}
+			else
+			{
+				setZapTick(stack, -1);
+				setZapSoundTick(stack, -1);
+			}
+
 			if(link != null && isSelected && (getPair(stack) == null || getDualityState(stack) == 2) )
 			{
 				link.updateColors(level, getPrimaryPortalColor(stack), getSecondaryPortalColor(stack));
@@ -295,7 +353,7 @@ public class PortalGunItem extends Item implements GeoItem
 			@Override
 			public VoxelShape getBlockShape(BlockState state, BlockGetter level, BlockPos pos)
 			{
-				if(state.is(ApertureInnovations.SHOOT_THROUGH))
+				if(state.is(TagInit.Blocks.SHOOT_THROUGH))
 					return Shapes.empty();
 
 				return super.getBlockShape(state, level, pos);
@@ -419,6 +477,57 @@ public class PortalGunItem extends Item implements GeoItem
 		if(tag.contains("variant"))
 			return ResourceLocation.parse(tag.getString("variant"));
 		else return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "chell");
+	}
+
+	@Nullable
+	public Integer getHeldEntity(ItemStack stack)
+	{
+		if(stack.getTag() != null && stack.getTag().contains("held_entity"))
+			return Integer.valueOf(stack.getTag().getInt("held_entity"));
+
+		return null;
+	}
+
+	public void setHeldEntity(ItemStack stack, Entity entity)
+	{
+		if(entity == null && stack.getTag() != null && stack.getTag().contains("held_entity"))
+		{
+			stack.getTag().remove("held_entity");
+		}
+	}
+
+	public int getZapSoundTick(ItemStack stack)
+	{
+		if(stack.getTag() != null && stack.getTag().contains("zap_sound_tick"))
+			return stack.getTag().getInt("zap_sound_tick");
+
+		return -1;
+	}
+
+	public void setZapSoundTick(ItemStack stack, int tick)
+	{
+		if(tick > 40)
+			tick = 0;
+
+		stack.getOrCreateTag().putInt("zap_sound_tick", tick);
+	}
+
+	public void setZapTick(ItemStack stack, int tick)
+	{
+		if(tick > 8)
+			tick = 0;
+
+		if(tick < 0 && stack.getTag() != null && stack.getTag().contains("zap_tick"))
+			stack.getTag().remove("zap_tick");
+		else stack.getOrCreateTag().putInt("zap_tick", tick);
+	}
+
+	public int getZapTick(ItemStack stack)
+	{
+		if(stack.getTag() != null && stack.getTag().contains("zap_tick"))
+			return stack.getTag().getInt("zap_tick");
+
+		return -1;
 	}
 
 	public void setDualityState(ItemStack stack, int state)

@@ -95,5 +95,30 @@ public class NetworkInit
 				.encoder(ClientboundEntityPortalLerpPacket::encode)
 				.decoder(ClientboundEntityPortalLerpPacket::decode)
 				.consumerMainThread(ClientboundEntityPortalLerpPacket::handle).add();
+
+		INSTANCE.messageBuilder(ClientboundAntlineOutputUpdatePacket.class, index++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(ClientboundAntlineOutputUpdatePacket::encode)
+				.decoder(ClientboundAntlineOutputUpdatePacket::decode)
+				.consumerMainThread(ClientboundAntlineOutputUpdatePacket::handle).add();
+
+		INSTANCE.messageBuilder(ClientboundAntlineUpdatePacket.class, index++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(ClientboundAntlineUpdatePacket::encode)
+				.decoder(ClientboundAntlineUpdatePacket::new)
+				.consumerMainThread(ClientboundAntlineUpdatePacket::handle).add();
+
+		INSTANCE.messageBuilder(ClientboundEntityHeldUpdatePacket.class, index++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(ClientboundEntityHeldUpdatePacket::encode)
+				.decoder(ClientboundEntityHeldUpdatePacket::new)
+				.consumerMainThread(ClientboundEntityHeldUpdatePacket::handle).add();
+
+		INSTANCE.messageBuilder(ClientboundGunZapSoundPacket.class, index++, NetworkDirection.PLAY_TO_CLIENT)
+				.encoder(ClientboundGunZapSoundPacket::encode)
+				.decoder(ClientboundGunZapSoundPacket::new)
+				.consumerMainThread(ClientboundGunZapSoundPacket::handle).add();
+
+		INSTANCE.messageBuilder(ServerboundPickUpEntityPacket.class, index++, NetworkDirection.PLAY_TO_SERVER)
+				.encoder(ServerboundPickUpEntityPacket::encode)
+				.decoder(ServerboundPickUpEntityPacket::new)
+				.consumerMainThread(ServerboundPickUpEntityPacket::handle).add();
 	}
 }

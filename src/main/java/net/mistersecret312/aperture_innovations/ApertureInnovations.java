@@ -9,6 +9,7 @@ import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.DispenserBlock;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.settings.KeyConflictContext;
@@ -28,6 +29,7 @@ import net.minecraftforge.registries.DataPackRegistryEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.mistersecret312.aperture_innovations.client.Layers;
 import net.mistersecret312.aperture_innovations.client.overlay.CrosshairOverlay;
+import net.mistersecret312.aperture_innovations.client.renderer.*;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ResourcePackReloadListener;
 import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
 import net.mistersecret312.aperture_innovations.init.*;
@@ -37,6 +39,8 @@ import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.items.ColorfulGelItem;
 import net.mistersecret312.aperture_innovations.items.ColorfulGelItemProperty;
+import net.mistersecret312.aperture_innovations.items.CompanionCubeItem;
+import net.mistersecret312.aperture_innovations.items.CubeItem;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 
@@ -48,13 +52,6 @@ public class ApertureInnovations
 	public static final String MODID = "aperture_innovations";
 	public static final Logger LOGGER = LogUtils.getLogger();
 
-	public static final TagKey<Block> SHOOT_THROUGH = TagKey.create(
-			ForgeRegistries.BLOCKS.getRegistryKey(), new ResourceLocation(MODID, "shoot_through"));
-	public static final TagKey<Block> IMPORTALABLE = TagKey.create(
-			ForgeRegistries.BLOCKS.getRegistryKey(), new ResourceLocation(MODID, "importalable"));
-	public static final TagKey<Block> PORTALABLE = TagKey.create(
-			ForgeRegistries.BLOCKS.getRegistryKey(), new ResourceLocation(MODID, "portalable"));
-
 	public ApertureInnovations()
 	{
 		IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
@@ -62,12 +59,14 @@ public class ApertureInnovations
 		modEventBus.addListener(this::commonSetup);
 		MinecraftForge.EVENT_BUS.register(this);
 
+		EntityInit.register(modEventBus);
 		ItemInit.register(modEventBus);
 		BlockInit.register(modEventBus);
 		ItemTabInit.register(modEventBus);
 		SoundInit.register(modEventBus);
 		StatisticsInit.register(modEventBus);
 		RecipeInit.register(modEventBus);
+		BlockEntityInit.register(modEventBus);
 
 		AdvancementInit.register();
 
@@ -82,9 +81,13 @@ public class ApertureInnovations
 		NetworkInit.register();
 	}
 
-	private void commonSetup(final FMLCommonSetupEvent event)
+	private void commonSetup(FMLCommonSetupEvent event)
 	{
-
+		event.enqueueWork(() ->
+			{
+				DispenserBlock.registerBehavior(ItemInit.WEIGHTED_COMPANION_CUBE.get(), CompanionCubeItem.getDispenserBehaviour());
+				DispenserBlock.registerBehavior(ItemInit.WEIGHTED_STORAGE_CUBE.get(), CubeItem.getDispenserBehaviour());
+			});
 	}
 
 	// You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
@@ -92,6 +95,7 @@ public class ApertureInnovations
 	public static class ClientModEvents
 	{
 		public static ShaderInstance portalCorridorShaderInstance;
+		public static ShaderInstance portalFizzleShaderInstance;
 
 		public static final Lazy<KeyMapping> RESET_PORTAL_GUN = Lazy.of(() -> new KeyMapping("aperture_innovations.portal_gun.reset",
 				KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.category.aperture_innovations"));
@@ -113,10 +117,29 @@ public class ApertureInnovations
 		@SubscribeEvent
 		public static void registerShaders(RegisterShadersEvent event) throws IOException
 		{
+//			event.registerShader(new ShaderInstance(event.getResourceProvider(),
+//							ResourceLocation.fromNamespaceAndPath(MODID, "portal_corridor"),
+//							DefaultVertexFormat.POSITION_TEX_COLOR),
+//					shaderInstance -> portalCorridorShaderInstance = shaderInstance);
+
 			event.registerShader(new ShaderInstance(event.getResourceProvider(),
-							ResourceLocation.fromNamespaceAndPath(MODID, "portal_corridor"),
+							ResourceLocation.fromNamespaceAndPath(MODID, "portal_fizzler"),
 							DefaultVertexFormat.POSITION_TEX_COLOR),
-					shaderInstance -> portalCorridorShaderInstance = shaderInstance);
+					shaderInstance -> portalFizzleShaderInstance = shaderInstance);
+		}
+
+		@SubscribeEvent
+		public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event)
+		{
+			event.registerBlockEntityRenderer(BlockEntityInit.ANTLINE.get(), AntlineRenderer::new);
+			event.registerBlockEntityRenderer(BlockEntityInit.CHECKMARK.get(), AntlineOutputRenderer::new);
+			event.registerBlockEntityRenderer(BlockEntityInit.TIMER.get(), AntlineTimerRenderer::new);
+
+			event.registerBlockEntityRenderer(BlockEntityInit.PEDESTAL_BUTTON.get(), PedestalButtonRenderer::new);
+			event.registerBlockEntityRenderer(BlockEntityInit.LARGE_BUTTON.get(), LargeButtonRenderer::new);
+
+			event.registerEntityRenderer(EntityInit.WEIGHTED_STORAGE_CUBE.get(), WeightedStorageCubeRenderer::new);
+			event.registerEntityRenderer(EntityInit.WEIGHTED_COMPANION_CUBE.get(), WeightedCompanionCubeRenderer::new);
 		}
 
 		@SubscribeEvent

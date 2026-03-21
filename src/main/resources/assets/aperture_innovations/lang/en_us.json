@@ -9,6 +9,13 @@
   "block.aperture_innovations.metal_surface_1x2_block": "Metal Surface 1x2 Block",
   "block.aperture_innovations.metal_surface_2x2_block": "Metal Surface 2x2 Block",
 
+  "block.aperture_innovations.antline": "Antline",
+  "block.aperture_innovations.antline_checkmark": "Antline Checkmark",
+  "block.aperture_innovations.antline_timer": "Antline Timer",
+
+  "block.aperture_innovations.pedestal_button": "Pedestal Button",
+  "block.aperture_innovations.large_button": "Large Button",
+
   "item.aperture_innovations.portal_gun": "Aperture Science Handheld Portal Device",
   "item.aperture_innovations.portal_gun.duality_primary": "Single Portal - Primary",
   "item.aperture_innovations.portal_gun.duality_secondary": "Single Portal - Secondary",
@@ -22,12 +29,21 @@
 
   "item.aperture_innovations.portal_gun.not_enough_energy": "Not enough energy!",
 
+  "tooltip.aperture_innovations.antline": "Used for instantaneous signal transfer between testing elements, does not output redstone signal without a Checkmark or a Timer connected",
+  "tooltip.aperture_innovations.antline_checkmark": "Outputs a Strong Redstone Signal to the back of itself while it is activated",
+  "tooltip.aperture_innovations.antline_timer": "Outputs a Strong Redstone Signal to the back of itself while it is activated and until the clock runs out",
+
+  "tooltip.aperture_innovations.is_colorable": "Colorful Gel Compatible",
+
   "item.aperture_innovations.colorful_gel": "Colorful Gel",
   "item.aperture_innovations.colorful_gel.color": "Color: %s",
   "item.aperture_innovations.colorful_gel.tooltip": "Color the Colorful Gel with dye to then apply it to your Portal Device!",
 
   "item.aperture_innovations.long_fall_boots": "Long Fall Boots",
   "item.aperture_innovations.long_fall_boots.energy": "Energy: ",
+
+  "item.aperture_innovations.weighted_storage_cube": "Weighted Storage Cube",
+  "item.aperture_innovations.weighted_companion_cube": "Weighted Companion Cube",
 
   "aperture_innovations.portal_gun.variant_chell": "Chell Variant",
   "aperture_innovations.portal_gun.variant_pbody": "P-Body Variant",
@@ -36,6 +52,7 @@
 
   "key.category.aperture_innovations": "Aperture Innovations",
   "aperture_innovations.portal_gun.reset": "Reset Portal Gun",
+  "aperture_innovations.portal_gun.pick_up": "Pick Up via Portal Gun",
   "aperture_innovations.portal_gun.primary_fire": "Primary Fire",
   "aperture_innovations.portal_gun.secondary_fire": "Secondary Fire",
 
@@ -50,6 +67,16 @@
   "sound.aperture_innovations.portal_open_secondary": "Secondary portal opened",
   "sound.aperture_innovations.portal_gun_reset": "Portal Gun Reset",
   "sound.aperture_innovations.long_fall_boots_land": "Long Fall Boots negate the fall",
+  "sound.aperture_innovations.cube_impact": "A cube hits the surface",
+  "sound.aperture_innovations.pedestal_button_down": "Pedestal Button pressed",
+  "sound.aperture_innovations.pedestal_button_up": "Pedestal Button unpressed",
+  "sound.aperture_innovations.large_button_down": "Large Button pressed",
+  "sound.aperture_innovations.large_button_up": "Large Button unpressed",
+  "sound.aperture_innovations.timer_tick": "Timer ticks",
+  "sound.aperture_innovations.portal_gun_hold_stop": "Portal Gun stops holding something",
+  "sound.aperture_innovations.portal_gun_hold_start": "Portal Gun picks up something",
+  "sound.aperture_innovations.portal_gun_hold_loop": "Portal Gun swirls as it holds something",
+  "sound.aperture_innovations.portal_gun_hold_fail": "Portal Gun fails to pick up something",
 
   "advancements.aperture_innovations.aperture.root.title": "Aperture Science Innovators",
   "advancements.aperture_innovations.aperture.root.description": "Obtain the Aperture Science Handheld Portal Device",

@@ -24,6 +24,11 @@ public class SoundInit
     public static RegistryObject<SoundEvent> PORTAL_GUN_FIRE_SECONDARY = registerSoundEvent("portal_gun_fire_secondary");
     public static RegistryObject<SoundEvent> PORTAL_GUN_RESET = registerSoundEvent("portal_gun_reset");
 
+    public static RegistryObject<SoundEvent> PORTAL_GUN_HOLD_START = registerSoundEvent("portal_gun_hold_start");
+    public static RegistryObject<SoundEvent> PORTAL_GUN_HOLD_FAIL = registerSoundEvent("portal_gun_hold_fail");
+    public static RegistryObject<SoundEvent> PORTAL_GUN_HOLD_STOP = registerSoundEvent("portal_gun_hold_stop");
+    public static RegistryObject<SoundEvent> PORTAL_GUN_HOLD_LOOP = registerSoundEvent("portal_gun_hold_loop");
+
     public static RegistryObject<SoundEvent> LONG_FALL_BOOTS_LAND = registerSoundEvent("long_fall_boots_land");
 
     public static RegistryObject<SoundEvent> CUBE_IMPACT = registerSoundEvent("cube_impact");
@@ -32,6 +37,8 @@ public class SoundInit
     public static RegistryObject<SoundEvent> PEDESTAL_BUTTON_UP = registerSoundEvent("pedestal_button_up");
     public static RegistryObject<SoundEvent> LARGE_BUTTON_DOWN = registerSoundEvent("large_button_down");
     public static RegistryObject<SoundEvent> LARGE_BUTTON_UP = registerSoundEvent("large_button_up");
+
+    public static RegistryObject<SoundEvent> TIMER_TICK = registerSoundEvent("timer_tick");
 
     private static RegistryObject<SoundEvent> registerSoundEvent(String sound)
     {
