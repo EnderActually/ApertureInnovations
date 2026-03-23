@@ -509,7 +509,7 @@ public class PortalLink
 
 				boolean smallEntity = entity.getBoundingBox().getYsize() < 1.5f;
 				Vec3 relativePosition = new Vec3(otherPortal.isOnWall() ? -0.15 : portal.isOnWall() ? 0 : smallEntity ? -entity.getBoundingBox().getYsize() :
-																												  otherPortal.isOnCeiling() ? -entity.getBoundingBox().getYsize()/2 : entity.getBoundingBox().getYsize(),
+																												  otherPortal.isOnCeiling() ? -entity.getBoundingBox().getYsize()/2 : entity.getBoundingBox().getYsize()/1.25f,
 						otherPortal.isOnWall() ? -entity.getBoundingBox().getYsize()/2 : 0, 0);
 
 				//				relativePosition = new Vec3(otherPortal.isOnWall() ? -0.15 : -0.15,
@@ -556,11 +556,19 @@ public class PortalLink
 
 
 				entity.hasImpulse = false;
+
+				System.out.println("In speed" + entity.getDeltaMovement());
+				System.out.println("In position" + entity.position());
+
 				entity.teleportTo(targetLevel, destinationPosition.x(), destinationPosition.y(), destinationPosition.z(),
 						Set.of(),
 						CoordUtil.CoordinateSystems.lookAngleY(destinationLookAngle), entity.getXRot());
 				entity.setDeltaMovement(destinationMomentum);
 				entity.setOldPosAndRot();
+
+				System.out.println("Out speed" + entity.getDeltaMovement());
+				System.out.println("Out position" + entity.position());
+				System.out.println("------------");
 
 				BlockPos targetBlock = BlockPos.containing(destinationPosition);
 				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(targetBlock)),

@@ -114,6 +114,9 @@ public class PedestalButtonRenderer extends DynamicGeoBlockRenderer<PedestalButt
 		super.preRender(poseStack, animatable, model, bufferSource, buffer, isReRender, partialTick, packedLight,
 				packedOverlay, red, green, blue, alpha);
 
+		if(!isReRender)
+			poseStack.translate(0.5, 0, 0.5);
+
 		Direction facing = animatable.getBlockState().getValue(PedestalButtonBlock.FACING);
 		Direction normal = animatable.getBlockState().getValue(PedestalButtonBlock.NORMAL);
 		boolean positive = normal.getAxisDirection().equals(Direction.AxisDirection.POSITIVE);
@@ -154,6 +157,8 @@ public class PedestalButtonRenderer extends DynamicGeoBlockRenderer<PedestalButt
 		poseStack.mulPose(Axis.YP.rotationDegrees(animatable.getBlockState().getValue(PedestalButtonBlock.FACING).toYRot()));
 		if(facing.getAxis().equals(Direction.Axis.X))
 			poseStack.mulPose(Axis.YP.rotationDegrees(180));
+
+		poseStack.translate(-0.5, 0, -0.5);
 	}
 
 	@Override

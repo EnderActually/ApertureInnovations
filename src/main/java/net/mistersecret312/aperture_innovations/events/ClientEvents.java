@@ -26,6 +26,7 @@ import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
 import net.mistersecret312.aperture_innovations.network.ServerboundOpenPortalPacket;
+import net.mistersecret312.aperture_innovations.network.ServerboundPickUpEntityPacket;
 import net.mistersecret312.aperture_innovations.network.ServerboundResetPortalLinkPacket;
 import net.mistersecret312.aperture_innovations.data.portal.ClientPortalLink;
 import net.mistersecret312.aperture_innovations.utilities.ClientPortalUtilities;
@@ -225,6 +226,9 @@ public class ClientEvents
 				{
 					NetworkInit.INSTANCE.sendToServer(new ServerboundResetPortalLinkPacket());
 				}
+
+				while(ApertureInnovations.ClientModEvents.PICK_UP.get().consumeClick())
+					NetworkInit.INSTANCE.sendToServer(new ServerboundPickUpEntityPacket());
 
 				while(ApertureInnovations.ClientModEvents.PORTAL_GUN_PRIMARY_FIRE.get().consumeClick())
 				{

@@ -87,7 +87,7 @@ public class HoldEntityCapability implements INBTSerializable<CompoundTag>
 		if(!entity.level().isClientSide())
 		{
 			this.isHeld = held;
-			NetworkInit.INSTANCE.send(PacketDistributor.ALL.noArg(),
+			NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_ENTITY.with(() -> entity),
 					new ClientboundEntityHeldUpdatePacket(entity.getId(), held));
 		}
 		else this.isHeld = held;

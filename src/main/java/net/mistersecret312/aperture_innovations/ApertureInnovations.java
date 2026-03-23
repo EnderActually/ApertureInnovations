@@ -99,6 +99,9 @@ public class ApertureInnovations
 
 		public static final Lazy<KeyMapping> RESET_PORTAL_GUN = Lazy.of(() -> new KeyMapping("aperture_innovations.portal_gun.reset",
 				KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.category.aperture_innovations"));
+		public static final Lazy<KeyMapping> PICK_UP = Lazy.of(() -> new KeyMapping("aperture_innovations.portal_gun.pick_up",
+				KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_G, "key.category.aperture_innovations"));
+
 		public static final Lazy<KeyMapping> PORTAL_GUN_PRIMARY_FIRE = Lazy.of(() -> new KeyMapping("aperture_innovations.portal_gun.primary_fire",
 				KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.MOUSE, GLFW.GLFW_MOUSE_BUTTON_LEFT, "key.category.aperture_innovations"));
 		public static final Lazy<KeyMapping> PORTAL_GUN_SECONDARY_FIRE = Lazy.of(() -> new KeyMapping("aperture_innovations.portal_gun.secondary_fire",
@@ -159,6 +162,7 @@ public class ApertureInnovations
 		public static void registerKeybindings(RegisterKeyMappingsEvent event)
 		{
 			event.register(RESET_PORTAL_GUN.get());
+			event.register(PICK_UP.get());
 			event.register(PORTAL_GUN_PRIMARY_FIRE.get());
 			event.register(PORTAL_GUN_SECONDARY_FIRE.get());
 		}

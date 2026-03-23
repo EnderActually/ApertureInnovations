@@ -123,6 +123,9 @@ public class LargeButtonRenderer extends DynamicGeoBlockRenderer<LargeButtonBloc
 		super.preRender(poseStack, animatable, model, bufferSource, buffer, isReRender, partialTick, packedLight,
 				packedOverlay, red, green, blue, alpha);
 
+		if(!isReRender)
+			poseStack.translate(0.5, 0, 0.5);
+
 		Direction facing = animatable.getBlockState().getValue(LargeButtonBlock.FACING);
 		Direction normal = animatable.getBlockState().getValue(LargeButtonBlock.NORMAL);
 		boolean positive = normal.getAxisDirection().equals(Direction.AxisDirection.POSITIVE);
@@ -178,6 +181,8 @@ public class LargeButtonRenderer extends DynamicGeoBlockRenderer<LargeButtonBloc
 		poseStack.mulPose(Axis.YP.rotationDegrees(animatable.getBlockState().getValue(LargeButtonBlock.FACING).toYRot()));
 		if(facing.getAxis().equals(Direction.Axis.X))
 			poseStack.mulPose(Axis.YP.rotationDegrees(180));
+
+		poseStack.translate(-0.5, 0, -0.5);
 	}
 
 	@Override

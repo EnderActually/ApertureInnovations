@@ -15,6 +15,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.client.ColorUtil;
+import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.client.renderer.geckolib.DynamicGeoItemRenderer;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortalGunVariant;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortalGunVariants;
@@ -117,6 +118,8 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
 																MultiBufferSource bufferSource, float partialTick)
 	{
 		List<String> gunCore = Lists.newArrayList("CoreOuter", "CoreInner", "PortalLight", "Muzzle");
+		if(bone.getName().equals("Zap"))
+			return PortalRenderTypes.APERTURE_GLOW.apply(getTextureOverrideForBone(bone, animatable, partialTick));
 		if(gunCore.contains(bone.getName()))
 		{
 			return DynamicGeoItemRenderer.GLOWING_FUNCTION.apply(getTextureOverrideForBone(bone, animatable, partialTick));
@@ -130,6 +133,12 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
 	{
 		int portal = this.getAnimatable().getLastShotPortal(this.currentItemStack);
 		ClientPortalLink link = PortalUtilities.getPortalLinks().get(this.getAnimatable().getUUID(this.currentItemStack, false));
+
+		if(bone.getName().equals("Zap") && animatable.getZapTick(currentItemStack) != -1)
+		{
+			return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "textures/portal_gun/zap/portal_gun_zap_" + animatable.getZapTick(this.currentItemStack) + ".png");
+		}
+
 		if(link != null)
 		{
 			List<String> gunCore = Lists.newArrayList("CoreOuter", "CoreInner", "PortalLight", "Muzzle");

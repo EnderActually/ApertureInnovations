@@ -39,6 +39,7 @@ import net.mistersecret312.aperture_innovations.blocks.AntlineTimerBlock;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
 import net.mistersecret312.aperture_innovations.capabilities.GenericProvider;
+import net.mistersecret312.aperture_innovations.capabilities.HoldEntityCapability;
 import net.mistersecret312.aperture_innovations.config.LongFallBootsConfig;
 import net.mistersecret312.aperture_innovations.forge_events.AntlineActivateEvent;
 import net.mistersecret312.aperture_innovations.init.CapabilityInit;
@@ -305,6 +306,7 @@ public class CommonEvents
 			for(Entity entity : serverLevel.getAllEntities())
 			{
 				entity.getCapability(CapabilityInit.APERTURE).ifPresent(cap -> cap.tick(level, entity));
+				entity.getCapability(CapabilityInit.HOLD).ifPresent(cap -> cap.tick(level, entity));
 			}
 		}
 	}
@@ -361,7 +363,12 @@ public class CommonEvents
 	public static void attachCapabilities(AttachCapabilitiesEvent<Entity> event)
 	{
 		if(event.getObject() instanceof Entity)
+		{
 			event.addCapability(new ResourceLocation(ApertureInnovations.MODID, "aperture"),
 					new GenericProvider<>(CapabilityInit.APERTURE, new ApertureCapability()));
+
+			event.addCapability(new ResourceLocation(ApertureInnovations.MODID, "hold_entity"),
+					new GenericProvider<>(CapabilityInit.HOLD, new HoldEntityCapability()));
+		}
 	}
 }

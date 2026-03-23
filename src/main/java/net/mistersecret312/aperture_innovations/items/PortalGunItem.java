@@ -72,8 +72,8 @@ public class PortalGunItem extends Item implements GeoItem
 
 		protected static final RawAnimation SHOOT = RawAnimation.begin().thenPlay("shoot");
 		protected static final RawAnimation RESET = RawAnimation.begin().thenPlay("reset");
-		protected static final RawAnimation HOLD = RawAnimation.begin().thenLoop("hold");
-
+		protected static final RawAnimation HOLD = RawAnimation.begin().thenPlayAndHold("hold");
+		protected static final RawAnimation LET_GO = RawAnimation.begin().thenPlay("let_go");
 
 		private Animations() {}
 	}
@@ -220,7 +220,7 @@ public class PortalGunItem extends Item implements GeoItem
 					if(heldEntity != null && heldEntity.getCapability(CapabilityInit.HOLD).isPresent())
 					{
 						HoldEntityCapability cap = heldEntity.getCapability(CapabilityInit.HOLD).resolve().get();
-						if(cap.isHeld)
+						if(!cap.isHeld)
 						{
 							setHeldEntity(stack, null);
 							NetworkInit.INSTANCE.send(PacketDistributor.ALL.noArg(),
@@ -483,7 +483,7 @@ public class PortalGunItem extends Item implements GeoItem
 	public Integer getHeldEntity(ItemStack stack)
 	{
 		if(stack.getTag() != null && stack.getTag().contains("held_entity"))
-			return Integer.valueOf(stack.getTag().getInt("held_entity"));
+			return stack.getTag().getInt("held_entity");
 
 		return null;
 	}
@@ -494,6 +494,9 @@ public class PortalGunItem extends Item implements GeoItem
 		{
 			stack.getTag().remove("held_entity");
 		}
+
+		if(entity != null)
+			stack.getOrCreateTag().putInt("held_entity", entity.getId());
 	}
 
 	public int getZapSoundTick(ItemStack stack)
@@ -620,6 +623,7 @@ public class PortalGunItem extends Item implements GeoItem
 		controller.triggerableAnim("shoot", Animations.SHOOT);
 		controller.triggerableAnim("reset", Animations.RESET);
 		controller.triggerableAnim("hold", Animations.HOLD);
+		controller.triggerableAnim("let_go", Animations.LET_GO);
 		controllers.add(controller);
 	}
 
