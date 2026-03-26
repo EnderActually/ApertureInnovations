@@ -5,10 +5,12 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
+import net.mistersecret312.aperture_innovations.init.CapabilityInit;
 import net.mistersecret312.aperture_innovations.utilities.PortalUtilities;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.UUID;
@@ -33,5 +35,13 @@ public class EntityMixin
 		AABB box = PortalUtilities.getPortalBoundingBox(portalPos, portalRot.x, portalRot.y);
 		if(box.intersects(entity.getBoundingBox()))
 			cir.setReturnValue(false);
+	}
+
+	@Inject(method = "tick()V", at = @At("TAIL"))
+	public void tickMixin(CallbackInfo ci)
+	{
+		Entity entity = (Entity) (Object) this;
+
+		entity.getCapability(CapabilityInit.HOLD).ifPresent(cap -> cap.tick(entity.level(), entity));
 	}
 }

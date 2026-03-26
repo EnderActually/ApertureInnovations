@@ -1,6 +1,7 @@
 package net.mistersecret312.aperture_innovations.events;
 
 import com.mojang.datafixers.util.Pair;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceKey;
@@ -306,7 +307,6 @@ public class CommonEvents
 			for(Entity entity : serverLevel.getAllEntities())
 			{
 				entity.getCapability(CapabilityInit.APERTURE).ifPresent(cap -> cap.tick(level, entity));
-				entity.getCapability(CapabilityInit.HOLD).ifPresent(cap -> cap.tick(level, entity));
 			}
 		}
 	}

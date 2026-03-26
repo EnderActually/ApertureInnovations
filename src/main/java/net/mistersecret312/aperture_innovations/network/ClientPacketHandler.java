@@ -59,7 +59,7 @@ public class ClientPacketHandler
 		}
 	}
 
-	public static void handleEntityPortalLerp(int id, Vector3f pos, float xRot, float yRot)
+	public static void handleEntityPortalLerp(int id, Vector3f pos, Vector3f delta, float xRot, float yRot)
 	{
 		Entity entity = Minecraft.getInstance().level.getEntity(id);
 		if(entity != null)
@@ -79,6 +79,7 @@ public class ClientPacketHandler
 
 			entity.setOldPosAndRot();
 			entity.lerpTo(pos.x, pos.y, pos.z, yRot, xRot, 0, true);
+			entity.setDeltaMovement(new Vec3(delta));
 		}
 	}
 
@@ -124,6 +125,7 @@ public class ClientPacketHandler
 		if(entity != null)
 		{
 			entity.getCapability(CapabilityInit.HOLD).ifPresent(cap -> cap.setHeld(entity, held));
+			entity.setNoGravity(held);
 		}
 	}
 

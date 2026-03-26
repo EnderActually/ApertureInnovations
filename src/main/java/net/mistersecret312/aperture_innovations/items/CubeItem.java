@@ -86,6 +86,7 @@ public class CubeItem extends Item
 			blockpos1 = blockpos.relative(direction);
 		}
 
+
 		EntityType<?> entitytype = EntityInit.WEIGHTED_STORAGE_CUBE.get();
 		if (entitytype.spawn(
 				(ServerLevel)level,

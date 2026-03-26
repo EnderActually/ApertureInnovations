@@ -15,13 +15,15 @@ public class ClientboundEntityPortalLerpPacket
 {
 	public int id;
 	public Vector3f position;
+	public Vector3f delta;
 	public float xRot;
 	public float yRot;
 
-	public ClientboundEntityPortalLerpPacket(int id, Vector3f position, float xRot, float yRot)
+	public ClientboundEntityPortalLerpPacket(int id, Vector3f position, Vector3f delta, float xRot, float yRot)
 	{
 		this.id = id;
 		this.position = position;
+		this.delta = delta;
 		this.xRot = xRot;
 		this.yRot = yRot;
 	}
@@ -30,20 +32,21 @@ public class ClientboundEntityPortalLerpPacket
 	{
 		buffer.writeInt(this.id);
 		buffer.writeVector3f(position);
+		buffer.writeVector3f(delta);
 		buffer.writeFloat(xRot);
 		buffer.writeFloat(yRot);
 	}
 
 	public static ClientboundEntityPortalLerpPacket decode(FriendlyByteBuf buffer)
 	{
-		return new ClientboundEntityPortalLerpPacket(buffer.readInt(), buffer.readVector3f(), buffer.readFloat(), buffer.readFloat());
+		return new ClientboundEntityPortalLerpPacket(buffer.readInt(), buffer.readVector3f(), buffer.readVector3f(), buffer.readFloat(), buffer.readFloat());
 	}
 
 	public boolean handle(Supplier<NetworkEvent.Context> ctx)
 	{
 		ctx.get().enqueueWork(() ->
 			{
-				ClientPacketHandler.handleEntityPortalLerp(this.id, this.position, this.xRot, this.yRot);
+				ClientPacketHandler.handleEntityPortalLerp(this.id, this.position, this.delta, this.xRot, this.yRot);
 			});
 		return true;
 	}

@@ -25,12 +25,15 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.network.PacketDistributor;
 import net.mistersecret312.aperture_innovations.block_entities.LargeButtonBlockEntity;
 import net.mistersecret312.aperture_innovations.blocks.LargeButtonBlock;
 import net.mistersecret312.aperture_innovations.init.EntityInit;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
+import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.items.ColorfulGelItem;
+import net.mistersecret312.aperture_innovations.network.ClientboundEntityPortalLerpPacket;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.util.GeckoLibUtil;
@@ -69,6 +72,10 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity
 		super.tick();
 		this.tickLerp();
 
+		this.xo = getX();
+		this.yo = getY();
+		this.zo = getZ();
+
 		if(!isNoGravity())
 		{
 			this.addDeltaMovement(new Vec3(0f, -0.08f, 0f));
@@ -84,15 +91,20 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity
 			{
 				this.setActiveColor(blockEntity.activeColor);
 			}
-		}
-		else this.setActive(false);
+		} else this.setActive(false);
 
 		float friction = 0.85f;
-		if(!this.onGround())
-			friction = 0.95f;
+		if(!this.onGround()) friction = 0.95f;
 
 		this.setDeltaMovement(this.getDeltaMovement().multiply(friction, 1f, friction));
 		this.move(MoverType.SELF, this.getDeltaMovement());
+
+		if(!level().isClientSide && level().getGameTime() % 4 == 0)
+		{
+			NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_ENTITY.with(() -> this),
+					new ClientboundEntityPortalLerpPacket(this.getId(), this.position().toVector3f(),
+							this.getDeltaMovement().toVector3f(), this.getXRot(), this.getYRot()));
+		}
 	}
 
 	@Override
