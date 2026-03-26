@@ -153,6 +153,8 @@ public class Portal
 		portal.setDimension(dimension);
 		portal.setXRotation(xRot);
 		portal.setYRotation(yRot);
+		portal.setDirection(direction);
+		portal.setFacing(facing);
 		portal.setMoonshot(moonshot);
 		portal.setColor(color);
 		return portal;

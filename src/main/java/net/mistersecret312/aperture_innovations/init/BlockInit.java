@@ -46,10 +46,6 @@ public class BlockInit
     public static final DeferredBlock<Block> LARGE_BUTTON = registerBlock("large_button",
             () -> new LargeButtonBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CONCRETE)));
 
-    public static final DeferredBlock<Block> BASIC_PROPULSION = registerBlock("basic_propulsion",
-            () -> new Block(BlockBehaviour.Properties.of().friction(0.3f)));
-
-
     private static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block)
     {
         DeferredBlock<T> toReturn = BLOCKS.register(name, block);

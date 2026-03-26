@@ -10,7 +10,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.joml.Vector3f;
 
 
-public record ClientboundEntityPortalLerpPacket(int id, Vector3f position, float xRot, float yRot) implements CustomPacketPayload
+public record ClientboundEntityPortalLerpPacket(int id, Vector3f position, Vector3f delta, float xRot, float yRot) implements CustomPacketPayload
 {
 	public static final Type<ClientboundEntityPortalLerpPacket> TYPE = new Type<>(
 			ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "s2c_portal_entity_lerp"));
@@ -18,6 +18,7 @@ public record ClientboundEntityPortalLerpPacket(int id, Vector3f position, float
 	public static final StreamCodec<ByteBuf, ClientboundEntityPortalLerpPacket> STREAM_CODEC = StreamCodec.composite(
 			ByteBufCodecs.INT, ClientboundEntityPortalLerpPacket::id,
 			ByteBufCodecs.VECTOR3F, ClientboundEntityPortalLerpPacket::position,
+			ByteBufCodecs.VECTOR3F, ClientboundEntityPortalLerpPacket::delta,
 			ByteBufCodecs.FLOAT, ClientboundEntityPortalLerpPacket::xRot,
 			ByteBufCodecs.FLOAT, ClientboundEntityPortalLerpPacket::yRot,
 			ClientboundEntityPortalLerpPacket::new
@@ -33,7 +34,7 @@ public record ClientboundEntityPortalLerpPacket(int id, Vector3f position, float
 	{
 		ctx.enqueueWork(() ->
 			{
-				ClientPacketHandler.handleEntityPortalLerp(packet.id, packet.position, packet.xRot, packet.yRot);
+				ClientPacketHandler.handleEntityPortalLerp(packet.id, packet.position, packet.delta, packet.xRot, packet.yRot);
 			});
 	}
 }
