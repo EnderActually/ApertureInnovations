@@ -101,7 +101,7 @@ public class AntlineTimerBlockEntity extends BlockEntity
 				timer.time = timer.maxTime;
 				timer.soundTime = 20;
 				level.playSound(null, pos, SoundInit.PEDESTAL_BUTTON_UP.get(), SoundSource.BLOCKS,
-						0.25f, 1f);
+						0.15f, 1f);
 				level.setBlock(pos, blockState.setValue(AntlineTimerBlock.ACTIVE, false), 16 | 2);
 				BlockPos relativePos = pos.relative(blockState.getValue(AntlineTimerBlock.NORMAL).getOpposite());
 				level.updateNeighborsAt(relativePos, blockState.getBlock());

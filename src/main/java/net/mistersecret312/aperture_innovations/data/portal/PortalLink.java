@@ -10,14 +10,10 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.network.PacketDistributor;
@@ -30,7 +26,6 @@ import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
 import net.mistersecret312.aperture_innovations.data.PortalLinkData;
 import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
 import net.mistersecret312.aperture_innovations.forge_events.PortalTravelEvent;
-import net.mistersecret312.aperture_innovations.init.AdvancementInit;
 import net.mistersecret312.aperture_innovations.init.NetworkInit;
 import net.mistersecret312.aperture_innovations.init.StatisticsInit;
 import net.mistersecret312.aperture_innovations.init.TagInit;
@@ -39,7 +34,6 @@ import net.mistersecret312.aperture_innovations.network.ClientboundPortalSoundsP
 import net.mistersecret312.aperture_innovations.network.ClientboundTeleportMomentumPacket;
 import net.mistersecret312.aperture_innovations.utilities.CoordUtil;
 import net.mistersecret312.aperture_innovations.utilities.PortalUtilities;
-import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
@@ -465,7 +459,7 @@ public class PortalLink
 		AABB teleportBox = PortalUtilities.getPortalTeleportBox(portal.getPosition(), portal.getXRotation(),
 				portal.getYRotation());
 
-		if(movementBox.inflate(0.05f).intersects(teleportBox))
+		if(movementBox.inflate(0.15f).intersects(teleportBox))
 		{
 			Direction direction = PortalUtilities.getPortalDirection(level, linkID, isPrimary);
 			Vector3f normal = direction.step();
@@ -538,7 +532,6 @@ public class PortalLink
 					destinationLookAngle = entity.getLookAngle();
 				}
 
-
 				PortalTravelEvent.Pre event = new PortalTravelEvent.Pre(link, portal, isPrimary, level,
 						targetLevel, currentPos, destinationPosition, otherPortal.isMoonshot());
 
@@ -556,19 +549,11 @@ public class PortalLink
 
 
 				entity.hasImpulse = false;
-
-				System.out.println("In speed" + entity.getDeltaMovement());
-				System.out.println("In position" + entity.position());
-
 				entity.teleportTo(targetLevel, destinationPosition.x(), destinationPosition.y(), destinationPosition.z(),
 						Set.of(),
 						CoordUtil.CoordinateSystems.lookAngleY(destinationLookAngle), entity.getXRot());
 				entity.setDeltaMovement(destinationMomentum);
 				entity.setOldPosAndRot();
-
-				System.out.println("Out speed" + entity.getDeltaMovement());
-				System.out.println("Out position" + entity.position());
-				System.out.println("------------");
 
 				BlockPos targetBlock = BlockPos.containing(destinationPosition);
 				NetworkInit.INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(targetBlock)),

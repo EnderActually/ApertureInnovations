@@ -147,7 +147,7 @@ public class LargeButtonBlockEntity extends BlockEntity implements GeoBlockEntit
 			{
 				level.setBlock(pos, blockState.setValue(LargeButtonBlock.PRESSED, false), 3);
 				button.triggerAnim("press", "up");
-				level.playSound(null, pos, SoundInit.LARGE_BUTTON_UP.get(), SoundSource.BLOCKS, 0.5f, 1f);
+				level.playSound(null, pos, SoundInit.LARGE_BUTTON_UP.get(), SoundSource.BLOCKS, 0.25f, 1f);
 			}
 		}
 
@@ -157,7 +157,7 @@ public class LargeButtonBlockEntity extends BlockEntity implements GeoBlockEntit
 			{
 				level.setBlock(pos, blockState.setValue(LargeButtonBlock.PRESSED, true), 3);
 				button.triggerAnim("press", "down");
-				level.playSound(null, pos, SoundInit.LARGE_BUTTON_DOWN.get(), SoundSource.BLOCKS, 0.5f, 1f);
+				level.playSound(null, pos, SoundInit.LARGE_BUTTON_DOWN.get(), SoundSource.BLOCKS, 0.25f, 1f);
 			}
 		}
 	}
