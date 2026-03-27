@@ -89,8 +89,6 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity
 		float friction = 0.85f;
 		if(!this.onGround())
 			friction = 0.95f;
-		if(this.getData(AttachmentTypeInit.APERTURE.get()).frictionlessTime > 0)
-			friction = 1f;
 
 		this.setDeltaMovement(this.getDeltaMovement().multiply(friction, 1f, friction));
 		this.move(MoverType.SELF, this.getDeltaMovement());
