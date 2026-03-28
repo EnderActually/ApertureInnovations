@@ -100,7 +100,7 @@ public class ApertureCapability implements INBTSerializable<CompoundTag>
 			return true;
 		}
 
-		return false;
+		return true;
 	}
 
 	public void reset()
