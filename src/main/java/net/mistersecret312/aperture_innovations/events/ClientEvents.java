@@ -159,6 +159,8 @@ public class ClientEvents
 		Minecraft mc = Minecraft.getInstance();
 		if(mc.level != null && mc.player != null)
 		{
+			mc.levelRenderer.setBlocksDirty(-100, -100, -100, 100, 100, 100);
+
 			LINKS.forEach((linkID, link) ->
 				{
 					for(int i = 0; i < 2; i++)
