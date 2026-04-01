@@ -528,7 +528,7 @@ public class PortalGunItem extends Item implements GeoItem
 			tick = 0;
 
 		if(tick < 0 && stack.getTag() != null && stack.getTag().contains("zap_tick"))
-			stack.getTag().remove("zap_tick");
+			stack.getTag().putInt("zap_tick", tick);
 		else stack.getOrCreateTag().putInt("zap_tick", tick);
 	}
 
