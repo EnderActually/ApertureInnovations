@@ -84,18 +84,29 @@ public abstract class OrientedMasterBlock extends MasterBlock
 				if(facing.equals(Direction.WEST)) return original.move(-original.getXsize(), 0, -original.getZsize());
 				if(facing.equals(Direction.SOUTH)) return original.move(-original.getXsize(), 0, 0);
 			}
+			if(normal.equals(Direction.DOWN))
+			{
+				return original.move(-(int) (original.getXsize()/2), -original.getYsize(), -(int) (original.getZsize()/2));
+			}
+
+			if(normal.getAxis().equals(Direction.Axis.Z))
+			{
+				original = new AABB(original.minX, original.minZ, original.minY, original.maxX, original.maxZ, original.maxY);
+			}
+			if(normal.getAxis().equals(Direction.Axis.X))
+			{
+				original = new AABB(original.minY, original.minX, original.minZ, original.maxY, original.maxX, original.maxZ);
+			}
+
 			if(normal.equals(Direction.SOUTH))
-			{
-				return original.move(-(int) (original.getYsize()/2), -(int) (original.getXsize()/2), 0);
-			}
-			if(normal.equals(Direction.NORTH))
-			{
-				return original.move(-(int) (original.getXsize()/2), -(int) (original.getZsize()/2), -original.getYsize());
-			}
+				return original.move(-(int) (original.getXsize()/2), -(int) (original.getYsize()/2), 0);
 			if(normal.equals(Direction.EAST))
-			{
-				return original.move(-(int) (original.getYsize()),0, (int) (original.getZsize()));
-			}
+				return original.move(0, -(int) (original.getYsize()/2), -(int) (original.getZsize()/2));
+
+			if(normal.equals(Direction.NORTH))
+				return original.move(-(int) (original.getXsize()/2), -(int) (original.getYsize()/2), -original.getZsize());
+			if(normal.equals(Direction.WEST))
+				return original.move(-original.getXsize(), -(int) (original.getYsize()/2), -(int) (original.getZsize()/2));
 		}
 
 		return original;

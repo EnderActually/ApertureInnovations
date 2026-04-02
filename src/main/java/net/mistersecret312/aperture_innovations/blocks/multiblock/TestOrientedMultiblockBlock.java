@@ -35,6 +35,6 @@ public class TestOrientedMultiblockBlock extends OrientedMasterBlock
 	@Override
 	public AABB getDefaultMultiblockVolume()
 	{
-		return new AABB(0, 0, 0, 2, 2,2);
+		return new AABB(0, 0, 0, 1, 0,1);
 	}
 }

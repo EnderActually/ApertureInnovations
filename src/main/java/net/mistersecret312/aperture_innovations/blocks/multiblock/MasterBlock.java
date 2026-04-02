@@ -11,6 +11,7 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -56,7 +57,7 @@ public abstract class MasterBlock extends BaseEntityBlock
 	/**
 	 *
 	 * @return AABB that defines the volume this multiblock will take up.
-	 * OrientedMasterblock uses this to rotate and has a separate method for which AABB it rotates.
+	 * OrientedMasterblock uses this to rotate and has a separate method for which AABB it rotates(getDefaultMultiblockVolume).
 	 */
 	public AABB getMultiblockVolume(Level level, BlockPos pos)
 	{
