@@ -8,6 +8,9 @@ import net.minecraft.world.level.material.MapColor;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.minecraft.world.level.block.Block;
 import net.mistersecret312.aperture_innovations.blocks.*;
+import net.mistersecret312.aperture_innovations.blocks.multiblock.DummyBlock;
+import net.mistersecret312.aperture_innovations.blocks.multiblock.TestMultiblockBlock;
+import net.mistersecret312.aperture_innovations.blocks.multiblock.TestOrientedMultiblockBlock;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -45,6 +48,14 @@ public class BlockInit
             () -> new PedestalButtonBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CONCRETE)));
     public static final DeferredBlock<Block> LARGE_BUTTON = registerBlock("large_button",
             () -> new LargeButtonBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CONCRETE)));
+
+
+    public static final DeferredBlock<Block> DUMMY_BLOCK = BLOCKS.register("dummy_block",
+            () -> new DummyBlock(BlockBehaviour.Properties.of().noLootTable()));
+    public static final DeferredBlock<Block> TEST_MULTIBLOCK = registerBlock("test_master",
+            () -> new TestMultiblockBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
+    public static final DeferredBlock<Block> TEST_ORIENTED_MULTIBLOCK = registerBlock("test_oriented_master",
+            () -> new TestOrientedMultiblockBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
 
     private static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block)
     {
