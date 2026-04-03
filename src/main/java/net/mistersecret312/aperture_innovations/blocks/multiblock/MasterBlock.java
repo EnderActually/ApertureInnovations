@@ -2,19 +2,23 @@ package net.mistersecret312.aperture_innovations.blocks.multiblock;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
-import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -27,9 +31,23 @@ import org.jetbrains.annotations.Nullable;
 
 public abstract class MasterBlock extends BaseEntityBlock
 {
+	public static final BooleanProperty UPDATE = BooleanProperty.create("update");
 	public MasterBlock(Properties properties)
 	{
 		super(properties);
+		this.registerDefaultState(this.defaultBlockState().setValue(UPDATE, false));
+	}
+
+	public InteractionResult useItemLess(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult)
+	{
+		return this.useWithoutItem(state, level, pos, player, hitResult);
+	}
+
+	public ItemInteractionResult useWithItemOn(ItemStack stack, BlockState state, Level level,
+											   BlockPos pos, Player player, InteractionHand hand,
+											   BlockHitResult hitResult)
+	{
+		return this.useItemOn(stack, state, level, pos, player, hand, hitResult);
 	}
 
 	@Override
@@ -60,6 +78,11 @@ public abstract class MasterBlock extends BaseEntityBlock
 	 * OrientedMasterblock uses this to rotate and has a separate method for which AABB it rotates(getDefaultMultiblockVolume).
 	 */
 	public AABB getMultiblockVolume(Level level, BlockPos pos)
+	{
+		return getDefaultMultiblockVolume();
+	}
+
+	public AABB getDefaultMultiblockVolume()
 	{
 		return new AABB(BlockPos.ZERO);
 	}
@@ -120,6 +143,11 @@ public abstract class MasterBlock extends BaseEntityBlock
 			});
 	}
 
+	@Override
+	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder)
+	{
+		builder.add(UPDATE);
+	}
 
 	//TODO Make sure the math for getting the voxelshape for a large multiblock
 	//TODO gets mathed out correctly and center the shapes Joining
@@ -127,21 +155,24 @@ public abstract class MasterBlock extends BaseEntityBlock
 
 	public VoxelShape getFullShape(Level level, BlockPos pos)
 	{
-		return Shapes.create(getMultiblockVolume(level, pos).inflate(1));
+		return Shapes.create(getMultiblockVolume(level, pos).expandTowards(1, 1, 1));
 	}
 
 	@Override
 	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context)
 	{
-		if(true)
-			return Shapes.block();
 		if(!(level instanceof Level realLevel))
 			return Shapes.empty();
 
-		Vec3 centerPos = getFullShape(realLevel, pos).bounds().move(pos).getCenter();
+		VoxelShape actualVolume = this.getFullShape(realLevel, pos);
+		Vec3 offset = Vec3.ZERO;
 
-		VoxelShape fullShape = getFullShape(realLevel, pos).move(centerPos.x, centerPos.y, centerPos.z);
-		VoxelShape blockShape = Shapes.block().move(pos.getX()+0.5, pos.getY()+0.5, pos.getZ()+0.5);
-		return Shapes.join(fullShape, blockShape, BooleanOp.AND).move(-pos.getX()-0.5, -pos.getY()-0.5, -pos.getZ()-0.5);
+		BlockEntity blockEntity = level.getBlockEntity(pos);
+		if(blockEntity instanceof DummyBlockEntity dummy)
+			offset = Vec3.atLowerCornerOf(dummy.getOffset());
+
+		actualVolume = actualVolume.move(offset.x, offset.y, offset.z);
+
+		return Shapes.join(actualVolume, Shapes.block(), BooleanOp.AND);
 	}
 }

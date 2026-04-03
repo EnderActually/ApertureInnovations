@@ -2,9 +2,10 @@ package net.mistersecret312.aperture_innovations.blocks.multiblock;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
@@ -12,7 +13,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class OrientedMasterBlock extends MasterBlock
@@ -23,12 +23,13 @@ public abstract class OrientedMasterBlock extends MasterBlock
 	public OrientedMasterBlock(Properties properties)
 	{
 		super(properties);
-		this.registerDefaultState(this.defaultBlockState().setValue(FACING, Direction.NORTH).setValue(NORMAL, Direction.UP));
+		this.registerDefaultState(this.defaultBlockState().setValue(FACING, Direction.NORTH).setValue(NORMAL, Direction.UP).setValue(UPDATE, false));
 	}
 
 	@Override
 	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder)
 	{
+		super.createBlockStateDefinition(builder);
 		builder.add(FACING).add(NORMAL);
 	}
 
@@ -36,6 +37,7 @@ public abstract class OrientedMasterBlock extends MasterBlock
 	protected BlockState rotate(BlockState state, Rotation rotation)
 	{
 		state = state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
+		state = state.setValue(UPDATE, true);
 		return state.setValue(NORMAL, rotation.rotate(state.getValue(NORMAL)));
 	}
 
@@ -61,42 +63,52 @@ public abstract class OrientedMasterBlock extends MasterBlock
 	}
 
 	@Override
+	protected BlockState updateShape(BlockState state, Direction direction, BlockState neighborState,
+									 LevelAccessor level, BlockPos pos, BlockPos neighborPos)
+	{
+		if(state.getValue(UPDATE))
+		{
+			level.setBlock(pos, state.setValue(UPDATE, false), 3);
+			if(level instanceof Level realLevel)
+				state.getBlock().setPlacedBy(realLevel, pos, state, null, ItemStack.EMPTY);
+		}
+
+		return super.updateShape(state, direction, neighborState, level, pos, neighborPos);
+	}
+
+	@Override
 	public AABB getMultiblockVolume(Level level, BlockPos pos)
 	{
 		BlockState state = level.getBlockState(pos);
 
 		AABB original = this.getDefaultMultiblockVolume();
-
-		Vec3 max = original.getMaxPosition();
-		Vec3 min = original.getMinPosition();
-
 		if(state.hasProperty(FACING) && state.hasProperty(NORMAL))
 		{
 			Direction normal = state.getValue(NORMAL);
 			Direction facing = state.getValue(FACING);
-			if(level.isClientSide())
-				level.addParticle(ParticleTypes.ANGRY_VILLAGER, original.getCenter().x+pos.getX(), original.getCenter().y+pos.getY(), original.getCenter().z+pos.getZ(), 0, 0, 0);
 
-			//TODO - rewire this to work good with rotatable multiblocks
 			if(normal.equals(Direction.UP))
 			{
-				if(facing.equals(Direction.NORTH)) return original.move(0, 0, -original.getZsize());
-				if(facing.equals(Direction.WEST)) return original.move(-original.getXsize(), 0, -original.getZsize());
-				if(facing.equals(Direction.SOUTH)) return original.move(-original.getXsize(), 0, 0);
+				if(facing.equals(Direction.NORTH))
+					return original.move(0, 0, -original.getZsize())
+								   .move(-(int) (original.getXsize() / 2), 0, (int) (original.getZsize() / 2));
+				if(facing.equals(Direction.WEST))
+					return original.move(-original.getXsize(), 0, -original.getZsize())
+								   .move((int) (original.getXsize() / 2), 0, (int) (original.getZsize() / 2));
+				if(facing.equals(Direction.SOUTH))
+					return original.move(-original.getXsize(), 0, 0)
+								   .move((int) (original.getXsize() / 2), 0, -(int) (original.getZsize() / 2));
+				return original.move(-(int) (original.getXsize() / 2), 0, -(int) (original.getZsize() / 2));
 			}
 			if(normal.equals(Direction.DOWN))
-			{
 				return original.move(-(int) (original.getXsize()/2), -original.getYsize(), -(int) (original.getZsize()/2));
-			}
 
 			if(normal.getAxis().equals(Direction.Axis.Z))
-			{
 				original = new AABB(original.minX, original.minZ, original.minY, original.maxX, original.maxZ, original.maxY);
-			}
+
 			if(normal.getAxis().equals(Direction.Axis.X))
-			{
 				original = new AABB(original.minY, original.minX, original.minZ, original.maxY, original.maxX, original.maxZ);
-			}
+
 
 			if(normal.equals(Direction.SOUTH))
 				return original.move(-(int) (original.getXsize()/2), -(int) (original.getYsize()/2), 0);
@@ -112,25 +124,4 @@ public abstract class OrientedMasterBlock extends MasterBlock
 		return original;
 	}
 
-	public AABB getDefaultMultiblockVolume()
-	{
-		return new AABB(BlockPos.ZERO);
-	}
-
-	public Vec3 rotateVec(Vec3 vec, Direction facing, Direction normal)
-	{
-		double x = vec.x;
-		double y = vec.y;
-		double z = vec.z;
-
-		vec = switch (facing) {
-			case EAST  -> new Vec3(x, y, z);      // 0 degrees
-			case SOUTH -> new Vec3(-z, y, x);     // 90 degrees Clockwise
-			case WEST  -> new Vec3(-x, y, -z);    // 180 degrees
-			case NORTH -> new Vec3(z, y, -x);     // 90 degrees Counter-Clockwise
-			default    -> new Vec3(x, y, z);      // Fallback for UP/DOWN
-		};
-
-		return vec;
-	}
 }

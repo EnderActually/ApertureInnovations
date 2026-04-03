@@ -17,6 +17,12 @@ import net.mistersecret312.aperture_innovations.client.Layers;
 import net.mistersecret312.aperture_innovations.client.TintBakedModelWrapper;
 import net.mistersecret312.aperture_innovations.client.overlay.CrosshairOverlay;
 import net.mistersecret312.aperture_innovations.client.renderer.*;
+import net.mistersecret312.aperture_innovations.client.renderer.antline.AntlineOutputRenderer;
+import net.mistersecret312.aperture_innovations.client.renderer.antline.AntlineRenderer;
+import net.mistersecret312.aperture_innovations.client.renderer.antline.AntlineTimerRenderer;
+import net.mistersecret312.aperture_innovations.client.renderer.block.LargeButtonRenderer;
+import net.mistersecret312.aperture_innovations.client.renderer.block.PedestalButtonRenderer;
+import net.mistersecret312.aperture_innovations.client.renderer.block.VitalApparatusVentRenderer;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ResourcePackReloadListener;
 import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
 import net.mistersecret312.aperture_innovations.init.*;
@@ -147,6 +153,8 @@ public class ApertureInnovations
 
 			event.registerBlockEntityRenderer(BlockEntityInit.PEDESTAL_BUTTON.get(), PedestalButtonRenderer::new);
 			event.registerBlockEntityRenderer(BlockEntityInit.LARGE_BUTTON.get(), LargeButtonRenderer::new);
+
+			event.registerBlockEntityRenderer(BlockEntityInit.VITAL_APPARATUS_VENT.get(), VitalApparatusVentRenderer::new);
 
 			event.registerEntityRenderer(EntityInit.WEIGHTED_STORAGE_CUBE.get(), WeightedStorageCubeRenderer::new);
 			event.registerEntityRenderer(EntityInit.WEIGHTED_COMPANION_CUBE.get(), WeightedCompanionCubeRenderer::new);

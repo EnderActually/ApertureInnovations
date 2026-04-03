@@ -7,6 +7,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -49,6 +50,7 @@ public class MasterBlockEntity extends BlockEntity
 	public void addDummy(BlockPos pos)
 	{
 		this.dummies.add(pos);
+		setChanged();
 	}
 
 	public void clearDummies()
@@ -66,15 +68,26 @@ public class MasterBlockEntity extends BlockEntity
 		}
 		this.dummies.clear();
 		this.beingRemoved = false;
+		setChanged();
 	}
 
-	public boolean isBeingRemoved()
+	@Override
+	public ClientboundBlockEntityDataPacket getUpdatePacket()
 	{
-		return beingRemoved;
+		return ClientboundBlockEntityDataPacket.create(this);
 	}
 
-	public void setBeingRemoved(boolean beingRemoved)
+	@Override
+	public CompoundTag getUpdateTag(HolderLookup.Provider registries)
 	{
-		this.beingRemoved = beingRemoved;
+		return this.saveWithoutMetadata(registries);
+	}
+
+	@Override
+	public void setChanged()
+	{
+		super.setChanged();
+		if(level != null)
+			level.markAndNotifyBlock(getBlockPos(), level.getChunkAt(getBlockPos()), getBlockState(), getBlockState(), 3, 512);
 	}
 }

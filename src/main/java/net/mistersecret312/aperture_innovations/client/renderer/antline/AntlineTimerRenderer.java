@@ -1,4 +1,4 @@
-package net.mistersecret312.aperture_innovations.client.renderer;
+package net.mistersecret312.aperture_innovations.client.renderer.antline;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -10,9 +10,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
-import net.mistersecret312.aperture_innovations.block_entities.AntlineOutputBlockEntity;
 import net.mistersecret312.aperture_innovations.block_entities.AntlineTimerBlockEntity;
-import net.mistersecret312.aperture_innovations.blocks.AntlineOutputBlock;
 import net.mistersecret312.aperture_innovations.blocks.AntlineTimerBlock;
 import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 

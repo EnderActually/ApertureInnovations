@@ -2,6 +2,7 @@ package net.mistersecret312.aperture_innovations.blocks.multiblock;
 
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -10,9 +11,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.BaseEntityBlock;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -50,14 +49,15 @@ public class DummyBlock extends BaseEntityBlock
 	}
 
 	@Override
-	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
-											   BlockHitResult hitResult)
+	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
+											   Player player, BlockHitResult hitResult)
 	{
 		MasterBlockEntity master = getMaster(level, pos);
-		if(master != null)
-			return master.getBlockState().useWithoutItem(level, player, hitResult);
+		if(master == null)
+			return super.useWithoutItem(state, level, pos, player, hitResult);
 
-		return super.useWithoutItem(state, level, pos, player, hitResult);
+		MasterBlock masterBlock = (MasterBlock) master.getBlockState().getBlock();
+		return masterBlock.useItemLess(master.getBlockState(), level, master.getBlockPos(), player, hitResult);
 	}
 
 	@Override
@@ -65,10 +65,23 @@ public class DummyBlock extends BaseEntityBlock
 											  Player player, InteractionHand hand, BlockHitResult hitResult)
 	{
 		MasterBlockEntity master = getMaster(level, pos);
-		if(master != null)
-			return master.getBlockState().useItemOn(stack, level, player, hand, hitResult);
+		if(master == null)
+			return super.useItemOn(stack, state, level, pos, player, hand, hitResult);
 
-		return super.useItemOn(stack, state, level, pos, player, hand, hitResult);
+		MasterBlock masterBlock = (MasterBlock) master.getBlockState().getBlock();
+		return masterBlock.useWithItemOn(stack, master.getBlockState(), level, master.getBlockPos(), player, hand, hitResult);
+	}
+
+	@Override
+	public boolean canConnectRedstone(BlockState state, BlockGetter level, BlockPos pos, @Nullable Direction direction)
+	{
+		if(!(level instanceof Level realLevel))
+			return super.canConnectRedstone(state, level, pos, direction);
+		MasterBlockEntity master = getMaster(realLevel, pos);
+		if(master == null)
+			return super.canConnectRedstone(state, level, pos, direction);
+
+		return master.getBlockState().canRedstoneConnectTo(level, master.getBlockPos(), direction);
 	}
 
 	public BlockPos getMasterPos(Level level, BlockPos pos)
@@ -120,21 +133,38 @@ public class DummyBlock extends BaseEntityBlock
 	}
 
 	@Override
+	protected BlockState rotate(BlockState state, Rotation rotation)
+	{
+		return Blocks.AIR.defaultBlockState();
+	}
+
+	@Override
+	protected BlockState mirror(BlockState state, Mirror mirror)
+	{
+		return Blocks.AIR.defaultBlockState();
+	}
+
+	@Override
 	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context)
 	{
 		if(!(level instanceof Level realLevel))
 			return Shapes.empty();
 
 		MasterBlock masterBlock = getMasterBlock(realLevel, pos);
-		if(masterBlock == null || true)
-			return Shapes.block();
+		if(masterBlock == null)
+ 			return Shapes.block();
 
 		BlockPos masterPos = getMasterPos(realLevel, pos);
 
-		Vec3 centerPos = masterBlock.getFullShape(realLevel, masterPos).bounds().move(masterPos).move(0.5, 0, 0.5).getCenter();
+		VoxelShape actualVolume = masterBlock.getFullShape(realLevel, masterPos);
+		Vec3 offset = Vec3.ZERO;
 
-		VoxelShape fullShape = masterBlock.getFullShape(realLevel, masterPos).move(centerPos.x, centerPos.y, centerPos.z);
-		VoxelShape blockShape = Shapes.block().move(pos.getX()+0.5, pos.getY()+0.5, pos.getZ()+0.5);
-		return Shapes.join(fullShape, blockShape, BooleanOp.AND).move(-pos.getX()-0.5, -pos.getY()-0.5, -pos.getZ()-0.5);
+		BlockEntity blockEntity = level.getBlockEntity(pos);
+		if(blockEntity instanceof DummyBlockEntity dummy)
+			offset = Vec3.atLowerCornerOf(dummy.getOffset());
+
+		actualVolume = actualVolume.move(offset.x, offset.y, offset.z);
+
+		return Shapes.join(actualVolume, Shapes.block(), BooleanOp.AND);
 	}
 }

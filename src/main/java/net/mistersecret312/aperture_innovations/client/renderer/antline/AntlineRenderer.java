@@ -1,4 +1,4 @@
-package net.mistersecret312.aperture_innovations.client.renderer;
+package net.mistersecret312.aperture_innovations.client.renderer.antline;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -10,7 +10,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.RedstoneLampBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.block_entities.AntlineBlockEntity;
@@ -18,9 +17,6 @@ import net.mistersecret312.aperture_innovations.blocks.AntlineBlock;
 import net.mistersecret312.aperture_innovations.blocks.enums.ConnectionState;
 import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.utilities.ClientAntlineUtilities;
-
-import java.awt.*;
-import java.util.stream.Collectors;
 
 public class AntlineRenderer implements BlockEntityRenderer<AntlineBlockEntity>
 {

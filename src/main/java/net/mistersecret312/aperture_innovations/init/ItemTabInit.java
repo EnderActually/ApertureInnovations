@@ -47,6 +47,8 @@ public class ItemTabInit
 
 							  output.accept(BlockInit.PEDESTAL_BUTTON.get());
 							  output.accept(BlockInit.LARGE_BUTTON.get());
+
+							  output.accept(BlockInit.VITAL_APPARATUS_VENT.get());
 						  }
 						  ).build());
 

@@ -27,8 +27,11 @@ import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.block_entities.AntlineBlockEntity;
 import net.mistersecret312.aperture_innovations.block_entities.AntlineOutputBlockEntity;
 import net.mistersecret312.aperture_innovations.block_entities.AntlineTimerBlockEntity;
+import net.mistersecret312.aperture_innovations.block_entities.VitalApparatusVentBlockEntity;
+import net.mistersecret312.aperture_innovations.block_entities.multiblock.MasterBlockEntity;
 import net.mistersecret312.aperture_innovations.blocks.AntlineOutputBlock;
 import net.mistersecret312.aperture_innovations.blocks.AntlineTimerBlock;
+import net.mistersecret312.aperture_innovations.blocks.multiblock.DummyBlock;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
 import net.mistersecret312.aperture_innovations.capabilities.HoldEntityCapability;
@@ -291,6 +294,13 @@ public class CommonEvents
 			return;
 
 		BlockState activatedBlockState = level.getBlockState(activatedBlockPos);
+
+		if(activatedBlockState.getBlock() instanceof DummyBlock dummyBlock)
+		{
+			MasterBlockEntity master = dummyBlock.getMaster(level, activatedBlockPos);
+			if(master instanceof VitalApparatusVentBlockEntity vent)
+				vent.toggleHatch(signal != 0);
+		}
 
 		if(activatedBlockState.getBlock() instanceof AntlineOutputBlock)
 		{

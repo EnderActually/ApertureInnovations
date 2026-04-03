@@ -4,6 +4,7 @@ import mekanism.common.util.NBTUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -41,8 +42,34 @@ public class DummyBlockEntity extends BlockEntity
 		return masterPos.offset(this.getBlockPos());
 	}
 
+	public BlockPos getOffset()
+	{
+		return masterPos;
+	}
+
 	public void setMasterPos(BlockPos masterPos)
 	{
 		this.masterPos = masterPos;
+		setChanged();
+	}
+
+	@Override
+	public ClientboundBlockEntityDataPacket getUpdatePacket()
+	{
+		return ClientboundBlockEntityDataPacket.create(this);
+	}
+
+	@Override
+	public CompoundTag getUpdateTag(HolderLookup.Provider registries)
+	{
+		return this.saveWithoutMetadata(registries);
+	}
+
+	@Override
+	public void setChanged()
+	{
+		super.setChanged();
+		if(level != null)
+			level.markAndNotifyBlock(getBlockPos(), level.getChunkAt(getBlockPos()), getBlockState(), getBlockState(), 3, 512);
 	}
 }
