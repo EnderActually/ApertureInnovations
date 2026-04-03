@@ -2,18 +2,30 @@ package net.mistersecret312.aperture_innovations.block_entities;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.block_entities.multiblock.MasterBlockEntity;
+import net.mistersecret312.aperture_innovations.blocks.multiblock.OrientedMasterBlock;
+import net.mistersecret312.aperture_innovations.entities.IFizzle;
 import net.mistersecret312.aperture_innovations.init.BlockEntityInit;
+import net.mistersecret312.aperture_innovations.init.EntityInit;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
 import software.bernie.geckolib.animatable.GeoBlockEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
 import software.bernie.geckolib.util.GeckoLibUtil;
+
+import java.util.UUID;
 
 public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements GeoBlockEntity
 {
@@ -22,11 +34,32 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 
 	private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
-	private boolean isOpen;
+	private boolean isOpen = false;
+	private int openingTick = -1;
+
+	private EntityType<?> trackingType = EntityInit.WEIGHTED_STORAGE_CUBE.get();
+	private UUID trackingID = null;
+
+	private int emptyTime = -1;
 
 	public VitalApparatusVentBlockEntity(BlockPos pos, BlockState blockState)
 	{
 		super(BlockEntityInit.VITAL_APPARATUS_VENT.get(), pos, blockState);
+	}
+
+	public static void tick(Level level, BlockPos pos, BlockState blockState,
+							VitalApparatusVentBlockEntity vent)
+	{
+		if(vent.emptyTime != -1 && vent.emptyTime < 16)
+			vent.emptyTime++;
+
+		if(vent.isOpen() && vent.getOpeningTick() != -1 && vent.getOpeningTick() < 20)
+			vent.setOpeningTick(vent.getOpeningTick()+1);
+
+		if(vent.isOpen() && vent.getOpeningTick() == 16)
+		{
+			vent.summonTrackingEntity(level);
+		}
 	}
 
 	@Override
@@ -42,6 +75,15 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 	protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries)
 	{
 		tag.putBoolean("open", this.isOpen);
+		tag.putInt("openTick", this.openingTick);
+		tag.putUUID("tracking_id", this.trackingID);
+		tag.putInt("empty_time", this.emptyTime);
+
+		if(this.getTrackingType() != null)
+		{
+			ResourceLocation location = BuiltInRegistries.ENTITY_TYPE.getKey(getTrackingType());
+			tag.putString("tracking_type", location.toString());
+		}
 
 		super.saveAdditional(tag, registries);
 	}
@@ -52,11 +94,72 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 		super.loadAdditional(tag, registries);
 
 		this.isOpen = tag.getBoolean("open");
+		this.openingTick = tag.getInt("openTick");
+		this.trackingID = tag.getUUID("tracking_id");
+		this.emptyTime = tag.getInt("empty_time");
+
+		if(tag.contains("tracking_type"))
+		{
+			String locationString = tag.getString("tracking_type");
+			ResourceLocation location = ResourceLocation.parse(locationString);
+
+			this.trackingType = BuiltInRegistries.ENTITY_TYPE.getOptional(location).orElse(EntityInit.WEIGHTED_STORAGE_CUBE.get());
+		}
 	}
 
 	public boolean isOpen()
 	{
 		return isOpen;
+	}
+
+	public int getOpeningTick()
+	{
+		return openingTick;
+	}
+
+	public void setOpeningTick(int openingTick)
+	{
+		this.openingTick = openingTick;
+		setChanged();
+	}
+
+	public int getEmptyTime()
+	{
+		return emptyTime;
+	}
+
+	public void setEmptyTime(int emptyTime)
+	{
+		this.emptyTime = emptyTime;
+		setChanged();
+	}
+
+	public EntityType<?> getTrackingType()
+	{
+		return trackingType;
+	}
+
+	public UUID getTrackingID()
+	{
+		return trackingID;
+	}
+
+	public void setTrackingID(UUID trackingID)
+	{
+		this.trackingID = trackingID;
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T extends Entity & IFizzle> T getTrackingEntity(Level level)
+	{
+		if(!(level instanceof ServerLevel serverLevel))
+			return null;
+
+		Entity entity = serverLevel.getEntity(this.trackingID);
+		if(!(entity instanceof IFizzle))
+			return null;
+
+		return (T) entity;
 	}
 
 	public void toggleHatch(boolean state)
@@ -66,17 +169,18 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 
 		if(this.isOpen == state)
 			return;
-
 		this.isOpen = state;
 		if(state)
 		{
 			level.playSound(null, getBlockPos(), SoundInit.VITAL_APPARATUS_VENT_OPEN.get(), SoundSource.BLOCKS, 0.33f, 1f);
 			this.triggerAnim("hatch", "open");
+			this.openingTick = 0;
 		}
 		else
 		{
 			level.playSound(null, getBlockPos(), SoundInit.VITAL_APPARATUS_VENT_CLOSE.get(), SoundSource.BLOCKS, 0.33f, 1f);
 			this.triggerAnim("hatch", "close");
+			this.openingTick = -1;
 		}
 
 		this.setChanged();
@@ -87,8 +191,45 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 		if(level == null)
 			return;
 
-		this.isOpen = !isOpen;
-		this.toggleHatch(this.isOpen);
+		boolean isOpen = !isOpen();
+		this.toggleHatch(isOpen);
+	}
+
+	public <T extends Entity & IFizzle> void setTrackingType(EntityType<T> type)
+	{
+		this.trackingType = type;
+	}
+
+	public void summonTrackingEntity(Level level)
+	{
+		Entity entity = getTrackingType().create(level);
+		if(entity == null)
+			return;
+
+		Vec3 normal = Vec3.atLowerCornerOf(getBlockState().getValue(OrientedMasterBlock.NORMAL).getNormal()).multiply(1, 1.3, 1);
+		Vec3 position = getBlockPos().getBottomCenter().add(normal);
+		entity.setPos(position);
+		level.addFreshEntity(entity);
+		this.setTrackingID(entity.getUUID());
+
+		this.emptyTime = 0;
+	}
+
+	public <T extends Entity & IFizzle> void fizzleTrackedEntity(Level level)
+	{
+		T entity = getTrackingEntity(level);
+		if(entity != null)
+			entity.fizzle();
+
+		if(entity == null)
+		{
+			if(!(level instanceof ServerLevel serverLevel))
+				return;
+
+			Entity trackingEntity = serverLevel.getEntity(getTrackingID());
+			if(trackingEntity != null && !(trackingEntity instanceof IFizzle))
+				trackingEntity.remove(Entity.RemovalReason.KILLED);
+		}
 	}
 
 	@Override

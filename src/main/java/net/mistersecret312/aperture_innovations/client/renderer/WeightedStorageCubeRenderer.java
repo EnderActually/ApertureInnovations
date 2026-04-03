@@ -9,7 +9,9 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.PigRenderer;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.client.ColorUtil;
 import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.client.model.WeightedStorageCubeModel;
 import net.mistersecret312.aperture_innovations.entities.WeightedStorageCubeEntity;
@@ -49,8 +51,37 @@ public class WeightedStorageCubeRenderer extends DynamicGeoEntityRenderer<Weight
 			return true;
 		}
 
+		if(!bone.getName().equals("ColoredCircle") && this.getAnimatable().getFizzlingTick() != -1)
+		{
+			float delta = (this.getAnimatable().getFizzlingTick() - 30f) /
+								  (this.getAnimatable().getMaxFizzleTime() - 30f);
+
+			int col = software.bernie.geckolib.util.Color.ofARGB(Mth.clampedLerp(1f, 0f, delta), 0f, 0f, 0f).argbInt();
+
+			renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, col);
+			return true;
+		}
+
 		return super.boneRenderOverride(poseStack, bone, bufferSource, buffer, partialTick, packedLight, packedOverlay,
 				colour);
+	}
+
+	@Override
+	public software.bernie.geckolib.util.Color getRenderColor(WeightedStorageCubeEntity animatable, float partialTick,
+															  int packedLight)
+	{
+		if(animatable.getFizzlingTick() != -1)
+		{
+			float delta = (this.getAnimatable().getFizzlingTick() - 30f) /
+								  (this.getAnimatable().getMaxFizzleTime() - 30f);
+
+			System.out.println("-------");
+			System.out.println("Delta - " + delta);
+			System.out.println("tick - " + this.getAnimatable().getFizzlingTick());
+			System.out.println("Value - " + Mth.clampedLerp(1f, 0f, delta));
+			return software.bernie.geckolib.util.Color.ofARGB(Mth.clampedLerp(1f, 0f, delta), 1f, 1f, 1f);
+		}
+		return super.getRenderColor(animatable, partialTick, packedLight);
 	}
 
 	@Override
@@ -76,6 +107,7 @@ public class WeightedStorageCubeRenderer extends DynamicGeoEntityRenderer<Weight
 	{
 		if(bone.getName().equals("ColoredCircle"))
 			return PortalRenderTypes.APERTURE_GLOW.apply(getTextureOverrideForBone(bone, animatable, partialTick), RenderStateShard.TRANSLUCENT_TRANSPARENCY);
+
 		return super.getRenderTypeOverrideForBone(bone, animatable, texturePath, bufferSource, partialTick);
 	}
 
@@ -88,6 +120,13 @@ public class WeightedStorageCubeRenderer extends DynamicGeoEntityRenderer<Weight
 				packedOverlay, colour);
 
 		poseStack.mulPose(Axis.YP.rotationDegrees(animatable.getYRot()));
+	}
+
+	@Override
+	public @Nullable RenderType getRenderType(WeightedStorageCubeEntity animatable, ResourceLocation texture,
+											  @Nullable MultiBufferSource bufferSource, float partialTick)
+	{
+		return RenderType.entityTranslucent(texture);
 	}
 
 	@Override

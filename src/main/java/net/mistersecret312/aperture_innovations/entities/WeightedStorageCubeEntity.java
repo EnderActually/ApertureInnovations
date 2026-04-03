@@ -34,11 +34,14 @@ import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
-public class WeightedStorageCubeEntity extends Entity implements GeoEntity
+public class WeightedStorageCubeEntity extends Entity implements GeoEntity, IFizzle
 {
 	private static final EntityDataAccessor<Boolean> ACTIVE = SynchedEntityData.defineId(WeightedStorageCubeEntity.class, EntityDataSerializers.BOOLEAN);
 	private static final EntityDataAccessor<Integer> COLOR = SynchedEntityData.defineId(WeightedStorageCubeEntity.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Integer> ACTIVE_COLOR = SynchedEntityData.defineId(
+			WeightedStorageCubeEntity.class, EntityDataSerializers.INT);
+
+	private static final EntityDataAccessor<Integer> FIZZLE_TIME = SynchedEntityData.defineId(
 			WeightedStorageCubeEntity.class, EntityDataSerializers.INT);
 
 	private SimpleContainer container = new SimpleContainer(9);
@@ -67,6 +70,18 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity
 	{
 		super.tick();
 		this.tickLerp();
+
+		if(getFizzlingTick() >= 0 && getFizzlingTick() < getMaxFizzleTime())
+		{
+			setFizzlingTick(getFizzlingTick() + 1);
+			return;
+		}
+
+		if(getFizzlingTick() == getMaxFizzleTime())
+		{
+			onFinishFizzling();
+			return;
+		}
 
 		if(!isNoGravity())
 		{
@@ -99,7 +114,7 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity
 	{
 		Level level = this.level();
 
-		if(fallDistance > 5F)
+		if(fallDistance > 5F && this.getFizzlingTick() == -1)
 		{
 			AABB impactZone = this.getBoundingBox().expandTowards(0f, -0.25f, 0f);
 			for(Entity entity : level.getEntities(this, impactZone))
@@ -116,19 +131,19 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity
 	@Override
 	public boolean canBeCollidedWith()
 	{
-		return true;
+		return this.getFizzlingTick() == -1;
 	}
 
 	@Override
 	public boolean isPickable()
 	{
-		return true;
+		return this.getFizzlingTick() == -1;
 	}
 
 	@Override
 	public boolean isPushable()
 	{
-		return true;
+		return this.getFizzlingTick() == -1;
 	}
 
 	@Override
@@ -190,9 +205,30 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity
 	public void fizzle()
 	{
 		this.setNoGravity(true);
+		setFizzlingTick(0);
+	}
 
-		//TODO - Fizzling
+	@Override
+	public int getFizzlingTick()
+	{
+		return this.entityData.get(FIZZLE_TIME);
+	}
 
+	@Override
+	public void setFizzlingTick(int tick)
+	{
+		this.entityData.set(FIZZLE_TIME, tick);
+	}
+
+	@Override
+	public int getMaxFizzleTime()
+	{
+		return 40;
+	}
+
+	@Override
+	public void onFinishFizzling()
+	{
 		super.kill();
 	}
 
@@ -206,6 +242,12 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity
 		}
 		
 		super.kill();
+	}
+
+	@Override
+	public boolean canCollideWith(Entity entity)
+	{
+		return this.getFizzlingTick() == -1;
 	}
 
 	@Override
@@ -279,6 +321,7 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity
 		builder.define(ACTIVE, false);
 		builder.define(COLOR, -1);
 		builder.define(ACTIVE_COLOR, -1);
+		builder.define(FIZZLE_TIME, -1);
 	}
 
 	@Override

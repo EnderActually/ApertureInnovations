@@ -299,7 +299,14 @@ public class CommonEvents
 		{
 			MasterBlockEntity master = dummyBlock.getMaster(level, activatedBlockPos);
 			if(master instanceof VitalApparatusVentBlockEntity vent)
+			{
 				vent.toggleHatch(signal != 0);
+
+				if(signal != 0)
+				{
+					vent.fizzleTrackedEntity(level);
+				}
+			}
 		}
 
 		if(activatedBlockState.getBlock() instanceof AntlineOutputBlock)

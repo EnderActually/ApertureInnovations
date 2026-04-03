@@ -2,6 +2,7 @@ package net.mistersecret312.aperture_innovations.client.renderer.block;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
@@ -9,6 +10,10 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.Level;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.block_entities.PedestalButtonBlockEntity;
 import net.mistersecret312.aperture_innovations.block_entities.VitalApparatusVentBlockEntity;
@@ -23,8 +28,13 @@ import software.bernie.geckolib.model.GeoModel;
 import software.bernie.geckolib.renderer.specialty.DynamicGeoBlockRenderer;
 import software.bernie.geckolib.util.RenderUtil;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class VitalApparatusVentRenderer extends DynamicGeoBlockRenderer<VitalApparatusVentBlockEntity>
 {
+	private final Map<EntityType<?>, Entity> ENTITIES = new HashMap<>();
+
 	public VitalApparatusVentRenderer(BlockEntityRendererProvider.Context context)
 	{
 		super(new VitalApparatusVentModel());
@@ -75,13 +85,37 @@ public class VitalApparatusVentRenderer extends DynamicGeoBlockRenderer<VitalApp
 	}
 
 	@Override
-	public void preRender(PoseStack poseStack, VitalApparatusVentBlockEntity animatable, BakedGeoModel model,
+	public void preRender(PoseStack poseStack, VitalApparatusVentBlockEntity vent, BakedGeoModel model,
 						  @Nullable MultiBufferSource bufferSource, @Nullable VertexConsumer buffer, boolean isReRender,
 						  float partialTick, int packedLight, int packedOverlay, int colour)
 	{
-		super.preRender(poseStack, animatable, model, bufferSource, buffer, isReRender, partialTick, packedLight,
+		super.preRender(poseStack, vent, model, bufferSource, buffer, isReRender, partialTick, packedLight,
 				packedOverlay, colour);
-		poseStack.translate(0, -1, 0);
+		poseStack.translate(0, -1.125, 0);
+
+		Minecraft mc = Minecraft.getInstance();
+		Level level = vent.getLevel();
+		if(level == null)
+			return;
+
+		Entity entity = ENTITIES.computeIfAbsent(vent.getTrackingType(), type -> type.create(level));
+
+		if(entity == null)
+			return;
+
+		if(bufferSource != null)
+		{
+			poseStack.pushPose();
+
+			float y = Mth.lerp(vent.getEmptyTime() / 16f, 1f, -0.25f);
+
+			poseStack.translate(0, y, 0);
+
+			mc.getEntityRenderDispatcher()
+			  .render(entity, 0, 0, 0, 0, partialTick, poseStack, bufferSource, packedLight);
+
+			poseStack.popPose();
+		}
 	}
 
 	@Override
