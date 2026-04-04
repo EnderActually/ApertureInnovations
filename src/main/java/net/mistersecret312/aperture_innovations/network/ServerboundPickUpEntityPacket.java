@@ -91,7 +91,7 @@ public record ServerboundPickUpEntityPacket() implements CustomPacketPayload
 							new ClientboundGunZapSoundPacket(player.getUUID(), true));
 
 					level.playSound(null, player.blockPosition(),
-							SoundInit.PORTAL_GUN_HOLD_FAIL.get(), SoundSource.PLAYERS);
+							SoundInit.PORTAL_GUN_HOLD_FAIL.get(), SoundSource.PLAYERS, 1f, 1f);
 					portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level),
 							"main", "reset");
 					return;
@@ -108,7 +108,8 @@ public record ServerboundPickUpEntityPacket() implements CustomPacketPayload
 					portalGun.setHeldEntity(gunStack, entity);
 					portalGun.setZapSoundTick(gunStack, 0);
 					portalGun.triggerAnim(player, GeoItem.getOrAssignId(gunStack, (ServerLevel) level), "main", "hold");
-					level.playSound(null, player.blockPosition(), SoundInit.PORTAL_GUN_HOLD_START.get(), SoundSource.PLAYERS);
+					level.playSound(null, player.blockPosition(), SoundInit.PORTAL_GUN_HOLD_START.get(), SoundSource.PLAYERS,
+							1f, 1f);
 					entity.setData(AttachmentTypeInit.HOLD_ENTITY.get(), capability);
 				}
 				else

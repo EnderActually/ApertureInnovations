@@ -587,6 +587,7 @@ public class PortalLink
 				{
 					PacketDistributor.sendToPlayersTrackingEntity(entity,
 							new ClientboundEntityPortalLerpPacket(entity.getId(), destinationPosition.toVector3f(),
+									entity.getDeltaMovement().toVector3f(),
 									entity.getXRot(),
 									CoordUtil.CoordinateSystems.lookAngleY(destinationLookAngle)));
 				}

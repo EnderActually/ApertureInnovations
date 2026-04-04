@@ -150,6 +150,13 @@ public class PortalGunItem extends Item implements GeoItem
 		if(secondaryStripeColor != -1 || flag.hasShiftDown())
 			components.add(Component.translatable("item.aperture_innovations.portal_gun.stripe_secondary_color", Integer.toHexString(secondaryStripeColor).toUpperCase()).withStyle(style -> style.withColor(secondaryStripeColor)));
 
+		Level level = context.level();
+		if(level != null)
+		{
+			Color hsbColor = Color.getHSBColor(level.getTimeOfDay(1f)*50, 1f, 1f);
+			components.add(Component.translatable("tooltip.aperture_innovations.is_colorable").withStyle((style -> style.withColor(
+					hsbColor.getRGB()))));
+		}
 	}
 
 	@Override

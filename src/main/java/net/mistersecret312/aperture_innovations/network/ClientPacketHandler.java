@@ -10,7 +10,6 @@ import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.block_entities.AntlineBlockEntity;
 import net.mistersecret312.aperture_innovations.block_entities.AntlineOutputBlockEntity;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
-import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.client.renderer.PortalRenderer;
 import net.mistersecret312.aperture_innovations.init.AttachmentTypeInit;
 import net.mistersecret312.aperture_innovations.data.portal.ClientPortalLink;
@@ -97,7 +96,7 @@ public class ClientPacketHandler
 		}
 	}
 
-	public static void handleEntityPortalLerp(int id, Vector3f pos, float xRot, float yRot)
+	public static void handleEntityPortalLerp(int id, Vector3f pos, Vector3f delta, float xRot, float yRot)
 	{
 		Entity entity = Minecraft.getInstance().level.getEntity(id);
 		if(entity != null)
@@ -117,6 +116,7 @@ public class ClientPacketHandler
 
 			entity.setOldPosAndRot();
 			entity.lerpTo(pos.x, pos.y, pos.z, yRot, xRot, 0);
+			entity.setDeltaMovement(new Vec3(delta));
 		}
 	}
 
