@@ -10,6 +10,7 @@ import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.block_entities.AntlineBlockEntity;
 import net.mistersecret312.aperture_innovations.block_entities.AntlineOutputBlockEntity;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
+import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.client.renderer.PortalRenderer;
 import net.mistersecret312.aperture_innovations.init.AttachmentTypeInit;
 import net.mistersecret312.aperture_innovations.data.portal.ClientPortalLink;
@@ -146,5 +147,13 @@ public class ClientPacketHandler
 		{
 			entity.getData(AttachmentTypeInit.HOLD_ENTITY.get()).setHeld(entity, held);
 		}
+	}
+
+	public static void handleClearPortalCache()
+	{
+		ClientPortalUtilities.PLAYERS.clear();
+		ClientPortalUtilities.OPENING_ANIMATIONS.clear();
+		ClientPortalUtilities.AMBIENTS.clear();
+		PortalRenderer.LINKS.clear();
 	}
 }

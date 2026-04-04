@@ -166,6 +166,13 @@ public class CommonEvents
 	}
 
 	@SubscribeEvent
+	public static void playerLeft(PlayerEvent.PlayerLoggedOutEvent event)
+	{
+		if(event.getEntity() instanceof ServerPlayer player)
+			PacketDistributor.sendToPlayer(player, new ClientboundClearPortalCachePacket());
+	}
+
+	@SubscribeEvent
 	public static void playerFall(EntityInvulnerabilityCheckEvent event)
 	{
 		Entity entity = event.getEntity();

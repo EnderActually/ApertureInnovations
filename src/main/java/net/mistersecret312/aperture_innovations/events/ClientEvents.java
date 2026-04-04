@@ -67,7 +67,8 @@ public class ClientEvents
 				{
 					boolean isPrimary = i == 0;
 					ResourceKey<Level> dimension = isPrimary ? link.getPrimaryPortal().getDimension() : link.getSecondaryPortal().getDimension();
-					if(Minecraft.getInstance().level.dimension() != dimension) continue;
+					if(Minecraft.getInstance().level.dimension() != dimension)
+						continue;
 
 					float scale = ClientPortalUtilities.getPortalOpeningAnimationProgress(link.linkID(), isPrimary);
 
@@ -81,16 +82,15 @@ public class ClientEvents
 							primaryRender(link, buffer, poseStack, camera, scale);
 						else
 							secondaryRender(link, buffer, poseStack, camera, scale);
-					}
 
-					if(isPrimary && link.getPrimaryPortal().isInWorld())
-						renderPortalVortex(link, camera, primary, buffer, poseStack, true);
-					else if(link.getSecondaryPortal().isInWorld())
-						renderPortalVortex(link, camera, secondary, buffer, poseStack, false);
+						if(isPrimary && link.getPrimaryPortal().isInWorld())
+							renderPortalVortex(link, camera, primary, buffer, poseStack, true);
+						else if(link.getSecondaryPortal().isInWorld())
+							renderPortalVortex(link, camera, secondary, buffer, poseStack, false);
+					}
 				}
 
 				poseStack.popPose();
-				buffer.endBatch();
 			}
 		}
 	}
