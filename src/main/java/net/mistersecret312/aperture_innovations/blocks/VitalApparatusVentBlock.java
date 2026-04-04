@@ -7,6 +7,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -52,8 +53,16 @@ public class VitalApparatusVentBlock extends OrientedMasterBlock
 		BlockEntity blockEntity = level.getBlockEntity(pos);
 		if(!level.isClientSide() && blockEntity instanceof VitalApparatusVentBlockEntity vent)
 		{
-			if(stack.is(ItemInit.WEIGHTED_STORAGE_CUBE))
-				vent.setTrackingType(EntityInit.WEIGHTED_STORAGE_CUBE.get());
+			if(stack.is(ItemInit.CUBE))
+			{
+				vent.setTrackingCube(stack);
+				return ItemInteractionResult.SUCCESS;
+			}
+			if(stack.getItem() instanceof SpawnEggItem spawnEggItem)
+			{
+				vent.setTrackingType(spawnEggItem.getType(stack));
+				return ItemInteractionResult.SUCCESS;
+			}
 		}
 
 		return super.useItemOn(stack, state, level, pos, player, hand, hitResult);

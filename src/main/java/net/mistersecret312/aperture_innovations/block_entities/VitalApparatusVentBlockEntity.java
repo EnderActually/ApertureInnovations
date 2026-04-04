@@ -10,6 +10,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -21,6 +22,7 @@ import net.mistersecret312.aperture_innovations.entities.IFizzle;
 import net.mistersecret312.aperture_innovations.init.BlockEntityInit;
 import net.mistersecret312.aperture_innovations.init.EntityInit;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
+import net.mistersecret312.aperture_innovations.items.CubeItem;
 import software.bernie.geckolib.animatable.GeoBlockEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
@@ -204,8 +206,7 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 		setChanged();
 	}
 
-	@SuppressWarnings("unchecked")
-	public <T extends Entity & IFizzle> T getTrackingEntity(Level level)
+	public Entity getTrackingEntity(Level level)
 	{
 		if(this.getTrackingID() == null)
 			return null;
@@ -213,11 +214,7 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 		if(!(level instanceof ServerLevel serverLevel))
 			return null;
 
-		Entity entity = serverLevel.getEntity(this.getTrackingID());
-		if(!(entity instanceof IFizzle))
-			return null;
-
-		return (T) entity;
+		return serverLevel.getEntity(this.getTrackingID());
 	}
 
 	public void toggleHatch(boolean state)
@@ -253,10 +250,25 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 		this.toggleHatch(isOpen);
 	}
 
-	public <T extends Entity & IFizzle> void setTrackingType(EntityType<T> type)
+	public void setTrackingType(EntityType<?> type)
 	{
 		this.trackingType = type;
 		this.setTrackingData(new CompoundTag());
+	}
+
+	public void setTrackingCube(ItemStack stack)
+	{
+		this.trackingType = EntityInit.CUBE.get();
+		if(stack.getItem() instanceof CubeItem cube)
+		{
+			CompoundTag tag = new CompoundTag();
+
+			tag.putInt("color", cube.getColor(stack));
+			tag.putInt("active_color", cube.getActiveColor(stack));
+			tag.putString("variant", cube.getVariant(stack).toString());
+
+			this.setTrackingData(tag);
+		}
 	}
 
 	public void summonTrackingEntity(Level level)
@@ -278,11 +290,11 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 		this.emptyTime = 0;
 	}
 
-	public <T extends Entity & IFizzle> void fizzleTrackedEntity(Level level)
+	public void fizzleTrackedEntity(Level level)
 	{
-		T entity = getTrackingEntity(level);
-		if(entity != null)
-			entity.fizzle();
+		Entity entity = getTrackingEntity(level);
+		if(entity instanceof IFizzle fizzle)
+			fizzle.fizzle();
 
 		if(entity == null)
 		{

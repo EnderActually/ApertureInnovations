@@ -34,6 +34,8 @@ public class ColoredGlowingLayer<T extends GeoAnimatable> extends AutoGlowingGeo
 			IDynamicTexture<T> texture = ((IDynamicTexture<T>) getRenderer());
 			for(GeoBone bone : bakedModel.topLevelBones())
 			{
+				if(texture.getTexture(bone, animatable) == null)
+					return;
 				renderType = texture.getRenderType(bone, animatable);
 				renderColoredCube(poseStack, bone, bufferSource.getBuffer(renderType), packedLight,
 						packedOverlay, texture.getColor(bone, animatable));

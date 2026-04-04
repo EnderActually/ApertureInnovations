@@ -23,7 +23,9 @@ import net.mistersecret312.aperture_innovations.client.renderer.antline.AntlineT
 import net.mistersecret312.aperture_innovations.client.renderer.block.LargeButtonRenderer;
 import net.mistersecret312.aperture_innovations.client.renderer.block.PedestalButtonRenderer;
 import net.mistersecret312.aperture_innovations.client.renderer.block.VitalApparatusVentRenderer;
+import net.mistersecret312.aperture_innovations.client.renderer.entity.CubeRenderer;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ResourcePackReloadListener;
+import net.mistersecret312.aperture_innovations.datapack.CubeVariant;
 import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
 import net.mistersecret312.aperture_innovations.init.*;
 import net.mistersecret312.aperture_innovations.items.*;
@@ -89,6 +91,7 @@ public class ApertureInnovations
 		modEventBus.addListener((DataPackRegistryEvent.NewRegistry event) ->
 			{
 				event.dataPackRegistry(PortalGunVariant.REGISTRY_KEY, PortalGunVariant.CODEC, PortalGunVariant.CODEC);
+				event.dataPackRegistry(CubeVariant.REGISTRY_KEY, CubeVariant.CODEC, CubeVariant.CODEC);
 			});
 
 		modContainer.registerConfig(ModConfig.Type.COMMON, Config.COMMON_CONFIG, "aperture_innovations-common.toml");
@@ -100,8 +103,7 @@ public class ApertureInnovations
 	{
 		event.enqueueWork(() ->
 			{
-				DispenserBlock.registerBehavior(ItemInit.WEIGHTED_COMPANION_CUBE.get(), CompanionCubeItem.getDispenserBehaviour());
-				DispenserBlock.registerBehavior(ItemInit.WEIGHTED_STORAGE_CUBE.get(), CubeItem.getDispenserBehaviour());
+				DispenserBlock.registerBehavior(ItemInit.CUBE.get(), CubeItem.getDispenserBehaviour());
 			});
 	}
 
@@ -156,8 +158,7 @@ public class ApertureInnovations
 
 			event.registerBlockEntityRenderer(BlockEntityInit.VITAL_APPARATUS_VENT.get(), VitalApparatusVentRenderer::new);
 
-			event.registerEntityRenderer(EntityInit.WEIGHTED_STORAGE_CUBE.get(), WeightedStorageCubeRenderer::new);
-			event.registerEntityRenderer(EntityInit.WEIGHTED_COMPANION_CUBE.get(), WeightedCompanionCubeRenderer::new);
+			event.registerEntityRenderer(EntityInit.CUBE.get(), CubeRenderer::new);
 		}
 
 		@SubscribeEvent

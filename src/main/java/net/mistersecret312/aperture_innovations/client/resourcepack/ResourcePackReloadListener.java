@@ -16,6 +16,7 @@ import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.datapack.CubeVariant;
 import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -29,6 +30,8 @@ public class ResourcePackReloadListener
 	public static final String PATH = ApertureInnovations.MODID;
 
 	public static final String GUN_VARIANT = "portal_gun_variant";
+	public static final String CUBE_VARIANT = "cube_variant";
+
 	private static Minecraft minecraft = Minecraft.getInstance();
 
 	@EventBusSubscriber(modid = ApertureInnovations.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
@@ -43,19 +46,7 @@ public class ResourcePackReloadListener
 		protected void apply(Map<ResourceLocation, JsonElement> jsonMap, ResourceManager manager, ProfilerFiller filler)
 		{
 			ClientPortalGunVariants.clear();
-
-			ClientPacketListener clientPacketListener = minecraft.getConnection();
-
-			if(clientPacketListener != null)
-			{
-				RegistryAccess registries = clientPacketListener.registryAccess();
-				Registry<PortalGunVariant> variantRegistry = registries.registryOrThrow(PortalGunVariant.REGISTRY_KEY);
-
-				for(Map.Entry<ResourceKey<PortalGunVariant>, PortalGunVariant> stargateVariantEntry : variantRegistry.entrySet())
-				{
-					stargateVariantEntry.getValue().resetMissing();
-				}
-			}
+			ClientCubeVariants.clear();
 
 			for(Map.Entry<ResourceLocation, JsonElement> jsonEntry : jsonMap.entrySet())
 			{
@@ -66,6 +57,11 @@ public class ResourcePackReloadListener
 				{
 					location = shortenPath(location, GUN_VARIANT);
 					addPortalGunVariant(location, element);
+				}
+				if(canShortenPath(location, CUBE_VARIANT))
+				{
+					location = shortenPath(location, CUBE_VARIANT);
+					addCubeVariant(location, element);
 				}
 			}
 		}
@@ -86,7 +82,21 @@ public class ResourcePackReloadListener
 			}
 		}
 
+		private static void addCubeVariant(ResourceLocation location, JsonElement element)
+		{
+			try
+			{
+				JsonObject json = GsonHelper.convertToJsonObject(element, CUBE_VARIANT);
+				ClientCubeVariant stargateVariant = ClientCubeVariant.CODEC.parse(JsonOps.INSTANCE, json).getOrThrow(msg -> new DecoderException("Failed to parse Portal Gun Variant "+ msg));
 
+				ClientCubeVariants.addCubeVariant(location, stargateVariant);
+			}
+			catch(RuntimeException e)
+			{
+				ApertureInnovations.LOGGER.error("Could not load Cube Variant: " + location.toString());
+				ApertureInnovations.LOGGER.error(e.getMessage());
+			}
+		}
 
 		@SubscribeEvent
 		public static void registerReloadListener(RegisterClientReloadListenersEvent event)

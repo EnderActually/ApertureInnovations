@@ -27,7 +27,7 @@ import software.bernie.geckolib.util.RenderUtil;
 import java.awt.*;
 import java.util.List;
 
-import static net.mistersecret312.aperture_innovations.client.renderer.PortalGunRenderer.GLOWING_RENDER_TYPE;
+import static net.mistersecret312.aperture_innovations.client.renderer.item.PortalGunRenderer.GLOWING_RENDER_TYPE;
 
 public class PedestalButtonRenderer extends DynamicGeoBlockRenderer<PedestalButtonBlockEntity>
 {

@@ -5,6 +5,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.entities.CubeEntity;
 import net.mistersecret312.aperture_innovations.entities.WeightedCompanionCubeEntity;
 import net.mistersecret312.aperture_innovations.entities.WeightedStorageCubeEntity;
 import net.neoforged.bus.api.IEventBus;
@@ -29,6 +30,13 @@ public class EntityInit
 											.sized(0.75f, 0.75f)
 											.build(ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
 													"weighted_companion_cube").toString()));
+
+	public static final DeferredHolder<EntityType<?>, EntityType<CubeEntity>> CUBE =
+			ENTITY_TYPES.register("cube",
+					() -> EntityType.Builder.<CubeEntity>of(CubeEntity::new, MobCategory.MISC)
+								  .sized(0.75f, 0.75f)
+								  .build(ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+										  "cube").toString()));
 
 	public static void register(IEventBus bus)
 	{

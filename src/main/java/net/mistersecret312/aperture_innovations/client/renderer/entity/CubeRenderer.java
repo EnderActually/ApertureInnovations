@@ -1,4 +1,4 @@
-package net.mistersecret312.aperture_innovations.client.renderer;
+package net.mistersecret312.aperture_innovations.client.renderer.entity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -9,10 +9,12 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
-import net.mistersecret312.aperture_innovations.client.model.WeightedStorageCubeModel;
-import net.mistersecret312.aperture_innovations.entities.WeightedStorageCubeEntity;
+import net.mistersecret312.aperture_innovations.client.model.CubeModel;
+import net.mistersecret312.aperture_innovations.client.renderer.ColoredGlowingLayer;
+import net.mistersecret312.aperture_innovations.client.renderer.IDynamicTexture;
+import net.mistersecret312.aperture_innovations.client.resourcepack.ClientCubeVariant;
+import net.mistersecret312.aperture_innovations.entities.CubeEntity;
 import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.cache.object.GeoBone;
@@ -20,16 +22,16 @@ import software.bernie.geckolib.renderer.specialty.DynamicGeoEntityRenderer;
 
 import java.awt.*;
 
-public class WeightedStorageCubeRenderer extends DynamicGeoEntityRenderer<WeightedStorageCubeEntity> implements IDynamicTexture<WeightedStorageCubeEntity>
+public class CubeRenderer extends DynamicGeoEntityRenderer<CubeEntity> implements IDynamicTexture<CubeEntity>
 {
-	public WeightedStorageCubeRenderer(EntityRendererProvider.Context context)
+	public CubeRenderer(EntityRendererProvider.Context context)
 	{
-		super(context, new WeightedStorageCubeModel());
+		super(context, new CubeModel());
 		this.addRenderLayer(new ColoredGlowingLayer<>(this));
 	}
 
 	@Override
-	public software.bernie.geckolib.util.Color getRenderColor(WeightedStorageCubeEntity animatable, float partialTick,
+	public software.bernie.geckolib.util.Color getRenderColor(CubeEntity animatable, float partialTick,
 															  int packedLight)
 	{
 		if(animatable.getFizzlingTick() != -1)
@@ -47,7 +49,7 @@ public class WeightedStorageCubeRenderer extends DynamicGeoEntityRenderer<Weight
 	}
 
 	@Override
-	public void preRender(PoseStack poseStack, WeightedStorageCubeEntity animatable, BakedGeoModel model,
+	public void preRender(PoseStack poseStack, CubeEntity animatable, BakedGeoModel model,
 						  @Nullable MultiBufferSource bufferSource, @Nullable VertexConsumer buffer, boolean isReRender,
 						  float partialTick, int packedLight, int packedOverlay, int colour)
 	{
@@ -58,28 +60,31 @@ public class WeightedStorageCubeRenderer extends DynamicGeoEntityRenderer<Weight
 	}
 
 	@Override
-	public @Nullable RenderType getRenderType(WeightedStorageCubeEntity animatable, ResourceLocation texture,
+	public @Nullable RenderType getRenderType(CubeEntity animatable, ResourceLocation texture,
 											  @Nullable MultiBufferSource bufferSource, float partialTick)
 	{
 		return RenderType.entityTranslucent(texture);
 	}
 
 	@Override
-	public ResourceLocation getTexture(GeoBone bone, WeightedStorageCubeEntity animatable)
+	public ResourceLocation getTexture(GeoBone bone, CubeEntity animatable)
 	{
 		boolean active = animatable.isActive();
 		int color = active ? animatable.getActiveColor() : animatable.getColor();
+		ClientCubeVariant cubeVariant = animatable.getClientVariant();
 
+		ResourceLocation texture = animatable.getClientVariant().idleTexture().orElse(null);
 		if(color != -1)
-			return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
-				"textures/entity/weighted_cube_generic.png");
-		else
-			return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
-				"textures/entity/weighted_cube_" + (active ? "active" : "inactive") + ".png");
+			texture = cubeVariant.genericTexture().orElse(null);
+
+		if(active)
+			texture = cubeVariant.activeTexture().orElse(null);
+
+		return texture;
 	}
 
 	@Override
-	public int getColor(GeoBone bone, WeightedStorageCubeEntity animatable)
+	public int getColor(GeoBone bone, CubeEntity animatable)
 	{
 		boolean active = this.getAnimatable().isActive();
 		int color = active ? this.getAnimatable().getActiveColor() : this.getAnimatable().getColor();
@@ -88,7 +93,7 @@ public class WeightedStorageCubeRenderer extends DynamicGeoEntityRenderer<Weight
 	}
 
 	@Override
-	public RenderType getRenderType(GeoBone bone, WeightedStorageCubeEntity animatable)
+	public RenderType getRenderType(GeoBone bone, CubeEntity animatable)
 	{
 		return PortalRenderTypes.APERTURE_GLOW.apply(getTexture(bone, animatable), RenderStateShard.TRANSLUCENT_TRANSPARENCY);
 	}

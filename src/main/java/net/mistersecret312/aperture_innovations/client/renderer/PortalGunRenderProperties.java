@@ -3,10 +3,9 @@ package net.mistersecret312.aperture_innovations.client.renderer;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
-import net.mistersecret312.aperture_innovations.client.model.LongFallBootsModel;
+import net.mistersecret312.aperture_innovations.client.renderer.item.PortalGunRenderer;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import org.jetbrains.annotations.Nullable;
 

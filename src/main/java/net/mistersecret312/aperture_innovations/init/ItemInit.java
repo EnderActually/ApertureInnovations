@@ -22,10 +22,8 @@ public class ItemInit
 	public static final DeferredItem<LongFallBootsItem> LONG_FALL_BOOTS = ITEMS.register("long_fall_boots",
 			() -> new LongFallBootsItem(ArmorMaterials.NETHERITE, ArmorItem.Type.BOOTS, new Item.Properties().stacksTo(1).fireResistant()));
 
-	public static final DeferredItem<CubeItem> WEIGHTED_STORAGE_CUBE = ITEMS.register("weighted_storage_cube",
-			() -> new CubeItem(EntityInit.WEIGHTED_STORAGE_CUBE.get(), new Item.Properties().stacksTo(64)));
-	public static final DeferredItem<CompanionCubeItem> WEIGHTED_COMPANION_CUBE = ITEMS.register("weighted_companion_cube",
-			() -> new CompanionCubeItem(EntityInit.WEIGHTED_COMPANION_CUBE.get(), new Item.Properties().stacksTo(64)));
+	public static final DeferredItem<CubeItem> CUBE = ITEMS.register("cube",
+			() -> new CubeItem(new Item.Properties().stacksTo(64)));
 
 	public static void register(IEventBus bus)
 	{

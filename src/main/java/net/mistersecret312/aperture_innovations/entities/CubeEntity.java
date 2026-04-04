@@ -1,51 +1,62 @@
 package net.mistersecret312.aperture_innovations.entities;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializer;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.*;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.vehicle.MinecartChest;
 import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.AnvilBlock;
-import net.minecraft.world.level.block.entity.EnchantingTableBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.block_entities.LargeButtonBlockEntity;
 import net.mistersecret312.aperture_innovations.blocks.LargeButtonBlock;
-import net.mistersecret312.aperture_innovations.init.*;
+import net.mistersecret312.aperture_innovations.client.resourcepack.ClientCubeVariant;
+import net.mistersecret312.aperture_innovations.client.resourcepack.ClientCubeVariants;
+import net.mistersecret312.aperture_innovations.datapack.CubeVariant;
+import net.mistersecret312.aperture_innovations.init.EntityInit;
+import net.mistersecret312.aperture_innovations.init.ItemInit;
+import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.items.ColorfulGelItem;
+import net.mistersecret312.aperture_innovations.items.CubeItem;
+import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
-public class WeightedStorageCubeEntity extends Entity implements GeoEntity, IFizzle
+public class CubeEntity extends Entity implements IFizzle, GeoEntity
 {
-	private static final EntityDataAccessor<Boolean> ACTIVE = SynchedEntityData.defineId(WeightedStorageCubeEntity.class, EntityDataSerializers.BOOLEAN);
-	private static final EntityDataAccessor<Integer> COLOR = SynchedEntityData.defineId(WeightedStorageCubeEntity.class, EntityDataSerializers.INT);
+	public static final EntityDataAccessor<ResourceLocation> VARIANT = SynchedEntityData.defineId(
+			CubeEntity.class, EntityDataSerializer.forValueType(ResourceLocation.STREAM_CODEC));
+
+	private static final EntityDataAccessor<Boolean> ACTIVE = SynchedEntityData.defineId(
+			CubeEntity.class, EntityDataSerializers.BOOLEAN);
+	private static final EntityDataAccessor<Integer> COLOR = SynchedEntityData.defineId(
+			CubeEntity.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Integer> ACTIVE_COLOR = SynchedEntityData.defineId(
-			WeightedStorageCubeEntity.class, EntityDataSerializers.INT);
-
+			CubeEntity.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Integer> FIZZLE_TIME = SynchedEntityData.defineId(
-			WeightedStorageCubeEntity.class, EntityDataSerializers.INT);
-
-	private SimpleContainer container = new SimpleContainer(9);
+			CubeEntity.class, EntityDataSerializers.INT);
 
 	private int lerpSteps;
 	private double lerpX;
@@ -54,16 +65,17 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity, IFiz
 	private double lerpYRot;
 	private double lerpXRot;
 
+	private final SimpleContainer container = new SimpleContainer(9);
 	private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
 
-	public WeightedStorageCubeEntity(EntityType<?> type, Level level)
+	public CubeEntity(EntityType<?> entityType, Level level)
 	{
-		super(type, level);
+		super(entityType, level);
 	}
 
-	public WeightedStorageCubeEntity(Level level)
+	public CubeEntity(Level level)
 	{
-		super(EntityInit.WEIGHTED_STORAGE_CUBE.get(), level);
+		this(EntityInit.CUBE.get(), level);
 	}
 
 	@Override
@@ -110,7 +122,7 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity, IFiz
 	}
 
 	@Override
-	public boolean causeFallDamage(float fallDistance, float multiplier, DamageSource source)
+	public boolean causeFallDamage(float fallDistance, float multiplier, @NotNull DamageSource source)
 	{
 		Level level = this.level();
 
@@ -147,36 +159,47 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity, IFiz
 	}
 
 	@Override
-	public boolean hurt(DamageSource source, float amount)
+	public boolean hurt(@NotNull DamageSource source, float amount)
 	{
 		return false;
 	}
 
 	@Override
-	public boolean skipAttackInteraction(Entity entity)
+	public boolean skipAttackInteraction(@NotNull Entity entity)
 	{
 		return true;
 	}
 
 	@Override
-	public InteractionResult interact(Player player, InteractionHand hand)
+	public @NotNull InteractionResult interact(Player player, @NotNull InteractionHand hand)
 	{
 		Level level = player.level();
 		ItemStack stack = player.getItemInHand(hand);
 
-		if(stack.isEmpty() && !player.isCrouching())
+		if(stack.isEmpty() && !player.isCrouching() && getVariant(level).hasContainer())
 		{
 			player.openMenu(new SimpleMenuProvider(
 					(id, playerInv, playerEntity) ->  new ChestMenu(MenuType.GENERIC_9x1, id, playerInv, container, 1),
 					Component.translatable("container.aperture_innovations.weighted_storage_cube")));
 			return InteractionResult.SUCCESS;
 		}
-		if(stack.isEmpty() && player.isCrouching())
+		if(stack.isEmpty() && player.isShiftKeyDown())
 		{
 			this.kill();
-			ItemEntity item = new ItemEntity(player.level(), this.getX(), this.getY(), this.getZ(),
-					ItemInit.WEIGHTED_STORAGE_CUBE.get().getDefaultInstance());
-			level.addFreshEntity(item);
+
+			if(!player.getAbilities().instabuild)
+			{
+				CubeItem cubeItem = ItemInit.CUBE.get();
+				ItemStack cubeStack = ItemInit.CUBE.get().getDefaultInstance();
+
+				cubeItem.setVariant(stack, getVariantKey());
+				cubeItem.setColor(stack, getColor());
+				cubeItem.setActiveColor(stack, getActiveColor());
+
+				ItemEntity item = new ItemEntity(player.level(), this.getX(), this.getY(), this.getZ(),
+						cubeStack);
+				level.addFreshEntity(item);
+			}
 			return InteractionResult.SUCCESS;
 		}
 		if(stack.getItem() instanceof ColorfulGelItem gelItem)
@@ -200,6 +223,61 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity, IFiz
 			this.lerpPositionAndRotationStep(this.lerpSteps, this.lerpX, this.lerpY, this.lerpZ, this.lerpYRot, this.lerpXRot);
 			this.lerpSteps--;
 		}
+	}
+
+	@Override
+	protected void defineSynchedData(SynchedEntityData.Builder builder)
+	{
+		builder.define(VARIANT, ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+				"weighted_storage_cube"));
+
+		builder.define(ACTIVE, false);
+		builder.define(COLOR, -1);
+		builder.define(ACTIVE_COLOR, -1);
+		builder.define(FIZZLE_TIME, -1);
+	}
+
+	@Override
+	protected void readAdditionalSaveData(CompoundTag tag)
+	{
+		String variantSring = tag.getString("variant");
+		setVariantKey(ResourceLocation.parse(variantSring));
+
+		this.setColor(tag.getInt("color"));
+		this.setActiveColor(tag.getInt("active_color"));
+	}
+
+	@Override
+	protected void addAdditionalSaveData(CompoundTag tag)
+	{
+		tag.putString("variant", getVariantKey().toString());
+
+		tag.putInt("color", this.getColor());
+		tag.putInt("active_color", this.getActiveColor());
+	}
+
+	public ResourceLocation getVariantKey()
+	{
+		return this.entityData.get(VARIANT);
+	}
+
+	public void setVariantKey(ResourceLocation location)
+	{
+		this.entityData.set(VARIANT, location);
+	}
+
+	public ClientCubeVariant getClientVariant()
+	{
+		CubeVariant dataVariant = getVariant(level());
+
+		return ClientCubeVariants.getCubeVariant(dataVariant.getClientVariant());
+	}
+
+	public CubeVariant getVariant(Level level)
+	{
+		Registry<CubeVariant> registry =
+				level.registryAccess().registryOrThrow(CubeVariant.REGISTRY_KEY);
+		return registry.get(getVariantKey());
 	}
 
 	public void fizzle()
@@ -241,12 +319,12 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity, IFiz
 			ItemEntity item = new ItemEntity(level(), position().x, position().y, position().z, stack);
 			level().addFreshEntity(item);
 		}
-		
+
 		super.kill();
 	}
 
 	@Override
-	public boolean canCollideWith(Entity entity)
+	public boolean canCollideWith(@NotNull Entity entity)
 	{
 		if(entity instanceof IFizzle fizzle)
 			return fizzle.getFizzlingTick() == -1;
@@ -259,8 +337,8 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity, IFiz
 		this.lerpX = x;
 		this.lerpY = y;
 		this.lerpZ = z;
-		this.lerpYRot = (double)yRot;
-		this.lerpXRot = (double)xRot;
+		this.lerpYRot = yRot;
+		this.lerpXRot = xRot;
 		this.lerpSteps = 10;
 	}
 
@@ -320,34 +398,6 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity, IFiz
 	}
 
 	@Override
-	protected void defineSynchedData(SynchedEntityData.Builder builder)
-	{
-		builder.define(ACTIVE, false);
-		builder.define(COLOR, -1);
-		builder.define(ACTIVE_COLOR, -1);
-		builder.define(FIZZLE_TIME, -1);
-	}
-
-	@Override
-	protected void readAdditionalSaveData(CompoundTag compound)
-	{
-		if (compound.contains("Inventory")) {
-			this.container.fromTag(compound.getList("Inventory", Tag.TAG_COMPOUND), this.registryAccess());
-		}
-
-		this.setColor(compound.getInt("color"));
-		this.setActiveColor(compound.getInt("active_color"));
-	}
-
-	@Override
-	protected void addAdditionalSaveData(CompoundTag compound)
-	{
-		compound.put("Inventory", this.container.createTag(this.registryAccess()));
-		compound.putInt("color", this.getColor());
-		compound.putInt("active_color", this.getActiveColor());
-	}
-
-	@Override
 	public void registerControllers(AnimatableManager.ControllerRegistrar controllers)
 	{
 
@@ -356,6 +406,6 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity, IFiz
 	@Override
 	public AnimatableInstanceCache getAnimatableInstanceCache()
 	{
-		return this.geoCache;
+		return geoCache;
 	}
 }
