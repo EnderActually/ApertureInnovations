@@ -108,18 +108,15 @@ public abstract class OrientedMasterBlock extends MasterBlock
 			Direction facing = state.getValue(FACING);
 
 			VoxelShape result = rotateVoxelShape(shape, normal.getOpposite(), facing);
+			AABB volume = getMultiblockVolume(level, pos);
 			if(normal.equals(Direction.UP))
-				return result.move(0,1,0);
-			if(normal.equals(Direction.DOWN))
-				return result.move(0, 0, 0);
-			if(normal.equals(Direction.NORTH))
-				return result.move(0,0, 0);
+				return result.move(0,volume.getYsize()/2,0);
 			if(normal.equals(Direction.SOUTH))
-				return result.move(0, 0, 1);
+				return result.move(0, 0, volume.getZsize()/2);
 			if(normal.equals(Direction.EAST))
-				return result.move(1, 0, 0);
-			if(normal.equals(Direction.WEST))
-				return result.move(0, 0, 0);
+				return result.move(volume.getXsize()/2, 0, 0);
+
+			return result;
 		}
 
 		return shape;

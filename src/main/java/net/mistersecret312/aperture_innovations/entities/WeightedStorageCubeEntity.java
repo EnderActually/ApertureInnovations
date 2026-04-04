@@ -75,7 +75,6 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity, IFiz
 		if(getFizzlingTick() >= 0 && getFizzlingTick() < getMaxFizzleTime())
 		{
 			setFizzlingTick(getFizzlingTick() + 1);
-			return;
 		}
 
 		if(getFizzlingTick() == getMaxFizzleTime())
@@ -249,7 +248,10 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity, IFiz
 	@Override
 	public boolean canCollideWith(Entity entity)
 	{
-		return this.getFizzlingTick() == -1;
+		if(entity instanceof IFizzle fizzle)
+			return fizzle.getFizzlingTick() == -1;
+
+		return true;
 	}
 
 	@Override
