@@ -149,9 +149,15 @@
     ]
   },
   "vital_apparatus_vent_close": {
-    "subtitle": "sound.aperture_innovations.vital_apparatus_vent.open",
+    "subtitle": "sound.aperture_innovations.vital_apparatus_vent.close",
     "sounds": [
       "aperture_innovations:dropper_close"
+    ]
+  },
+  "fizzle": {
+    "subtitle": "sound.aperture_innovations.fizzle",
+    "sounds": [
+      "aperture_innovations:generic_fizzle"
     ]
   }
 }

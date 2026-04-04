@@ -13,6 +13,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.block_entities.multiblock.MasterBlockEntity;
 import net.mistersecret312.aperture_innovations.blocks.multiblock.OrientedMasterBlock;
@@ -25,6 +26,7 @@ import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
+import java.util.List;
 import java.util.UUID;
 
 public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements GeoBlockEntity
@@ -39,8 +41,9 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 
 	private EntityType<?> trackingType = EntityInit.WEIGHTED_STORAGE_CUBE.get();
 	private UUID trackingID = null;
+	private CompoundTag trackingData = null;
 
-	private int emptyTime = -1;
+	private int emptyTime = 0;
 
 	public VitalApparatusVentBlockEntity(BlockPos pos, BlockState blockState)
 	{
@@ -53,12 +56,45 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 		if(vent.emptyTime != -1 && vent.emptyTime < 16)
 			vent.emptyTime++;
 
+		Entity trackedEntity = vent.getTrackingEntity(level);
+		if(trackedEntity != null)
+		{
+			CompoundTag tag = trackedEntity.saveWithoutId(new CompoundTag());
+
+			tag.remove("Pos");
+			tag.remove("Motion");
+			tag.remove("Rotation");
+			tag.remove("UUID");
+			tag.remove("FallDistance");
+			tag.remove("Fire");
+			tag.remove("Air");
+			tag.remove("OnGround");
+
+			vent.setTrackingData(tag);
+		}
+
 		if(vent.isOpen() && vent.getOpeningTick() != -1 && vent.getOpeningTick() < 20)
 			vent.setOpeningTick(vent.getOpeningTick()+1);
 
 		if(vent.isOpen() && vent.getOpeningTick() == 16)
 		{
 			vent.summonTrackingEntity(level);
+		}
+
+		if(vent.isOpen())
+		{
+			if(vent.getBlockState().getBlock() instanceof OrientedMasterBlock masterBlock)
+			{
+				AABB volume = masterBlock.getMultiblockVolume(level, pos).move(pos);
+				List<Entity> entities = level.getEntities((Entity) null, volume, entity -> true);
+				for(Entity entity : entities)
+				{
+					Vec3 normal = Vec3.atLowerCornerOf(
+							vent.getBlockState().getValue(OrientedMasterBlock.NORMAL).getNormal());
+					if(normal.y >= 0)
+						entity.addDeltaMovement(normal.multiply(0.25, 0.75, 0.25));
+				}
+			}
 		}
 	}
 
@@ -76,7 +112,11 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 	{
 		tag.putBoolean("open", this.isOpen);
 		tag.putInt("openTick", this.openingTick);
-		tag.putUUID("tracking_id", this.trackingID);
+		if(this.trackingID != null)
+			tag.putUUID("tracking_id", this.trackingID);
+		if(this.trackingData != null)
+			tag.put("tracking_data", this.trackingData);
+
 		tag.putInt("empty_time", this.emptyTime);
 
 		if(this.getTrackingType() != null)
@@ -95,7 +135,11 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 
 		this.isOpen = tag.getBoolean("open");
 		this.openingTick = tag.getInt("openTick");
-		this.trackingID = tag.getUUID("tracking_id");
+		if(tag.contains("tracking_id"))
+			this.trackingID = tag.getUUID("tracking_id");
+		if(tag.contains("tracking_data"))
+			this.trackingData = tag.getCompound("tracking_data");
+
 		this.emptyTime = tag.getInt("empty_time");
 
 		if(tag.contains("tracking_type"))
@@ -149,13 +193,27 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 		this.trackingID = trackingID;
 	}
 
+	public CompoundTag getTrackingData()
+	{
+		return trackingData;
+	}
+
+	public void setTrackingData(CompoundTag trackingData)
+	{
+		this.trackingData = trackingData;
+		setChanged();
+	}
+
 	@SuppressWarnings("unchecked")
 	public <T extends Entity & IFizzle> T getTrackingEntity(Level level)
 	{
+		if(this.getTrackingID() == null)
+			return null;
+
 		if(!(level instanceof ServerLevel serverLevel))
 			return null;
 
-		Entity entity = serverLevel.getEntity(this.trackingID);
+		Entity entity = serverLevel.getEntity(this.getTrackingID());
 		if(!(entity instanceof IFizzle))
 			return null;
 
@@ -198,6 +256,7 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 	public <T extends Entity & IFizzle> void setTrackingType(EntityType<T> type)
 	{
 		this.trackingType = type;
+		this.setTrackingData(new CompoundTag());
 	}
 
 	public void summonTrackingEntity(Level level)
@@ -208,7 +267,11 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 
 		Vec3 normal = Vec3.atLowerCornerOf(getBlockState().getValue(OrientedMasterBlock.NORMAL).getNormal()).multiply(1, 1.3, 1);
 		Vec3 position = getBlockPos().getBottomCenter().add(normal);
+		if(getTrackingData() != null && !getTrackingData().isEmpty())
+			entity.load(getTrackingData());
+
 		entity.setPos(position);
+		entity.setNoGravity(false);
 		level.addFreshEntity(entity);
 		this.setTrackingID(entity.getUUID());
 

@@ -13,6 +13,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.shapes.BooleanOp;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class OrientedMasterBlock extends MasterBlock
@@ -77,7 +80,7 @@ public abstract class OrientedMasterBlock extends MasterBlock
 	}
 
 	@Override
-	public AABB getMultiblockVolume(Level level, BlockPos pos)
+	public final AABB getMultiblockVolume(Level level, BlockPos pos)
 	{
 		BlockState state = level.getBlockState(pos);
 
@@ -87,41 +90,117 @@ public abstract class OrientedMasterBlock extends MasterBlock
 			Direction normal = state.getValue(NORMAL);
 			Direction facing = state.getValue(FACING);
 
-			if(normal.equals(Direction.UP))
-			{
-				if(facing.equals(Direction.NORTH))
-					return original.move(0, 0, -original.getZsize())
-								   .move(-(int) (original.getXsize() / 2), 0, (int) (original.getZsize() / 2));
-				if(facing.equals(Direction.WEST))
-					return original.move(-original.getXsize(), 0, -original.getZsize())
-								   .move((int) (original.getXsize() / 2), 0, (int) (original.getZsize() / 2));
-				if(facing.equals(Direction.SOUTH))
-					return original.move(-original.getXsize(), 0, 0)
-								   .move((int) (original.getXsize() / 2), 0, -(int) (original.getZsize() / 2));
-				return original.move(-(int) (original.getXsize() / 2), 0, -(int) (original.getZsize() / 2));
-			}
-			if(normal.equals(Direction.DOWN))
-				return original.move(-(int) (original.getXsize()/2), -original.getYsize(), -(int) (original.getZsize()/2));
-
-			if(normal.getAxis().equals(Direction.Axis.Z))
-				original = new AABB(original.minX, original.minZ, original.minY, original.maxX, original.maxZ, original.maxY);
-
-			if(normal.getAxis().equals(Direction.Axis.X))
-				original = new AABB(original.minY, original.minX, original.minZ, original.maxY, original.maxX, original.maxZ);
-
-
-			if(normal.equals(Direction.SOUTH))
-				return original.move(-(int) (original.getXsize()/2), -(int) (original.getYsize()/2), 0);
-			if(normal.equals(Direction.EAST))
-				return original.move(0, -(int) (original.getYsize()/2), -(int) (original.getZsize()/2));
-
-			if(normal.equals(Direction.NORTH))
-				return original.move(-(int) (original.getXsize()/2), -(int) (original.getYsize()/2), -original.getZsize());
-			if(normal.equals(Direction.WEST))
-				return original.move(-original.getXsize(), -(int) (original.getYsize()/2), -(int) (original.getZsize()/2));
+			original = rotateAABB(original, normal, facing);
 		}
 
 		return original;
 	}
 
+	@Override
+	public final VoxelShape getFullShape(Level level, BlockPos pos)
+	{
+		BlockState state = level.getBlockState(pos);
+
+		VoxelShape shape = this.getDefaultVoxelShape(level, pos);
+		if(state.hasProperty(FACING) && state.hasProperty(NORMAL))
+		{
+			Direction normal = state.getValue(NORMAL);
+			Direction facing = state.getValue(FACING);
+
+			VoxelShape result = rotateVoxelShape(shape, normal.getOpposite(), facing);
+			if(normal.equals(Direction.UP))
+				return result.move(0,1,0);
+			if(normal.equals(Direction.DOWN))
+				return result.move(0, 0, 0);
+			if(normal.equals(Direction.NORTH))
+				return result.move(0,0, 0);
+			if(normal.equals(Direction.SOUTH))
+				return result.move(0, 0, 1);
+			if(normal.equals(Direction.EAST))
+				return result.move(1, 0, 0);
+			if(normal.equals(Direction.WEST))
+				return result.move(0, 0, 0);
+		}
+
+		return shape;
+	}
+
+	protected AABB rotateAABB(AABB original, Direction normal, Direction facing)
+	{
+		if(normal.equals(Direction.UP))
+		{
+			if(facing.equals(Direction.NORTH))
+				return original.move(0, 0, -original.getZsize())
+							   .move(-(int) (original.getXsize() / 2), 0, (int) (original.getZsize() / 2));
+			if(facing.equals(Direction.WEST))
+				return original.move(-original.getXsize(), 0, -original.getZsize())
+							   .move((int) (original.getXsize() / 2), 0, (int) (original.getZsize() / 2));
+			if(facing.equals(Direction.SOUTH))
+				return original.move(-original.getXsize(), 0, 0)
+							   .move((int) (original.getXsize() / 2), 0, -(int) (original.getZsize() / 2));
+			return original.move(-(int) (original.getXsize() / 2), 0, -(int) (original.getZsize() / 2));
+		}
+		if(normal.equals(Direction.DOWN))
+			return original.move(-(int) (original.getXsize()/2), -original.getYsize(), -(int) (original.getZsize()/2));
+
+		if(normal.getAxis().equals(Direction.Axis.Z))
+			original = new AABB(original.minX, original.minZ, original.minY, original.maxX, original.maxZ, original.maxY);
+
+		if(normal.getAxis().equals(Direction.Axis.X))
+			original = new AABB(original.minY, original.minX, original.minZ, original.maxY, original.maxX, original.maxZ);
+
+
+		if(normal.equals(Direction.SOUTH))
+			return original.move(-(int) (original.getXsize()/2), -(int) (original.getYsize()/2), 0);
+		if(normal.equals(Direction.EAST))
+			return original.move(0, -(int) (original.getYsize()/2), -(int) (original.getZsize()/2));
+
+		if(normal.equals(Direction.NORTH))
+			return original.move(-(int) (original.getXsize()/2), -(int) (original.getYsize()/2), -original.getZsize());
+		if(normal.equals(Direction.WEST))
+			return original.move(-original.getXsize(), -(int) (original.getYsize()/2), -(int) (original.getZsize()/2));
+
+		return original;
+	}
+
+	protected VoxelShape rotateVoxelShape(VoxelShape original, Direction normal, Direction facing)
+	{
+		original = swapShapeAxis(original, normal);
+
+		return original;
+	}
+
+	protected final VoxelShape swapShapeAxis(VoxelShape shape, Direction normal)
+	{
+		VoxelShape result = Shapes.empty();
+
+		Direction.Axis axis = normal.getAxis();
+		boolean positive = normal.getAxisDirection().equals(Direction.AxisDirection.POSITIVE);
+
+		for(AABB original : shape.toAabbs())
+		{
+			if(axis.equals(Direction.Axis.Z))
+				original = new AABB(original.minX, original.minZ, original.minY, original.maxX, original.maxZ,
+						original.maxY);
+
+			if(axis.equals(Direction.Axis.X))
+				original = new AABB(original.minY, original.minX, original.minZ, original.maxY, original.maxX,
+						original.maxZ);
+
+			if(!positive)
+			{
+				original = switch(axis)
+				{
+					case X -> new AABB(-original.maxX, original.minY, original.minZ,
+							-original.minX, original.maxY, original.maxZ);
+					case Y -> new AABB(original.minX, -original.maxY, original.minZ,
+							original.maxX, -original.minY, original.maxZ);
+					case Z -> new AABB(original.minX, original.minY, -original.maxZ,
+							original.maxX, original.maxY, -original.minZ);
+				};
+			}
+			result = Shapes.joinUnoptimized(result, Shapes.create(original), BooleanOp.OR);
+		}
+		return result.optimize();
+	}
 }

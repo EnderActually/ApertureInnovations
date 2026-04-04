@@ -155,6 +155,11 @@ public abstract class MasterBlock extends BaseEntityBlock
 
 	public VoxelShape getFullShape(Level level, BlockPos pos)
 	{
+		return getDefaultVoxelShape(level, pos);
+	}
+
+	public VoxelShape getDefaultVoxelShape(Level level, BlockPos pos)
+	{
 		return Shapes.create(getMultiblockVolume(level, pos).expandTowards(1, 1, 1));
 	}
 

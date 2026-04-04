@@ -2,13 +2,11 @@ package net.mistersecret312.aperture_innovations.blocks;
 
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -20,16 +18,12 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.mistersecret312.aperture_innovations.block_entities.LargeButtonBlockEntity;
 import net.mistersecret312.aperture_innovations.block_entities.VitalApparatusVentBlockEntity;
-import net.mistersecret312.aperture_innovations.blocks.multiblock.MasterBlock;
 import net.mistersecret312.aperture_innovations.blocks.multiblock.OrientedMasterBlock;
 import net.mistersecret312.aperture_innovations.init.BlockEntityInit;
 import net.mistersecret312.aperture_innovations.init.EntityInit;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import org.jetbrains.annotations.Nullable;
-import software.bernie.geckolib.animation.AnimatableManager;
-import software.bernie.geckolib.animation.AnimationController;
 
 public class VitalApparatusVentBlock extends OrientedMasterBlock
 {
@@ -72,7 +66,7 @@ public class VitalApparatusVentBlock extends OrientedMasterBlock
 	}
 
 	@Override
-	public VoxelShape getFullShape(Level level, BlockPos pos)
+	public VoxelShape getDefaultVoxelShape(Level level, BlockPos pos)
 	{
 		if(level.getBlockEntity(pos) instanceof VitalApparatusVentBlockEntity vent)
 		{

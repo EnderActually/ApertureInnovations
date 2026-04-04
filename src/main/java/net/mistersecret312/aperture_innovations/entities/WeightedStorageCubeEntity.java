@@ -16,6 +16,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.vehicle.MinecartChest;
 import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
@@ -206,6 +207,7 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity, IFiz
 	{
 		this.setNoGravity(true);
 		setFizzlingTick(0);
+		playSound(SoundInit.FIZZLE.get(), 0.33f, 1f);
 	}
 
 	@Override
@@ -330,12 +332,17 @@ public class WeightedStorageCubeEntity extends Entity implements GeoEntity, IFiz
 		if (compound.contains("Inventory")) {
 			this.container.fromTag(compound.getList("Inventory", Tag.TAG_COMPOUND), this.registryAccess());
 		}
+
+		this.setColor(compound.getInt("color"));
+		this.setActiveColor(compound.getInt("active_color"));
 	}
 
 	@Override
 	protected void addAdditionalSaveData(CompoundTag compound)
 	{
 		compound.put("Inventory", this.container.createTag(this.registryAccess()));
+		compound.putInt("color", this.getColor());
+		compound.putInt("active_color", this.getActiveColor());
 	}
 
 	@Override
