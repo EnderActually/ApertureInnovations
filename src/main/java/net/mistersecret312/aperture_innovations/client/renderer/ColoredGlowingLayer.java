@@ -34,28 +34,28 @@ public class ColoredGlowingLayer<T extends GeoAnimatable> extends AutoGlowingGeo
 			IDynamicTexture<T> texture = ((IDynamicTexture<T>) getRenderer());
 			for(GeoBone bone : bakedModel.topLevelBones())
 			{
-				if(texture.getTexture(bone, animatable) == null)
-					return;
-				renderType = texture.getRenderType(bone, animatable);
-				renderColoredCube(poseStack, bone, bufferSource.getBuffer(renderType), packedLight,
-						packedOverlay, texture.getColor(bone, animatable));
+				renderColoredCube(texture, animatable, poseStack, bone, bufferSource, packedLight,
+						packedOverlay);
 			}
 		}
 	}
 
-	public void renderColoredCube(PoseStack poseStack, GeoBone bone, VertexConsumer buffer,
-								  int packedLight, int packedOverlay, int color)
+	public void renderColoredCube(IDynamicTexture<T> texture, T animatable, PoseStack poseStack,
+								  GeoBone bone, MultiBufferSource bufferSource,
+								  int packedLight, int packedOverlay)
 	{
-		getRenderer().renderCubesOfBone(poseStack, bone, buffer,
-				packedLight, packedOverlay, color);
+		if(texture.getTexture(bone, animatable) != null)
+			getRenderer().renderCubesOfBone(poseStack, bone,
+					bufferSource.getBuffer(texture.getRenderType(bone, animatable)), packedLight,
+					packedOverlay, texture.getColor(bone, animatable));
 
 		if(bone.isHidingChildren())
 			return;
 
 		for(GeoBone childBone : bone.getChildBones())
 		{
-			renderColoredCube(poseStack, childBone, buffer,
-					packedLight, packedOverlay, color);
+			renderColoredCube(texture, animatable, poseStack, childBone, bufferSource,
+					packedLight, packedOverlay);
 		}
 	}
 }

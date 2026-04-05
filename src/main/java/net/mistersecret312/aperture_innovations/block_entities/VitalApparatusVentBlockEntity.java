@@ -12,7 +12,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -41,9 +40,9 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 	private boolean isOpen = false;
 	private int openingTick = -1;
 
-	private EntityType<?> trackingType = EntityInit.WEIGHTED_STORAGE_CUBE.get();
+	private EntityType<?> trackingType = EntityInit.CUBE.get();
 	private UUID trackingID = null;
-	private CompoundTag trackingData = null;
+	private CompoundTag trackingData = new CompoundTag();
 
 	private int emptyTime = 0;
 
@@ -94,7 +93,7 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 					Vec3 normal = Vec3.atLowerCornerOf(
 							vent.getBlockState().getValue(OrientedMasterBlock.NORMAL).getNormal());
 					if(normal.y >= 0)
-						entity.addDeltaMovement(normal.multiply(0.25, 0.75, 0.25));
+						entity.addDeltaMovement(normal.multiply(0.25, 0.6, 0.25));
 				}
 			}
 		}
@@ -149,7 +148,7 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 			String locationString = tag.getString("tracking_type");
 			ResourceLocation location = ResourceLocation.parse(locationString);
 
-			this.trackingType = BuiltInRegistries.ENTITY_TYPE.getOptional(location).orElse(EntityInit.WEIGHTED_STORAGE_CUBE.get());
+			this.trackingType = BuiltInRegistries.ENTITY_TYPE.getOptional(location).orElse(EntityInit.CUBE.get());
 		}
 	}
 

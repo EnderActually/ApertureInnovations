@@ -74,9 +74,6 @@ public class VitalApparatusVentRenderer extends DynamicGeoBlockRenderer<VitalApp
 		if(level == null)
 			return;
 
-		if(vent.getTrackingData() == null)
-			return;
-
 		Entity entity = vent.getTrackingType().create(level);
 		if(entity == null)
 			return;

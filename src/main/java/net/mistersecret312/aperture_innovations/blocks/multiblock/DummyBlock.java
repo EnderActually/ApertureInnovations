@@ -11,11 +11,13 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -58,6 +60,23 @@ public class DummyBlock extends BaseEntityBlock
 
 		MasterBlock masterBlock = (MasterBlock) master.getBlockState().getBlock();
 		return masterBlock.useItemLess(master.getBlockState(), level, master.getBlockPos(), player, hitResult);
+	}
+
+	@Override
+	public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos,
+									   Player player)
+	{
+		if(!(level instanceof Level realLevel))
+			return ItemStack.EMPTY;
+
+		MasterBlockEntity master = getMaster(realLevel, pos);
+		if(master == null)
+			return ItemStack.EMPTY;
+
+		MasterBlock masterBlock = (MasterBlock) master.getBlockState().getBlock();
+		return masterBlock.getCloneItemStack(state, target, realLevel, pos, player);
+
+
 	}
 
 	@Override

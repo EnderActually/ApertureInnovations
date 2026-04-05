@@ -1,14 +1,19 @@
 package net.mistersecret312.aperture_innovations.entities;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializer;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -33,11 +38,14 @@ import net.mistersecret312.aperture_innovations.blocks.LargeButtonBlock;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientCubeVariant;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientCubeVariants;
 import net.mistersecret312.aperture_innovations.datapack.CubeVariant;
+import net.mistersecret312.aperture_innovations.init.EntityDataSerializerInit;
 import net.mistersecret312.aperture_innovations.init.EntityInit;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.items.ColorfulGelItem;
 import net.mistersecret312.aperture_innovations.items.CubeItem;
+import net.mistersecret312.aperture_innovations.network.ClientboundFizzleParticlesPacket;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
@@ -47,7 +55,7 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 public class CubeEntity extends Entity implements IFizzle, GeoEntity
 {
 	public static final EntityDataAccessor<ResourceLocation> VARIANT = SynchedEntityData.defineId(
-			CubeEntity.class, EntityDataSerializer.forValueType(ResourceLocation.STREAM_CODEC));
+			CubeEntity.class, EntityDataSerializerInit.RESOURCE_LOCATION.get());
 
 	private static final EntityDataAccessor<Boolean> ACTIVE = SynchedEntityData.defineId(
 			CubeEntity.class, EntityDataSerializers.BOOLEAN);
@@ -87,6 +95,8 @@ public class CubeEntity extends Entity implements IFizzle, GeoEntity
 		if(getFizzlingTick() >= 0 && getFizzlingTick() < getMaxFizzleTime())
 		{
 			setFizzlingTick(getFizzlingTick() + 1);
+			if(!level().isClientSide())
+				PacketDistributor.sendToPlayersTrackingEntity(this, new ClientboundFizzleParticlesPacket(this.getId()));
 		}
 
 		if(getFizzlingTick() == getMaxFizzleTime())
@@ -116,6 +126,8 @@ public class CubeEntity extends Entity implements IFizzle, GeoEntity
 		float friction = 0.85f;
 		if(!this.onGround())
 			friction = 0.95f;
+		if(getFizzlingTick() != -1)
+			friction = 1f;
 
 		this.setDeltaMovement(this.getDeltaMovement().multiply(friction, 1f, friction));
 		this.move(MoverType.SELF, this.getDeltaMovement());
@@ -245,6 +257,8 @@ public class CubeEntity extends Entity implements IFizzle, GeoEntity
 
 		this.setColor(tag.getInt("color"));
 		this.setActiveColor(tag.getInt("active_color"));
+
+		this.container.fromTag(tag.getList("container", Tag.TAG_COMPOUND), this.registryAccess());
 	}
 
 	@Override
@@ -254,6 +268,8 @@ public class CubeEntity extends Entity implements IFizzle, GeoEntity
 
 		tag.putInt("color", this.getColor());
 		tag.putInt("active_color", this.getActiveColor());
+
+		tag.put("container", this.container.createTag(this.registryAccess()));
 	}
 
 	public ResourceLocation getVariantKey()
@@ -269,6 +285,8 @@ public class CubeEntity extends Entity implements IFizzle, GeoEntity
 	public ClientCubeVariant getClientVariant()
 	{
 		CubeVariant dataVariant = getVariant(level());
+		if(dataVariant == null)
+			return ClientCubeVariant.DEFAULT_VARIANT;
 
 		return ClientCubeVariants.getCubeVariant(dataVariant.getClientVariant());
 	}

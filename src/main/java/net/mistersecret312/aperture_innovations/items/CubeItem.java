@@ -1,9 +1,14 @@
 package net.mistersecret312.aperture_innovations.items;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.dispenser.DispenseItemBehavior;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.DoubleTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -14,6 +19,7 @@ import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.DispenserBlock;
@@ -21,23 +27,27 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.client.renderer.item.CubeItemRenderer;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientCubeVariant;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientCubeVariants;
 import net.mistersecret312.aperture_innovations.datapack.CubeVariant;
 import net.mistersecret312.aperture_innovations.entities.CubeEntity;
 import net.mistersecret312.aperture_innovations.init.DataComponentInit;
 import net.mistersecret312.aperture_innovations.init.EntityInit;
+import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
-import software.bernie.geckolib.animatable.GeoAnimatable;
+import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoItem;
 import software.bernie.geckolib.animatable.SingletonGeoAnimatable;
+import software.bernie.geckolib.animatable.client.GeoRenderProvider;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.awt.*;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class CubeItem extends Item implements GeoItem
 {
@@ -49,6 +59,16 @@ public class CubeItem extends Item implements GeoItem
 		SingletonGeoAnimatable.registerSyncedAnimatable(this);
 	}
 
+	public static ItemStack createCube(ResourceLocation variant)
+	{
+		CubeItem item = ItemInit.CUBE.get();
+		ItemStack stack = item.getDefaultInstance();
+
+		item.setVariant(stack, variant);
+
+		return stack;
+	}
+
 	public static DispenseItemBehavior getDispenserBehaviour()
 	{
 		return (blockSource, item) ->
@@ -56,21 +76,29 @@ public class CubeItem extends Item implements GeoItem
 				if(!(item.getItem() instanceof CubeItem cubeItem))
 					return item;
 
-				Level level = blockSource.level();
+				ServerLevel level = blockSource.level();
 				Vec3 dirVec = Vec3.atLowerCornerOf(blockSource.state().getValue(DispenserBlock.FACING).getNormal());
 				EntityType<?> entitytype = EntityInit.CUBE.get();
-				Entity entity = entitytype.spawn((ServerLevel)level, null, null,
+				CompoundTag tag = new CompoundTag();
+
+				tag.putInt("color", cubeItem.getColor(item));
+				tag.putInt("active_color", cubeItem.getActiveColor(item));
+				tag.putString("variant", cubeItem.getVariant(item).toString());
+
+				ListTag motion = new ListTag(3);
+				Vec3 speed = dirVec.multiply(0.5, dirVec.y < 0 ? 0 : 0.5, 0.5);
+				motion.add(DoubleTag.valueOf(speed.x));
+				motion.add(DoubleTag.valueOf(speed.y));
+				motion.add(DoubleTag.valueOf(speed.z));
+				tag.put("Motion", motion);
+
+				item.set(DataComponents.ENTITY_DATA, CustomData.of(tag));
+				Entity entity = entitytype.spawn(level, item, null,
 						BlockPos.containing(blockSource.center().add(dirVec)), MobSpawnType.SPAWN_EGG,
 						true, false);
-				if (entity instanceof CubeEntity cube)
+				item.remove(DataComponents.ENTITY_DATA);
+				if(entity != null)
 				{
-					cube.setDeltaMovement(
-							dirVec.multiply(0.5, dirVec.y < 0 ? 0 : 0.5, 0.5));
-
-					cube.setVariantKey(cubeItem.getVariant(item));
-					cube.setColor(cubeItem.getColor(item));
-					cube.setActiveColor(cubeItem.getActiveColor(item));
-
 					item.shrink(1);
 					return item;
 				}
@@ -79,8 +107,15 @@ public class CubeItem extends Item implements GeoItem
 	}
 
 	@Override
-	public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> components,
-								TooltipFlag tooltipFlag)
+	public @NotNull Component getName(@NotNull ItemStack stack)
+	{
+		ResourceLocation key = getVariant(stack);
+		return Component.translatable("item."+key.getNamespace()+"."+key.getPath());
+	}
+
+	@Override
+	public void appendHoverText(@NotNull ItemStack stack, @NotNull TooltipContext context, @NotNull List<Component> components,
+								@NotNull TooltipFlag tooltipFlag)
 	{
 		super.appendHoverText(stack, context, components, tooltipFlag);
 
@@ -94,7 +129,22 @@ public class CubeItem extends Item implements GeoItem
 	}
 
 	@Override
-	public InteractionResult useOn(UseOnContext context)
+	public void createGeoRenderer(Consumer<GeoRenderProvider> consumer) {
+		consumer.accept(new GeoRenderProvider() {
+			private CubeItemRenderer renderer;
+
+			@Override
+			public BlockEntityWithoutLevelRenderer getGeoItemRenderer() {
+				if (this.renderer == null)
+					this.renderer = new CubeItemRenderer();
+
+				return this.renderer;
+			}
+		});
+	}
+
+	@Override
+	public @NotNull InteractionResult useOn(UseOnContext context)
 	{
 		Level level = context.getLevel();
 		if(level.isClientSide())
@@ -115,17 +165,19 @@ public class CubeItem extends Item implements GeoItem
 		}
 
 		EntityType<?> entitytype = EntityInit.CUBE.get();
+
+		CompoundTag tag = new CompoundTag();
+
+		tag.putInt("color", this.getColor(itemstack));
+		tag.putInt("active_color", this.getActiveColor(itemstack));
+		tag.putString("variant", this.getVariant(itemstack).toString());
+
+		itemstack.set(DataComponents.ENTITY_DATA, CustomData.of(tag));
 		Entity spawned = entitytype.spawn((ServerLevel)level, itemstack, context.getPlayer(),
 				blockpos1, MobSpawnType.SPAWN_EGG, true, false);
+		itemstack.remove(DataComponents.ENTITY_DATA);
 		if (spawned != null)
 		{
-			if(spawned instanceof CubeEntity cube)
-			{
-				cube.setVariantKey(item.getVariant(itemstack));
-				cube.setColor(item.getColor(itemstack));
-				cube.setActiveColor(item.getActiveColor(itemstack));
-			}
-
 			itemstack.shrink(1);
 			level.gameEvent(context.getPlayer(), GameEvent.ENTITY_PLACE, blockpos);
 		}
@@ -142,6 +194,9 @@ public class CubeItem extends Item implements GeoItem
 	@OnlyIn(Dist.CLIENT)
 	public ClientCubeVariant getCubeVariant(ItemStack stack)
 	{
+		if(Minecraft.getInstance().level == null)
+			return ClientCubeVariant.DEFAULT_VARIANT;
+
 		CubeVariant variant =  Minecraft.getInstance().level.registryAccess()
 											.registryOrThrow(CubeVariant.REGISTRY_KEY)
 											.get(getVariant(stack));
@@ -159,7 +214,7 @@ public class CubeItem extends Item implements GeoItem
 
 	public Integer getColor(ItemStack stack)
 	{
-		return stack.get(DataComponentInit.COLOR);
+		return stack.getOrDefault(DataComponentInit.COLOR, -1);
 	}
 
 	public void setColor(ItemStack stack, int color)
@@ -169,7 +224,7 @@ public class CubeItem extends Item implements GeoItem
 
 	public Integer getActiveColor(ItemStack stack)
 	{
-		return stack.get(DataComponentInit.ACTIVE_COLOR);
+		return stack.getOrDefault(DataComponentInit.ACTIVE_COLOR, -1);
 	}
 
 	public void setActiveColor(ItemStack stack, int color)

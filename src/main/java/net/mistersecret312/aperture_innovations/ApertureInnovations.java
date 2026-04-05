@@ -82,6 +82,7 @@ public class ApertureInnovations
 		AdvancementInit.register(modEventBus);
 		AttachmentTypeInit.register(modEventBus);
 		DataComponentInit.register(modEventBus);
+		EntityDataSerializerInit.register(modEventBus);
 
 		modEventBus.addListener(Layers::registerLayers);
 		modEventBus.addListener(NetworkInit::registerPackets);
@@ -200,9 +201,6 @@ public class ApertureInnovations
 					BakedModel newModel = new TintBakedModelWrapper(entry.getValue());
 					event.getModels().put(entry.getKey(), newModel);
 				}
-				//				if (entry.getKey().id().getPath().contains("block/")) {
-//					event.getModels().put(entry.getKey(), new TintBakedModelWrapper(entry.getValue()));
-//				}
 			}
 		}
 

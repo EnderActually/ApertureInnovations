@@ -72,6 +72,8 @@ public class CubeRenderer extends DynamicGeoEntityRenderer<CubeEntity> implement
 		boolean active = animatable.isActive();
 		int color = active ? animatable.getActiveColor() : animatable.getColor();
 		ClientCubeVariant cubeVariant = animatable.getClientVariant();
+		if(!bone.getName().equals("ColoredCircle"))
+			return null;
 
 		ResourceLocation texture = animatable.getClientVariant().idleTexture().orElse(null);
 		if(color != -1)

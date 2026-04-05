@@ -128,5 +128,11 @@ public class NetworkInit
 				ClientboundGunZapSoundPacket.STREAM_CODEC,
 				ClientboundGunZapSoundPacket::handle
 		);
+
+		registrar.playToClient(
+				ClientboundFizzleParticlesPacket.TYPE,
+				ClientboundFizzleParticlesPacket.STREAM_CODEC,
+				ClientboundFizzleParticlesPacket::handle
+		);
 	}
 }
