@@ -4,6 +4,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterials;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.items.*;
 import net.neoforged.bus.api.IEventBus;
@@ -23,7 +24,10 @@ public class ItemInit
 			() -> new LongFallBootsItem(ArmorMaterials.NETHERITE, ArmorItem.Type.BOOTS, new Item.Properties().stacksTo(1).fireResistant()));
 
 	public static final DeferredItem<CubeItem> CUBE = ITEMS.register("cube",
-			() -> new CubeItem(new Item.Properties().stacksTo(64)));
+			() -> new CubeItem(new Item.Properties().stacksTo(64).fireResistant()));
+
+	public static final DeferredItem<MultiBlockItem> VITAL_APPARATUS_VENT = ITEMS.register("vital_apparatus_vent",
+			() -> new MultiBlockItem(BlockInit.VITAL_APPARATUS_VENT.get(), new Item.Properties().stacksTo(64).fireResistant()));
 
 	public static void register(IEventBus bus)
 	{

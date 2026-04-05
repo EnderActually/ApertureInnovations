@@ -153,7 +153,7 @@ public abstract class MasterBlock extends BaseEntityBlock
 	//TODO gets mathed out correctly and center the shapes Joining
 	//TODO At a later point, make it only calculate this once and then cache it in the block entity;
 
-	public VoxelShape getFullShape(Level level, BlockPos pos)
+	public VoxelShape getFullShape(Level level, BlockPos pos, BlockState state)
 	{
 		return getDefaultVoxelShape(level, pos);
 	}
@@ -169,7 +169,7 @@ public abstract class MasterBlock extends BaseEntityBlock
 		if(!(level instanceof Level realLevel))
 			return Shapes.empty();
 
-		VoxelShape actualVolume = this.getFullShape(realLevel, pos);
+		VoxelShape actualVolume = this.getFullShape(realLevel, pos, state);
 		Vec3 offset = Vec3.ZERO;
 
 		BlockEntity blockEntity = level.getBlockEntity(pos);

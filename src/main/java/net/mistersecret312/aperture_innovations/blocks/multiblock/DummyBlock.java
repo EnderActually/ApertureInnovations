@@ -170,12 +170,12 @@ public class DummyBlock extends BaseEntityBlock
 			return Shapes.empty();
 
 		MasterBlock masterBlock = getMasterBlock(realLevel, pos);
+		MasterBlockEntity master = getMaster(realLevel, pos);
 		if(masterBlock == null)
  			return Shapes.block();
 
 		BlockPos masterPos = getMasterPos(realLevel, pos);
-
-		VoxelShape actualVolume = masterBlock.getFullShape(realLevel, masterPos);
+		VoxelShape actualVolume = masterBlock.getFullShape(realLevel, masterPos, master.getBlockState());
 		Vec3 offset = Vec3.ZERO;
 
 		BlockEntity blockEntity = level.getBlockEntity(pos);

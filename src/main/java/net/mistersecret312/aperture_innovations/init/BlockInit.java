@@ -51,7 +51,7 @@ public class BlockInit
     public static final DeferredBlock<Block> DUMMY_BLOCK = BLOCKS.register("dummy_block",
             () -> new DummyBlock(BlockBehaviour.Properties.of().noLootTable()));
 
-    public static final DeferredBlock<Block> VITAL_APPARATUS_VENT = registerBlock("vital_apparatus_vent",
+    public static final DeferredBlock<VitalApparatusVentBlock> VITAL_APPARATUS_VENT = BLOCKS.register("vital_apparatus_vent",
             () -> new VitalApparatusVentBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)));
 
     private static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block)

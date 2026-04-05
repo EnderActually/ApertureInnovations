@@ -97,10 +97,8 @@ public abstract class OrientedMasterBlock extends MasterBlock
 	}
 
 	@Override
-	public final VoxelShape getFullShape(Level level, BlockPos pos)
+	public final VoxelShape getFullShape(Level level, BlockPos pos, BlockState state)
 	{
-		BlockState state = level.getBlockState(pos);
-
 		VoxelShape shape = this.getDefaultVoxelShape(level, pos);
 		if(state.hasProperty(FACING) && state.hasProperty(NORMAL))
 		{
