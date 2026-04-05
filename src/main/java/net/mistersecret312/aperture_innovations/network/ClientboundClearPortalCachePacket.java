@@ -12,7 +12,7 @@ public record ClientboundClearPortalCachePacket() implements CustomPacketPayload
 {
 
 	public static final CustomPacketPayload.Type<ClientboundClearPortalCachePacket> TYPE = new CustomPacketPayload.Type<>(
-			ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "s2c_capability"));
+			ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "s2c_clear_cache"));
 
 	public static final StreamCodec<ByteBuf, ClientboundClearPortalCachePacket> STREAM_CODEC = new StreamCodec<>()
 	{
