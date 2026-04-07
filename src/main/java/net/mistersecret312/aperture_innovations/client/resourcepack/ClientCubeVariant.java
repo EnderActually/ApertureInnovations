@@ -13,9 +13,9 @@ public record ClientCubeVariant(ResourceLocation modelPath, ResourceLocation hul
 {
 	public static final String MODEL = "model";
 	public static final String HULL = "hull_texture";
-	public static final String IDLE = "idle_texture";
-	public static final String ACTIVE = "active_texture";
-	public static final String GENERIC = "generic_texture";
+	public static final String IDLE = "idle_glow_texture";
+	public static final String ACTIVE = "active_glow_texture";
+	public static final String GENERIC = "coloring_glow_texture";
 
 	public static final Codec<ClientCubeVariant> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 			ResourceLocation.CODEC.fieldOf(MODEL).forGetter(ClientCubeVariant::modelPath),
