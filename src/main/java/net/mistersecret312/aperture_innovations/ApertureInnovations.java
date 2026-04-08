@@ -30,6 +30,7 @@ import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
 import net.mistersecret312.aperture_innovations.init.*;
 import net.mistersecret312.aperture_innovations.items.*;
 import net.mistersecret312.aperture_innovations.mixin.BlockColorAccessor;
+import net.mistersecret312.aperture_innovations.multitool.ConfigurationType;
 import net.mistersecret312.aperture_innovations.utilities.WorldColoringUtils;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -83,11 +84,13 @@ public class ApertureInnovations
 		AttachmentTypeInit.register(modEventBus);
 		DataComponentInit.register(modEventBus);
 		EntityDataSerializerInit.register(modEventBus);
+		MultiToolConfigTypeInit.register(modEventBus);
 
 		modEventBus.addListener(Layers::registerLayers);
 		modEventBus.addListener(NetworkInit::registerPackets);
 		modEventBus.addListener(ApertureInnovations::registerCapabilities);
 		modEventBus.addListener(ApertureInnovations::commonSetup);
+		modEventBus.addListener(ApertureInnovations::registerRegistry);
 
 		modEventBus.addListener((DataPackRegistryEvent.NewRegistry event) ->
 			{
@@ -98,6 +101,11 @@ public class ApertureInnovations
 		modContainer.registerConfig(ModConfig.Type.COMMON, Config.COMMON_CONFIG, "aperture_innovations-common.toml");
 		if(dist.isClient())
 			modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+	}
+
+	public static void registerRegistry(NewRegistryEvent event)
+	{
+		event.register(MultiToolConfigTypeInit.REGISTRY);
 	}
 
 	public static void commonSetup(FMLCommonSetupEvent event)

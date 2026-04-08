@@ -20,17 +20,21 @@ import net.mistersecret312.aperture_innovations.blocks.multiblock.OrientedMaster
 import net.mistersecret312.aperture_innovations.entities.IFizzle;
 import net.mistersecret312.aperture_innovations.init.BlockEntityInit;
 import net.mistersecret312.aperture_innovations.init.EntityInit;
+import net.mistersecret312.aperture_innovations.init.MultiToolConfigTypeInit;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.items.CubeItem;
+import net.mistersecret312.aperture_innovations.multitool.ConfigurationProperty;
+import net.mistersecret312.aperture_innovations.multitool.IHaveConfiguration;
 import software.bernie.geckolib.animatable.GeoBlockEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements GeoBlockEntity
+public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements GeoBlockEntity, IHaveConfiguration
 {
 	protected static final RawAnimation OPEN = RawAnimation.begin().thenPlayAndHold("open");
 	protected static final RawAnimation CLOSE = RawAnimation.begin().thenPlay("close");
@@ -43,6 +47,10 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 	private EntityType<?> trackingType = EntityInit.CUBE.get();
 	private UUID trackingID = null;
 	private CompoundTag trackingData = new CompoundTag();
+
+	private int hullColor;
+	private int activeColor;
+	private int idleColor;
 
 	private int emptyTime = 0;
 
@@ -205,6 +213,36 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 		setChanged();
 	}
 
+	public int getHullColor()
+	{
+		return hullColor;
+	}
+
+	public void setHullColor(int hullColor)
+	{
+		this.hullColor = hullColor;
+	}
+
+	public int getActiveColor()
+	{
+		return activeColor;
+	}
+
+	public void setActiveColor(int activeColor)
+	{
+		this.activeColor = activeColor;
+	}
+
+	public int getIdleColor()
+	{
+		return idleColor;
+	}
+
+	public void setIdleColor(int idleColor)
+	{
+		this.idleColor = idleColor;
+	}
+
 	public Entity getTrackingEntity(Level level)
 	{
 		if(this.getTrackingID() == null)
@@ -345,5 +383,31 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 		super.setChanged();
 		if(level != null)
 			level.markAndNotifyBlock(getBlockPos(), level.getChunkAt(getBlockPos()), getBlockState(), getBlockState(), 3, 512);
+	}
+
+	@Override
+	public List<ConfigurationProperty<?>> getConfigurationProperties()
+	{
+		List<ConfigurationProperty<?>> list = new ArrayList<>();
+		list.add(new ConfigurationProperty<>("hull_color",
+				"multi_tool.aperture_innovations.vital_apparatus_vent.hull_color",
+				MultiToolConfigTypeInit.INT.get(),
+				this::setHullColor, this::getHullColor));
+		list.add(new ConfigurationProperty<>("active_color",
+				"multi_tool.aperture_innovations.vital_apparatus_vent.active_color",
+				MultiToolConfigTypeInit.INT.get(),
+				this::setActiveColor, this::getActiveColor));
+		list.add(new ConfigurationProperty<>("idle_color",
+				"multi_tool.aperture_innovations.vital_apparatus_vent.idle_color",
+				MultiToolConfigTypeInit.INT.get(),
+				this::setIdleColor, this::getIdleColor));
+
+//		if(true)
+//		{
+//			ConfigurationProperty<?> first = list.getFirst();
+//			first.setUnsafe(15);
+//		}
+
+		return list;
 	}
 }
