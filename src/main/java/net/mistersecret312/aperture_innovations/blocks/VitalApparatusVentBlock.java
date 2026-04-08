@@ -10,6 +10,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -40,9 +41,6 @@ public class VitalApparatusVentBlock extends OrientedMasterBlock
 											   BlockHitResult hitResult)
 	{
 		BlockEntity blockEntity = level.getBlockEntity(pos);
-		if(!level.isClientSide() && blockEntity instanceof VitalApparatusVentBlockEntity vent)
-			vent.toggleHatch();
-
 		return super.useWithoutItem(state, level, pos, player, hitResult);
 	}
 

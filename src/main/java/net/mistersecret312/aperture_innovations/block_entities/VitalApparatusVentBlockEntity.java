@@ -48,9 +48,9 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 	private UUID trackingID = null;
 	private CompoundTag trackingData = new CompoundTag();
 
-	private int hullColor;
-	private int activeColor;
-	private int idleColor;
+	private int hullColor = -1;
+	private int activeColor = -1;
+	private int idleColor = -1;
 
 	private int emptyTime = 0;
 
@@ -94,7 +94,7 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 		{
 			if(vent.getBlockState().getBlock() instanceof OrientedMasterBlock masterBlock)
 			{
-				AABB volume = masterBlock.getMultiblockVolume(level, pos).move(pos);
+				AABB volume = masterBlock.getMultiblockVolume(level, pos).move(pos).deflate(0.5, 0, 0.5);
 				List<Entity> entities = level.getEntities((Entity) null, volume, entity -> true);
 				for(Entity entity : entities)
 				{
@@ -126,6 +126,10 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 		if(this.trackingData != null)
 			tag.put("tracking_data", this.trackingData);
 
+		tag.putInt("hull_color", this.hullColor);
+		tag.putInt("idle_color", this.idleColor);
+		tag.putInt("active_color", this.activeColor);
+
 		tag.putInt("empty_time", this.emptyTime);
 
 		if(this.getTrackingType() != null)
@@ -150,6 +154,10 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 			this.trackingData = tag.getCompound("tracking_data");
 
 		this.emptyTime = tag.getInt("empty_time");
+
+		this.hullColor = tag.getInt("hull_color");
+		this.idleColor = tag.getInt("idle_color");
+		this.activeColor = tag.getInt("active_color");
 
 		if(tag.contains("tracking_type"))
 		{
@@ -402,11 +410,15 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 				MultiToolConfigTypeInit.INT.get(),
 				this::setIdleColor, this::getIdleColor));
 
-//		if(true)
-//		{
-//			ConfigurationProperty<?> first = list.getFirst();
-//			first.setUnsafe(15);
-//		}
+		for(ConfigurationProperty<?> property : list)
+		{
+			if(property.getName().equals("hull_color"))
+				property.setUnsafe(hullColor);
+			if(property.getName().equals("active_color"))
+				property.setUnsafe(activeColor);
+			if(property.getName().equals("idle_color"))
+				property.setUnsafe(idleColor);
+		}
 
 		return list;
 	}

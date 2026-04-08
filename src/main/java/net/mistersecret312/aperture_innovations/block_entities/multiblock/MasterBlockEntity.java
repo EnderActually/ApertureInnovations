@@ -1,5 +1,6 @@
 package net.mistersecret312.aperture_innovations.block_entities.multiblock;
 
+import mekanism.common.util.NBTUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.*;
@@ -42,7 +43,6 @@ public class MasterBlockEntity extends BlockEntity
 	protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries)
 	{
 		super.loadAdditional(tag, registries);
-		this.clearDummies();
 
 		ListTag dummiesTag = tag.getList("dummies", Tag.TAG_INT_ARRAY);
 		for(Tag dummyTag : dummiesTag)

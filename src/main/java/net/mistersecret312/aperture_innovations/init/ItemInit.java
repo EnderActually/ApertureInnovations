@@ -29,6 +29,9 @@ public class ItemInit
 	public static final DeferredItem<MultiBlockItem> VITAL_APPARATUS_VENT = ITEMS.register("vital_apparatus_vent",
 			() -> new MultiBlockItem(BlockInit.VITAL_APPARATUS_VENT.get(), new Item.Properties().stacksTo(64).fireResistant()));
 
+	public static final DeferredItem<MultiToolItem> MULTI_TOOL = ITEMS.register("multi_tool",
+			() -> new MultiToolItem(new Item.Properties().stacksTo(1).fireResistant()));
+
 	public static void register(IEventBus bus)
 	{
 		ITEMS.register(bus);

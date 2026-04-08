@@ -1,0 +1,99 @@
+package net.mistersecret312.aperture_innovations.client.screen.renderers;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.mistersecret312.aperture_innovations.multitool.ConfigurationProperty;
+import net.mistersecret312.aperture_innovations.multitool.IHaveConfiguration;
+import net.neoforged.neoforge.client.model.data.ModelData;
+
+import java.util.HashMap;
+
+public class BlockEntityPreviewRenderer implements PreviewRenderer
+{
+	public final BlockState state;
+	private BlockEntity blockEntity = null;
+
+	public BlockEntityPreviewRenderer(BlockState state, BlockEntity blockEntity,
+									  HolderLookup.Provider provider)
+	{
+		this.state = state;
+		if(blockEntity != null)
+		{
+			CompoundTag entireTag = blockEntity.saveWithoutMetadata(provider);
+			this.blockEntity = blockEntity.getType().create(BlockPos.ZERO, state);
+			if(this.blockEntity != null)
+			{
+				this.blockEntity.loadWithComponents(entireTag, provider);
+				this.blockEntity.setLevel(Minecraft.getInstance().level);
+			}
+		}
+	}
+
+	@Override
+	public void render(GuiGraphics graphics, PoseStack poseStack, int mouseX, int mouseY, float partialTick)
+	{
+		poseStack.pushPose();
+		poseStack.scale(30, -30, 30);
+		float rotation = Minecraft.getInstance().levelRenderer.getTicks();
+		poseStack.mulPose(Axis.XP.rotationDegrees(30));  // Tilt it down slightly
+		poseStack.mulPose(Axis.YP.rotationDegrees(rotation % 360)); // Spin it around to see the corner
+		poseStack.translate(-0.5, -0.5, -0.5);
+
+		if(state.getRenderShape().equals(RenderShape.INVISIBLE))
+		{
+			poseStack.popPose();
+			return;
+		}
+		if(state.getRenderShape().equals(RenderShape.MODEL))
+		{
+			Minecraft.getInstance().getBlockRenderer().renderSingleBlock(state, poseStack, graphics.bufferSource(),
+					LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY,
+					net.neoforged.neoforge.client.model.data.ModelData.EMPTY, null);
+
+			if(this.blockEntity != null)
+			{
+				Minecraft.getInstance().getBlockEntityRenderDispatcher().render(this.blockEntity, partialTick, poseStack, graphics.bufferSource());
+			}
+		}
+
+		if(state.getRenderShape().equals(RenderShape.ENTITYBLOCK_ANIMATED) && this.blockEntity != null)
+		{
+			Minecraft.getInstance().getBlockRenderer().renderSingleBlock(state, poseStack, graphics.bufferSource(),
+					LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY,
+					net.neoforged.neoforge.client.model.data.ModelData.EMPTY, null);
+
+			Minecraft.getInstance().getBlockEntityRenderDispatcher().render(this.blockEntity, partialTick, poseStack, graphics.bufferSource());
+		}
+
+		graphics.bufferSource().endBatch();
+		poseStack.popPose();
+	}
+
+	@Override
+	public void applyFakeState(HashMap<String, Object> map)
+	{
+		if(this.blockEntity == null)
+			return;
+		if(!(this.blockEntity instanceof IHaveConfiguration configurable))
+			return;
+
+		for(ConfigurationProperty<?> property : configurable.getConfigurationProperties())
+		{
+			Object value = map.get(property.getName());
+			if(value != null)
+			{
+				property.setUnsafe(value);
+			}
+		}
+	}
+}

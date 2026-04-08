@@ -13,6 +13,7 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -179,5 +180,11 @@ public abstract class MasterBlock extends BaseEntityBlock
 		actualVolume = actualVolume.move(offset.x, offset.y, offset.z);
 
 		return Shapes.join(actualVolume, Shapes.block(), BooleanOp.AND);
+	}
+
+	@Override
+	protected RenderShape getRenderShape(BlockState state)
+	{
+		return RenderShape.ENTITYBLOCK_ANIMATED;
 	}
 }
