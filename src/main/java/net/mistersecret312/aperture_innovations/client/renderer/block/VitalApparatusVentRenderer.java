@@ -31,6 +31,7 @@ import software.bernie.geckolib.model.GeoModel;
 import software.bernie.geckolib.renderer.specialty.DynamicGeoBlockRenderer;
 import software.bernie.geckolib.util.RenderUtil;
 
+import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -105,6 +106,11 @@ public class VitalApparatusVentRenderer extends DynamicGeoBlockRenderer<VitalApp
 	@Override
 	public ResourceLocation getTexture(GeoBone bone, VitalApparatusVentBlockEntity animatable)
 	{
+		if(animatable.getIdleColor().packagedInt() != 0)
+		{
+			return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+					"textures/entity/vital_apparatus_vent/vital_apparatus_vent_generic.png");
+		}
 		return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
 			"textures/entity/vital_apparatus_vent/vital_apparatus_vent_"
 					+ (animatable.isOpen() ? "active" : "inactive") + ".png");
@@ -113,6 +119,9 @@ public class VitalApparatusVentRenderer extends DynamicGeoBlockRenderer<VitalApp
 	@Override
 	public int getColor(GeoBone bone, VitalApparatusVentBlockEntity animatable)
 	{
+		if(animatable.getIdleColor().packagedInt() != 0)
+			return new Color(animatable.getIdleColor().packagedInt(), false).getRGB();
+
 		return -1;
 	}
 

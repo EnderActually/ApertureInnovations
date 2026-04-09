@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -23,8 +24,11 @@ import net.mistersecret312.aperture_innovations.init.EntityInit;
 import net.mistersecret312.aperture_innovations.init.MultiToolConfigTypeInit;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
 import net.mistersecret312.aperture_innovations.items.CubeItem;
+import net.mistersecret312.aperture_innovations.multitool.Color;
 import net.mistersecret312.aperture_innovations.multitool.ConfigurationProperty;
 import net.mistersecret312.aperture_innovations.multitool.IHaveConfiguration;
+import net.mistersecret312.aperture_innovations.multitool.InteractionType;
+import org.checkerframework.checker.units.qual.C;
 import software.bernie.geckolib.animatable.GeoBlockEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
@@ -48,9 +52,9 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 	private UUID trackingID = null;
 	private CompoundTag trackingData = new CompoundTag();
 
-	private int hullColor = -1;
-	private int activeColor = -1;
-	private int idleColor = -1;
+	private Color hullColor = new Color(0, 0, 0);
+	private Color activeColor = new Color(0, 0, 0);
+	private Color idleColor = new Color(0, 0, 0);
 
 	private int emptyTime = 0;
 
@@ -126,9 +130,13 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 		if(this.trackingData != null)
 			tag.put("tracking_data", this.trackingData);
 
-		tag.putInt("hull_color", this.hullColor);
-		tag.putInt("idle_color", this.idleColor);
-		tag.putInt("active_color", this.activeColor);
+		int[] hullArray = {hullColor.red(), hullColor.green(), hullColor.blue()};
+		int[] idleArray = {idleColor.red(), idleColor.green(), idleColor.blue()};
+		int[] activeArray = {activeColor.red(), activeColor.green(), activeColor.blue()};
+
+		tag.putIntArray("hull_color", hullArray);
+		tag.putIntArray("idle_color", idleArray);
+		tag.putIntArray("active_color", activeArray);
 
 		tag.putInt("empty_time", this.emptyTime);
 
@@ -155,9 +163,13 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 
 		this.emptyTime = tag.getInt("empty_time");
 
-		this.hullColor = tag.getInt("hull_color");
-		this.idleColor = tag.getInt("idle_color");
-		this.activeColor = tag.getInt("active_color");
+		int[] hullArray = tag.getIntArray("hull_color");
+		int[] idleArray = tag.getIntArray("idle_color");
+		int[] activeArray = tag.getIntArray("active_color");
+
+		this.hullColor = new Color(hullArray[0], hullArray[1], hullArray[2]);
+		this.idleColor = new Color(idleArray[0], idleArray[1], idleArray[2]);
+		this.activeColor = new Color(activeArray[0], activeArray[1], activeArray[2]);
 
 		if(tag.contains("tracking_type"))
 		{
@@ -221,32 +233,32 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 		setChanged();
 	}
 
-	public int getHullColor()
+	public Color getHullColor()
 	{
 		return hullColor;
 	}
 
-	public void setHullColor(int hullColor)
+	public void setHullColor(Color hullColor)
 	{
 		this.hullColor = hullColor;
 	}
 
-	public int getActiveColor()
+	public Color getActiveColor()
 	{
 		return activeColor;
 	}
 
-	public void setActiveColor(int activeColor)
+	public void setActiveColor(Color activeColor)
 	{
 		this.activeColor = activeColor;
 	}
 
-	public int getIdleColor()
+	public Color getIdleColor()
 	{
 		return idleColor;
 	}
 
-	public void setIdleColor(int idleColor)
+	public void setIdleColor(Color idleColor)
 	{
 		this.idleColor = idleColor;
 	}
@@ -399,15 +411,18 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 		List<ConfigurationProperty<?>> list = new ArrayList<>();
 		list.add(new ConfigurationProperty<>("hull_color",
 				"multi_tool.aperture_innovations.vital_apparatus_vent.hull_color",
-				MultiToolConfigTypeInit.INT.get(),
+				MultiToolConfigTypeInit.COLOR.get(),
+				new InteractionType.RGBColorPicker(),
 				this::setHullColor, this::getHullColor));
 		list.add(new ConfigurationProperty<>("active_color",
 				"multi_tool.aperture_innovations.vital_apparatus_vent.active_color",
-				MultiToolConfigTypeInit.INT.get(),
+				MultiToolConfigTypeInit.COLOR.get(),
+				new InteractionType.RGBColorPicker(),
 				this::setActiveColor, this::getActiveColor));
 		list.add(new ConfigurationProperty<>("idle_color",
 				"multi_tool.aperture_innovations.vital_apparatus_vent.idle_color",
-				MultiToolConfigTypeInit.INT.get(),
+				MultiToolConfigTypeInit.COLOR.get(),
+				new InteractionType.RGBColorPicker(),
 				this::setIdleColor, this::getIdleColor));
 
 		for(ConfigurationProperty<?> property : list)

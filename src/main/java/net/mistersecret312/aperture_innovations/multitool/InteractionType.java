@@ -1,61 +1,53 @@
 package net.mistersecret312.aperture_innovations.multitool;
 
+import java.util.List;
+
 public abstract class InteractionType
 {
-	static class Toggle extends InteractionType
+	public static class Toggle extends InteractionType
 	{
-		private boolean value;
 		public Toggle() {}
-
-		public void toggle()
-		{
-			this.value = !value;
-		}
 	}
 
-	static class NumberField extends InteractionType
+	public static class NumberField extends InteractionType
 	{
-		private double value;
 		public NumberField() {}
-
-		public void setValue(double value)
-		{
-			this.value = value;
-		}
-
-		public double getValue()
-		{
-			return value;
-		}
 	}
 
-	static class TextField extends InteractionType
+	public static class RGBColorPicker extends InteractionType
 	{
-		private String value;
+		public RGBColorPicker() {}
+	}
 
-		private final int maxSymbols;
+	public static class TextField extends InteractionType
+	{
+		public final int maxSymbols;
 		public TextField(int maxSymbols)
 		{
 			this.maxSymbols = maxSymbols;
-			this.value = "";
 		}
 
-		public int getMaxSymbols()
-		{
-			return maxSymbols;
-		}
+	}
 
-		public String getValue()
+	public static class Slider extends InteractionType
+	{
+		public final double min;
+		public final double max;
+		public final double step;
+		public Slider(double min, double max, double step)
 		{
-			return value;
-		}
-
-		public void setValue(String value)
-		{
-			this.value = value;
+			this.min = min;
+			this.max = max;
+			this.step = step;
 		}
 	}
 
-	record Slider(double min, double max, double step){};
-
+	public static class ListChoice extends InteractionType
+	{
+		public final List<Object> allowedValues;
+		public ListChoice(List<Object> allowedValues)
+		{
+			this.allowedValues = allowedValues;
+		}
+	}
 }

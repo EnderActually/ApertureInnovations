@@ -95,5 +95,7 @@ public class BlockEntityPreviewRenderer implements PreviewRenderer
 				property.setUnsafe(value);
 			}
 		}
+
+		this.blockEntity.getBlockState();
 	}
 }

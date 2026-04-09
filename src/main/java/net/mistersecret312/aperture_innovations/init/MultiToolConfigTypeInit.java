@@ -5,6 +5,7 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.multitool.Color;
 import net.mistersecret312.aperture_innovations.multitool.ConfigurationType;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -31,6 +32,9 @@ public class MultiToolConfigTypeInit
 
 	public static final DeferredHolder<ConfigurationType<?>, ConfigurationType<Long>> LONG =
 			TYPES.register("long", () -> new ConfigurationType<>(ByteBufCodecs.VAR_LONG));
+
+	public static final DeferredHolder<ConfigurationType<?>, ConfigurationType<Color>> COLOR =
+			TYPES.register("color", () -> new ConfigurationType<>(Color.STREAM_CODEC));
 
 	public static void register(IEventBus bus)
 	{

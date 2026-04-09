@@ -9,17 +9,19 @@ public class ConfigurationProperty<T>
 	private final String translatable;
 
 	private final ConfigurationType<T> type;
+	private final InteractionType interaction;
 
 	private final Consumer<T> setter;
 	private final Supplier<T> getter;
 
 	public ConfigurationProperty(String name, String translatable, ConfigurationType<T> type,
-			Consumer<T> setter, Supplier<T> getter)
+			InteractionType interaction, Consumer<T> setter, Supplier<T> getter)
 	{
 		this.name = name;
 		this.translatable = translatable;
 
 		this.type = type;
+		this.interaction = interaction;
 
 		this.setter = setter;
 		this.getter = getter;
@@ -28,6 +30,11 @@ public class ConfigurationProperty<T>
 	public ConfigurationType<T> getType()
 	{
 		return type;
+	}
+
+	public InteractionType getInteraction()
+	{
+		return interaction;
 	}
 
 	public String getName()

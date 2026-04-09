@@ -3,6 +3,11 @@ package net.mistersecret312.aperture_innovations.client.screen;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractStringWidget;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -15,11 +20,15 @@ import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.client.screen.renderers.BlockEntityPreviewRenderer;
 import net.mistersecret312.aperture_innovations.client.screen.renderers.PreviewRenderer;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
+import net.mistersecret312.aperture_innovations.multitool.Color;
 import net.mistersecret312.aperture_innovations.multitool.ConfigurationProperty;
 import net.mistersecret312.aperture_innovations.multitool.IHaveConfiguration;
+import net.mistersecret312.aperture_innovations.multitool.InteractionType;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class MultiToolScreen extends Screen
 {
@@ -50,6 +59,16 @@ public class MultiToolScreen extends Screen
 	{
 		super.init();
 		this.clearWidgets();
+
+		if(config == null)
+			return;
+
+		int id = 0;
+		for(ConfigurationProperty<?> property : config.getConfigurationProperties())
+		{
+			makeWidget(property, (int) (width/1.5f), width/16+id*(24));
+			id++;
+		}
 	}
 
 	@Override
@@ -65,6 +84,11 @@ public class MultiToolScreen extends Screen
 		PoseStack poseStack = graphics.pose();
 		poseStack.pushPose();
 
+		for(Renderable renderable : renderables)
+		{
+			renderable.render(graphics, mouseX, mouseY, partialTick);
+		}
+
 		poseStack.translate(this.width / 2f, this.height / 2f, 0);
 		this.renderer.render(graphics, poseStack, mouseX, mouseY, partialTick);
 
@@ -72,12 +96,12 @@ public class MultiToolScreen extends Screen
 
 		poseStack.pushPose();
 
-		poseStack.translate(this.width / 2f, this.height / 4f, 0);
+		poseStack.translate(this.width / 4f, this.height / 4f, 0);
 		graphics.drawCenteredString(Minecraft.getInstance().font, title, 0,0, -1);
 
 		properties.forEach((string, value) -> {
 			poseStack.translate(0, -10, 0);
-			graphics.drawString(Minecraft.getInstance().font, string + ": " + value, 0, 0, -1);
+			graphics.drawString(Minecraft.getInstance().font, string + ": " + value.toString(), 0, 0, -1);
 		});
 
 		poseStack.popPose();
@@ -87,5 +111,55 @@ public class MultiToolScreen extends Screen
 	public boolean isPauseScreen()
 	{
 		return false;
+	}
+
+	private void makeWidget(ConfigurationProperty<?> property, int x, int y)
+	{
+		if(property.getInteraction() instanceof InteractionType.RGBColorPicker)
+		{
+			String name = property.getName();
+			for(int i = 0; i < 3; i++)
+			{
+				String text = "R";
+				if(i == 1)
+					text = "G";
+				if(i == 2)
+					text = "B";
+
+				EditBox box = new EditBox(Minecraft.getInstance().font, x+i*44, y, 40, 16,
+						Component.empty());
+				box.setFilter(string -> string.matches("^$|^([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$"));
+				int finalI = i;
+				box.setResponder(string ->
+					{
+						if(string.isBlank())
+							return;
+
+						int value;
+						try
+						{
+							value = Integer.parseInt(string);
+						}
+						catch(NumberFormatException ignored)
+						{
+							value = Integer.MAX_VALUE;
+							box.setValue(String.valueOf(value));
+						}
+						Object object = properties.get(name);
+						if(object instanceof Color(int red, int green, int blue))
+						{
+							if(finalI == 0)
+								properties.put(name, new Color(value, green, blue));
+							if(finalI == 1)
+								properties.put(name, new Color(red, value, blue));
+							if(finalI == 2)
+								properties.put(name, new Color(red, green, value));
+						}
+						this.renderer.applyFakeState(properties);
+					});
+				box.setHint(Component.literal(text));
+				this.addRenderableWidget(box);
+			}
+		}
 	}
 }
