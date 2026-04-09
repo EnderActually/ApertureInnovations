@@ -409,17 +409,17 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 	public List<ConfigurationProperty<?>> getConfigurationProperties()
 	{
 		List<ConfigurationProperty<?>> list = new ArrayList<>();
-		list.add(new ConfigurationProperty<>("hull_color",
+		list.add(new ConfigurationProperty<>("hull_color", "color",
 				"multi_tool.aperture_innovations.vital_apparatus_vent.hull_color",
 				MultiToolConfigTypeInit.COLOR.get(),
 				new InteractionType.RGBColorPicker(),
 				this::setHullColor, this::getHullColor));
-		list.add(new ConfigurationProperty<>("active_color",
+		list.add(new ConfigurationProperty<>("active_color", "color",
 				"multi_tool.aperture_innovations.vital_apparatus_vent.active_color",
 				MultiToolConfigTypeInit.COLOR.get(),
 				new InteractionType.RGBColorPicker(),
 				this::setActiveColor, this::getActiveColor));
-		list.add(new ConfigurationProperty<>("idle_color",
+		list.add(new ConfigurationProperty<>("idle_color", "color",
 				"multi_tool.aperture_innovations.vital_apparatus_vent.idle_color",
 				MultiToolConfigTypeInit.COLOR.get(),
 				new InteractionType.RGBColorPicker(),

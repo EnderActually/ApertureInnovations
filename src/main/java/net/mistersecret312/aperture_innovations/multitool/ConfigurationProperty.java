@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 public class ConfigurationProperty<T>
 {
 	private final String name;
+	private final String category;
 	private final String translatable;
 
 	private final ConfigurationType<T> type;
@@ -14,10 +15,11 @@ public class ConfigurationProperty<T>
 	private final Consumer<T> setter;
 	private final Supplier<T> getter;
 
-	public ConfigurationProperty(String name, String translatable, ConfigurationType<T> type,
+	public ConfigurationProperty(String name, String category, String translatable, ConfigurationType<T> type,
 			InteractionType interaction, Consumer<T> setter, Supplier<T> getter)
 	{
 		this.name = name;
+		this.category = category;
 		this.translatable = translatable;
 
 		this.type = type;
@@ -40,6 +42,11 @@ public class ConfigurationProperty<T>
 	public String getName()
 	{
 		return name;
+	}
+
+	public String getCategory()
+	{
+		return category;
 	}
 
 	public String getTranslatable()
