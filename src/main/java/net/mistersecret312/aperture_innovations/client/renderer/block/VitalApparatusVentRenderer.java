@@ -12,8 +12,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.block_entities.VitalApparatusVentBlockEntity;
+import net.mistersecret312.aperture_innovations.blocks.multiblock.MasterBlock;
 import net.mistersecret312.aperture_innovations.blocks.multiblock.OrientedMasterBlock;
 import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.client.model.VitalApparatusVentModel;
@@ -152,5 +155,14 @@ public class VitalApparatusVentRenderer extends DynamicGeoBlockRenderer<VitalApp
 	public RenderType getGlowRenderType(GeoBone bone, VitalApparatusVentBlockEntity animatable)
 	{
 		return PortalRenderTypes.APERTURE_GLOW.apply(getGlowTexture(bone, animatable), RenderStateShard.TRANSLUCENT_TRANSPARENCY);
+	}
+
+	@Override
+	public AABB getRenderBoundingBox(VitalApparatusVentBlockEntity blockEntity)
+	{
+		if(blockEntity.getBlockState().getBlock() instanceof MasterBlock masterBlock)
+			return masterBlock.getMultiblockVolume(blockEntity.getLevel(), blockEntity.getBlockPos());
+
+		return super.getRenderBoundingBox(blockEntity);
 	}
 }
