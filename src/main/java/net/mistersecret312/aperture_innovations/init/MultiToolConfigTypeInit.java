@@ -36,6 +36,9 @@ public class MultiToolConfigTypeInit
 	public static final DeferredHolder<ConfigurationType<?>, ConfigurationType<Color>> COLOR =
 			TYPES.register("color", () -> new ConfigurationType<>(Color.STREAM_CODEC));
 
+	public static final DeferredHolder<ConfigurationType<?>, ConfigurationType<ResourceLocation>> RESOURCE_LOCATION =
+			TYPES.register("resource_location", () -> new ConfigurationType<>(ResourceLocation.STREAM_CODEC));
+
 	public static void register(IEventBus bus)
 	{
 		TYPES.register(bus);

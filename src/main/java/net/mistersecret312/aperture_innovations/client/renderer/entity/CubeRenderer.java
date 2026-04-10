@@ -12,7 +12,6 @@ import net.minecraft.util.Mth;
 import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.client.model.CubeModel;
 import net.mistersecret312.aperture_innovations.client.renderer.ColoredGlowingLayer;
-import net.mistersecret312.aperture_innovations.client.renderer.IDynamicTexture;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientCubeVariant;
 import net.mistersecret312.aperture_innovations.entities.CubeEntity;
 import org.jetbrains.annotations.Nullable;
@@ -22,12 +21,16 @@ import software.bernie.geckolib.renderer.specialty.DynamicGeoEntityRenderer;
 
 import java.awt.*;
 
-public class CubeRenderer extends DynamicGeoEntityRenderer<CubeEntity> implements IDynamicTexture<CubeEntity>
+public class CubeRenderer extends DynamicGeoEntityRenderer<CubeEntity>
 {
 	public CubeRenderer(EntityRendererProvider.Context context)
 	{
 		super(context, new CubeModel());
-		this.addRenderLayer(new ColoredGlowingLayer<>(this));
+		this.addRenderLayer(new ColoredGlowingLayer<>(this,
+				(cube, bone) -> getTexture(bone, cube),
+				(cube, bone) -> getColor(bone, cube),
+				(cube, bone) -> getRenderType(bone, cube)
+		));
 	}
 
 	@Override
@@ -66,17 +69,16 @@ public class CubeRenderer extends DynamicGeoEntityRenderer<CubeEntity> implement
 		return RenderType.entityTranslucent(texture);
 	}
 
-	@Override
 	public ResourceLocation getTexture(GeoBone bone, CubeEntity animatable)
 	{
 		boolean active = animatable.isActive();
-		int color = active ? animatable.getActiveColor() : animatable.getColor();
+		int color = active ? animatable.getActiveColor().packagedInt() : animatable.getColor().packagedInt();
 		ClientCubeVariant cubeVariant = animatable.getClientVariant();
 		if(!bone.getName().equals("ColoredCircle"))
 			return null;
 
 		ResourceLocation texture = animatable.getClientVariant().idleTexture().orElse(null);
-		if(color != -1)
+		if(color != 0)
 			texture = cubeVariant.genericTexture().orElse(null);
 
 		if(active)
@@ -85,16 +87,17 @@ public class CubeRenderer extends DynamicGeoEntityRenderer<CubeEntity> implement
 		return texture;
 	}
 
-	@Override
 	public int getColor(GeoBone bone, CubeEntity animatable)
 	{
 		boolean active = this.getAnimatable().isActive();
-		int color = active ? this.getAnimatable().getActiveColor() : this.getAnimatable().getColor();
+		int color = active ? this.getAnimatable().getActiveColor().packagedInt() : this.getAnimatable().getColor().packagedInt();
 
-		return new Color(color, false).getRGB();
+		if(color != 0)
+			return new Color(color, false).getRGB();
+
+		return -1;
 	}
 
-	@Override
 	public RenderType getRenderType(GeoBone bone, CubeEntity animatable)
 	{
 		return PortalRenderTypes.APERTURE_GLOW.apply(getTexture(bone, animatable), RenderStateShard.TRANSLUCENT_TRANSPARENCY);

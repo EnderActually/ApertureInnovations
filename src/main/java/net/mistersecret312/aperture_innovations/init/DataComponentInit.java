@@ -58,6 +58,8 @@ public class DataComponentInit
 			register("color", builder -> builder.persistent(Codec.INT));
 	public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> ACTIVE_COLOR =
 			register("active_color", builder -> builder.persistent(Codec.INT));
+	public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> HULL_COLOR =
+			register("hull_color", builder -> builder.persistent(Codec.INT));
 
 	public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> HELD_ENTITY = register("held_entity", builder -> builder.persistent(
 			Codec.INT

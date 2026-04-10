@@ -8,6 +8,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -33,12 +34,10 @@ import net.mistersecret312.aperture_innovations.blocks.LargeButtonBlock;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientCubeVariant;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientCubeVariants;
 import net.mistersecret312.aperture_innovations.datapack.CubeVariant;
-import net.mistersecret312.aperture_innovations.init.EntityDataSerializerInit;
-import net.mistersecret312.aperture_innovations.init.EntityInit;
-import net.mistersecret312.aperture_innovations.init.ItemInit;
-import net.mistersecret312.aperture_innovations.init.SoundInit;
+import net.mistersecret312.aperture_innovations.init.*;
 import net.mistersecret312.aperture_innovations.items.ColorfulGelItem;
 import net.mistersecret312.aperture_innovations.items.CubeItem;
+import net.mistersecret312.aperture_innovations.multitool.*;
 import net.mistersecret312.aperture_innovations.network.ClientboundFizzleParticlesPacket;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
@@ -47,13 +46,19 @@ import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
-public class CubeEntity extends Entity implements IFizzle, GeoEntity
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+public class CubeEntity extends Entity implements IFizzle, GeoEntity, IHaveConfiguration
 {
 	public static final EntityDataAccessor<ResourceLocation> VARIANT = SynchedEntityData.defineId(
 			CubeEntity.class, EntityDataSerializerInit.RESOURCE_LOCATION.get());
 
 	private static final EntityDataAccessor<Boolean> ACTIVE = SynchedEntityData.defineId(
 			CubeEntity.class, EntityDataSerializers.BOOLEAN);
+	private static final EntityDataAccessor<Integer> HULL_COLOR = SynchedEntityData.defineId(
+			CubeEntity.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Integer> COLOR = SynchedEntityData.defineId(
 			CubeEntity.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Integer> ACTIVE_COLOR = SynchedEntityData.defineId(
@@ -113,7 +118,7 @@ public class CubeEntity extends Entity implements IFizzle, GeoEntity
 			BlockPos masterPos = button.getMasterPos(blockPosition(), state);
 			if(level().getBlockEntity(masterPos) instanceof LargeButtonBlockEntity blockEntity)
 			{
-				this.setActiveColor(blockEntity.activeColor);
+				this.setActiveColor(blockEntity.activeColor == -1 ? 0 : blockEntity.activeColor);
 			}
 		}
 		else this.setActive(false);
@@ -200,8 +205,9 @@ public class CubeEntity extends Entity implements IFizzle, GeoEntity
 				ItemStack cubeStack = ItemInit.CUBE.get().getDefaultInstance();
 
 				cubeItem.setVariant(stack, getVariantKey());
-				cubeItem.setColor(stack, getColor());
-				cubeItem.setActiveColor(stack, getActiveColor());
+				cubeItem.setColor(stack, getColor().packagedInt());
+				cubeItem.setActiveColor(stack, getActiveColor().packagedInt());
+				cubeItem.setHullColor(stack, getHullColor().packagedInt());
 
 				ItemEntity item = new ItemEntity(player.level(), this.getX(), this.getY(), this.getZ(),
 						cubeStack);
@@ -239,9 +245,10 @@ public class CubeEntity extends Entity implements IFizzle, GeoEntity
 				"weighted_storage_cube"));
 
 		builder.define(ACTIVE, false);
-		builder.define(COLOR, -1);
-		builder.define(ACTIVE_COLOR, -1);
+		builder.define(COLOR, 0);
+		builder.define(ACTIVE_COLOR, 0);
 		builder.define(FIZZLE_TIME, -1);
+		builder.define(HULL_COLOR, 0);
 	}
 
 	@Override
@@ -252,6 +259,7 @@ public class CubeEntity extends Entity implements IFizzle, GeoEntity
 
 		this.setColor(tag.getInt("color"));
 		this.setActiveColor(tag.getInt("active_color"));
+		this.setHullColor(tag.getInt("hull_color"));
 
 		this.container.fromTag(tag.getList("container", Tag.TAG_COMPOUND), this.registryAccess());
 	}
@@ -261,8 +269,9 @@ public class CubeEntity extends Entity implements IFizzle, GeoEntity
 	{
 		tag.putString("variant", getVariantKey().toString());
 
-		tag.putInt("color", this.getColor());
-		tag.putInt("active_color", this.getActiveColor());
+		tag.putInt("color", this.getColor().packagedInt());
+		tag.putInt("active_color", this.getActiveColor().packagedInt());
+		tag.putInt("hull_color", this.getHullColor().packagedInt());
 
 		tag.put("container", this.container.createTag(this.registryAccess()));
 	}
@@ -380,14 +389,22 @@ public class CubeEntity extends Entity implements IFizzle, GeoEntity
 		return this.lerpSteps > 0 ? (float)this.lerpYRot : this.getYRot();
 	}
 
-	public int getColor()
+	public Color getColor()
 	{
-		return this.entityData.get(COLOR);
+		java.awt.Color rgb = new java.awt.Color(this.entityData.get(COLOR), false);
+		return new Color(rgb.getRed(), rgb.getGreen(), rgb.getBlue());
 	}
 
-	public int getActiveColor()
+	public Color getActiveColor()
 	{
-		return this.entityData.get(ACTIVE_COLOR);
+		java.awt.Color rgb = new java.awt.Color(this.entityData.get(ACTIVE_COLOR));
+		return new Color(rgb.getRed(), rgb.getGreen(), rgb.getBlue());
+	}
+
+	public Color getHullColor()
+	{
+		java.awt.Color rgb = new java.awt.Color(this.entityData.get(HULL_COLOR));
+		return new Color(rgb.getRed(), rgb.getGreen(), rgb.getBlue());
 	}
 
 	public boolean isActive()
@@ -400,6 +417,21 @@ public class CubeEntity extends Entity implements IFizzle, GeoEntity
 		this.entityData.set(ACTIVE, active);
 	}
 
+	public void setColor(Color color)
+	{
+		this.entityData.set(COLOR, color.packagedInt());
+	}
+
+	public void setActiveColor(Color color)
+	{
+		this.entityData.set(ACTIVE_COLOR, color.packagedInt());
+	}
+
+	public void setHullColor(Color color)
+	{
+		this.entityData.set(HULL_COLOR, color.packagedInt());
+	}
+
 	public void setColor(int color)
 	{
 		this.entityData.set(COLOR, color);
@@ -408,6 +440,11 @@ public class CubeEntity extends Entity implements IFizzle, GeoEntity
 	public void setActiveColor(int color)
 	{
 		this.entityData.set(ACTIVE_COLOR, color);
+	}
+
+	public void setHullColor(int color)
+	{
+		this.entityData.set(HULL_COLOR, color);
 	}
 
 	@Override
@@ -420,5 +457,44 @@ public class CubeEntity extends Entity implements IFizzle, GeoEntity
 	public AnimatableInstanceCache getAnimatableInstanceCache()
 	{
 		return geoCache;
+	}
+
+	@Override
+	public List<ConfigurationProperty<?>> getConfigurationProperties()
+	{
+		List<ConfigurationProperty<?>> list = new ArrayList<>();
+		list.add(new ConfigurationProperty<>("hull_color", "color",
+				"multi_tool.aperture_innovations.cube.hull_color",
+				MultiToolConfigTypeInit.COLOR.get(),
+				new InteractionType.RGBColorPicker(),
+				this::setHullColor, this::getHullColor));
+
+		list.add(new ConfigurationProperty<>("active_color", "color",
+				"multi_tool.aperture_innovations.cube.active_color",
+				MultiToolConfigTypeInit.COLOR.get(),
+				new InteractionType.RGBColorPicker(),
+				this::setActiveColor, this::getActiveColor));
+
+		list.add(new ConfigurationProperty<>("idle_color", "color",
+				"multi_tool.aperture_innovations.cube.idle_color",
+				MultiToolConfigTypeInit.COLOR.get(),
+				new InteractionType.RGBColorPicker(),
+				this::setColor, this::getColor));
+
+		List<ResourceLocation> variants = new ArrayList<>();
+		for(Map.Entry<ResourceKey<CubeVariant>, CubeVariant> entry : this.registryAccess()
+																		 .registryOrThrow(CubeVariant.REGISTRY_KEY)
+																		 .entrySet())
+		{
+			variants.add(entry.getKey().location());
+		}
+
+		list.add(new ConfigurationProperty<>("variant", "variant",
+				"multi_tool.aperture_innovations.cube.variant",
+				MultiToolConfigTypeInit.RESOURCE_LOCATION.get(),
+				new InteractionType.ListChoice(variants),
+				this::setVariantKey, this::getVariantKey));
+
+		return list;
 	}
 }

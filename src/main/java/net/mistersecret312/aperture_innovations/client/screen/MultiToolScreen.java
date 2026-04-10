@@ -1,42 +1,41 @@
 package net.mistersecret312.aperture_innovations.client.screen;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.renderer.texture.TextureAtlas;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
-import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.minecraft.network.chat.MutableComponent;
 import net.mistersecret312.aperture_innovations.client.screen.renderers.BlockEntityPreviewRenderer;
+import net.mistersecret312.aperture_innovations.client.screen.renderers.EntityPreviewRenderer;
 import net.mistersecret312.aperture_innovations.client.screen.renderers.PreviewRenderer;
-import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.multitool.Color;
 import net.mistersecret312.aperture_innovations.multitool.ConfigurationProperty;
 import net.mistersecret312.aperture_innovations.multitool.IHaveConfiguration;
 import net.mistersecret312.aperture_innovations.multitool.InteractionType;
+import net.mistersecret312.aperture_innovations.network.ServerboundMultiToolApplyBlockEntityPacket;
+import net.mistersecret312.aperture_innovations.network.ServerboundMultiToolApplyEntityPacket;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MultiToolScreen extends Screen
 {
-	private HashMap<String, Object> properties = new HashMap<>();
-	private HashMap<String, Category> categories = new HashMap<>();
+	public HashMap<String, Object> properties = new HashMap<>();
+	public HashMap<String, Category> categories = new HashMap<>();
+
+	public HashMap<Category, List<Renderable>> categoryWidgets = new HashMap<>();
+
 	private IHaveConfiguration config = null;
-	private final PreviewRenderer renderer;
+	public final PreviewRenderer renderer;
+
+	public boolean hsbMode = false;
+	public boolean colorSliderMode = false;
 
 	private String openCategory = "";
 
@@ -72,21 +71,69 @@ public class MultiToolScreen extends Screen
 		if(config == null)
 			return;
 
-		int id = 0;
-		for(ConfigurationProperty<?> property : config.getConfigurationProperties())
-		{
-			makeWidget(property, (int) (width/1.5f), width/16+id*(24));
-			id++;
-		}
-
+		int categoryID = 0;
 		for(Map.Entry<String, Category> entry : categories.entrySet())
 		{
-			this.addRenderableWidget(new PlainTextButton((int) (width/10f), (int) (height/8f), 25, 10,
-					Component.literal(entry.getKey()), button ->
+			categoryID++;
+			if(!openCategory.isBlank() && !entry.getKey().equals(openCategory))
+				continue;
+
+			String type = "category.aperture_innovations."+entry.getKey();
+			MutableComponent component = Component.translatable(type);
+
+			int x = (int) (width/10f);
+			int y = (int) (height/8f) + categoryID*12;
+			this.addRenderableWidget(new PlainTextButton(2*x, y, Minecraft.getInstance().font.width(component), Minecraft.getInstance().font.lineHeight,
+					component, button ->
 				{
-					System.out.println("Category: " + entry.getKey());
-					this.openCategory = entry.getKey();
+					if(this.openCategory.equals(entry.getKey()))
+						this.openCategory = "";
+					else this.openCategory = entry.getKey();
+					init();
 				}, Minecraft.getInstance().font));
+
+			boolean hasColor = entry.getValue().entries.entrySet().stream().anyMatch(catEntry -> properties.get(catEntry.getKey()) instanceof Color);
+			if(hasColor)
+			{
+				String colorMode = "RGB";
+				if(hsbMode)
+					colorMode = "HSB";
+
+				String sliderMode = "Text";
+				if(colorSliderMode)
+					sliderMode = "Slider";
+
+				this.addCategoryWidget(new PlainTextButton(2*x-24, y, Minecraft.getInstance().font.width(colorMode),
+						Minecraft.getInstance().font.lineHeight, Component.literal(colorMode),
+						button ->
+							{
+								this.hsbMode = !this.hsbMode;
+								this.init();
+							}, Minecraft.getInstance().font),
+						entry.getValue());
+
+				this.addCategoryWidget(new PlainTextButton(2*x-56, y, Minecraft.getInstance().font.width(sliderMode),
+						Minecraft.getInstance().font.lineHeight, Component.literal(sliderMode),
+						button ->
+							{
+								this.colorSliderMode = !this.colorSliderMode;
+								this.init();
+							}, Minecraft.getInstance().font),
+						entry.getValue());
+			}
+
+			Category category = entry.getValue();
+			int entryID = 0;
+			for(Map.Entry<String, CategoryEntry> categoryEntry : category.entries.entrySet())
+			{
+				Optional<ConfigurationProperty<?>> property = config.getConfigurationProperties().stream().filter(
+						prop -> prop.getName().equals(categoryEntry.getValue().name) && prop.getCategory().equals(category.category)).findFirst();
+				if(property.isPresent())
+				{
+					property.get().getInteraction().makeWidget(property.get(), x, y+(entryID)*24+12, this);
+					entryID++;
+				}
+			}
 		}
 	}
 
@@ -94,6 +141,19 @@ public class MultiToolScreen extends Screen
 	public void onClose()
 	{
 		super.onClose();
+		if(this.config == null)
+			return;
+
+		for(ConfigurationProperty<?> property : this.config.getConfigurationProperties())
+		{
+			Object value = properties.get(property.getName());
+			if(renderer instanceof BlockEntityPreviewRenderer blockEntityPreviewRenderer)
+				PacketDistributor.sendToServer(new ServerboundMultiToolApplyBlockEntityPacket(blockEntityPreviewRenderer.blockEntity.getBlockPos(),
+						property.getName(), property.getType(), value));
+			if(renderer instanceof EntityPreviewRenderer entityPreviewRenderer)
+				PacketDistributor.sendToServer(new ServerboundMultiToolApplyEntityPacket(entityPreviewRenderer.entity.getUUID(),
+						property.getName(), property.getType(), value));
+		}
 	}
 
 	@Override
@@ -120,13 +180,8 @@ public class MultiToolScreen extends Screen
 
 		poseStack.pushPose();
 
-		poseStack.translate(this.width / 4f, this.height / 4f, 0);
+		poseStack.translate(this.width / 2f, this.height / 5f, 0);
 		graphics.drawCenteredString(Minecraft.getInstance().font, title, 0,0, -1);
-
-		properties.forEach((string, value) -> {
-			poseStack.translate(0, -10, 0);
-			graphics.drawString(Minecraft.getInstance().font, string + ": " + value.toString(), 0, 0, -1);
-		});
 
 		poseStack.popPose();
 	}
@@ -135,62 +190,6 @@ public class MultiToolScreen extends Screen
 	public boolean isPauseScreen()
 	{
 		return false;
-	}
-
-	private void makeWidget(ConfigurationProperty<?> property, int x, int y)
-	{
-		if(property.getInteraction() instanceof InteractionType.RGBColorPicker)
-		{
-			String name = property.getName();
-			for(int i = 0; i < 3; i++)
-			{
-				String text = "R";
-				if(i == 1)
-					text = "G";
-				if(i == 2)
-					text = "B";
-				int textColor = 0xFF0000;
-				if(i == 1)
-					textColor = 0x00FF00;
-				if(i == 2)
-					textColor = 0x0000FF;
-
-				EditBox box = new EditBox(Minecraft.getInstance().font, x+i*44, y, 40, 16,
-						Component.empty());
-				box.setFilter(string -> string.matches("^$|^([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$"));
-				int finalI = i;
-				box.setTextColor(textColor);
-				box.setResponder(string ->
-					{
-						if(string.isBlank())
-							return;
-
-						int value;
-						try
-						{
-							value = Integer.parseInt(string);
-						}
-						catch(NumberFormatException ignored)
-						{
-							value = Integer.MAX_VALUE;
-							box.setValue(String.valueOf(value));
-						}
-						Object object = properties.get(name);
-						if(object instanceof Color(int red, int green, int blue))
-						{
-							if(finalI == 0)
-								properties.put(name, new Color(value, green, blue));
-							if(finalI == 1)
-								properties.put(name, new Color(red, value, blue));
-							if(finalI == 2)
-								properties.put(name, new Color(red, green, value));
-						}
-						this.renderer.applyFakeState(properties);
-					});
-				box.setHint(Component.literal(text));
-				this.addRenderableWidget(box);
-			}
-		}
 	}
 
 	public String getOpenCategory()
@@ -203,12 +202,22 @@ public class MultiToolScreen extends Screen
 		this.openCategory = openCategory;
 	}
 
-	record CategoryEntry(String name, String translatable)
+	public <T extends GuiEventListener & Renderable & NarratableEntry> void addCategoryWidget(T widget,
+																							  Category category)
+	{
+		this.categoryWidgets.computeIfAbsent(category, ctg -> new ArrayList<>()).add(widget);
+		if(this.openCategory.equals(category.category))
+		{
+			super.addRenderableWidget(widget);
+		}
+	}
+
+	public record CategoryEntry(String name, String translatable)
 	{
 
 	}
 
-	record Category(String category, HashMap<String, CategoryEntry> entries)
+	public record Category(String category, HashMap<String, CategoryEntry> entries)
 	{
 
 	}

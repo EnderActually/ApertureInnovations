@@ -1,6 +1,7 @@
 package net.mistersecret312.aperture_innovations.events;
 
 import com.mojang.datafixers.util.Pair;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceKey;
@@ -35,10 +36,14 @@ import net.mistersecret312.aperture_innovations.blocks.multiblock.DummyBlock;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureCapability;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
 import net.mistersecret312.aperture_innovations.capabilities.HoldEntityCapability;
+import net.mistersecret312.aperture_innovations.client.screen.MultiToolScreen;
+import net.mistersecret312.aperture_innovations.client.screen.renderers.EntityPreviewRenderer;
+import net.mistersecret312.aperture_innovations.client.screen.renderers.PreviewRenderer;
 import net.mistersecret312.aperture_innovations.config.LongFallBootsConfig;
 import net.mistersecret312.aperture_innovations.init.*;
 import net.mistersecret312.aperture_innovations.items.LongFallBootsItem;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
+import net.mistersecret312.aperture_innovations.multitool.IHaveConfiguration;
 import net.mistersecret312.aperture_innovations.neo_events.AntlineActivateEvent;
 import net.mistersecret312.aperture_innovations.network.*;
 import net.mistersecret312.aperture_innovations.data.portal.Portal;
@@ -54,6 +59,7 @@ import net.neoforged.neoforge.event.entity.item.ItemTossEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingUseTotemEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -165,6 +171,29 @@ public class CommonEvents
 								link.getSecondaryPortal(), link.variantKey));
 				}
 			});
+		}
+	}
+
+	@SubscribeEvent
+	public static void entityInteract(PlayerInteractEvent.EntityInteract event)
+	{
+		Entity entity = event.getTarget();
+		Player player = event.getEntity();
+
+		Level level = player.level();
+		if(level.isClientSide())
+		{
+			ItemStack main = player.getMainHandItem();
+			ItemStack off = player.getOffhandItem();
+			boolean hasMultiTool = main.is(ItemInit.MULTI_TOOL.get()) || off.is(ItemInit.MULTI_TOOL.get());
+			if(!hasMultiTool)
+				return;
+
+			PreviewRenderer renderer = new EntityPreviewRenderer(level, entity);
+			MultiToolScreen screen = new MultiToolScreen(entity.getName(), entity instanceof IHaveConfiguration config ? config : null,
+					renderer);
+
+			Minecraft.getInstance().setScreen(screen);
 		}
 	}
 

@@ -7,43 +7,44 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
-import net.mistersecret312.aperture_innovations.block_entities.PedestalButtonBlockEntity;
 import net.mistersecret312.aperture_innovations.block_entities.VitalApparatusVentBlockEntity;
 import net.mistersecret312.aperture_innovations.blocks.multiblock.OrientedMasterBlock;
 import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.client.model.VitalApparatusVentModel;
 import net.mistersecret312.aperture_innovations.client.renderer.ColoredGlowingLayer;
-import net.mistersecret312.aperture_innovations.client.renderer.IDynamicTexture;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
-import org.joml.Vector3f;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.cache.object.GeoBone;
-import software.bernie.geckolib.model.GeoModel;
 import software.bernie.geckolib.renderer.specialty.DynamicGeoBlockRenderer;
-import software.bernie.geckolib.util.RenderUtil;
 
 import java.awt.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 
-public class VitalApparatusVentRenderer extends DynamicGeoBlockRenderer<VitalApparatusVentBlockEntity> implements IDynamicTexture<VitalApparatusVentBlockEntity>
+public class VitalApparatusVentRenderer extends DynamicGeoBlockRenderer<VitalApparatusVentBlockEntity>
 {
-	private final Map<EntityType<?>, Entity> ENTITIES = new HashMap<>();
-
 	public VitalApparatusVentRenderer(BlockEntityRendererProvider.Context context)
 	{
 		super(new VitalApparatusVentModel());
-		this.addRenderLayer(new ColoredGlowingLayer<>(this));
+		this.addRenderLayer(new ColoredGlowingLayer<>(this,
+				(vent, bone) -> getGlowTexture(bone, vent),
+				(vent, bone) -> getGlowColor(bone, vent),
+				(vent, bone) -> getGlowRenderType(bone, vent)
+		));
+		this.addRenderLayer(new ColoredGlowingLayer<>(this,
+				(vent, bone) -> getHullTexture(bone, vent),
+				(vent, bone) -> getHullColor(bone, vent),
+				(vent, bone) -> RenderType.entityTranslucent(getHullTexture(bone, vent))
+		));
+		this.addRenderLayer(new ColoredGlowingLayer<>(this,
+				(vent, bone) -> ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "textures/entity/vital_apparatus_vent/glass.png"),
+				(vent, bone) -> getHullColor(bone, vent),
+				(vent, bone) -> RenderType.entityTranslucent(ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "textures/entity/vital_apparatus_vent/glass.png"))
+		));
 	}
 
 	@Override
@@ -103,9 +104,11 @@ public class VitalApparatusVentRenderer extends DynamicGeoBlockRenderer<VitalApp
 
 	}
 
-	@Override
-	public ResourceLocation getTexture(GeoBone bone, VitalApparatusVentBlockEntity animatable)
+	public ResourceLocation getGlowTexture(GeoBone bone, VitalApparatusVentBlockEntity animatable)
 	{
+		if(!bone.getName().equals("GlowingStuff"))
+			return null;
+
 		if(animatable.getIdleColor().packagedInt() != 0)
 		{
 			return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
@@ -116,18 +119,38 @@ public class VitalApparatusVentRenderer extends DynamicGeoBlockRenderer<VitalApp
 					+ (animatable.isOpen() ? "active" : "inactive") + ".png");
 	}
 
-	@Override
-	public int getColor(GeoBone bone, VitalApparatusVentBlockEntity animatable)
+	public ResourceLocation getHullTexture(GeoBone bone, VitalApparatusVentBlockEntity animatable)
 	{
-		if(animatable.getIdleColor().packagedInt() != 0)
+		if(animatable.getHullColor().packagedInt() != 0)
+		{
+			return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+					"textures/entity/vital_apparatus_vent/vital_apparatus_vent_hull_generic.png");
+		}
+
+		return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+				"textures/entity/vital_apparatus_vent/vital_apparatus_vent.png");
+	}
+
+	public int getGlowColor(GeoBone bone, VitalApparatusVentBlockEntity animatable)
+	{
+		if(animatable.getIdleColor().packagedInt() != 0 && !animatable.isOpen())
 			return new Color(animatable.getIdleColor().packagedInt(), false).getRGB();
+		if(animatable.getActiveColor().packagedInt() != 0 && animatable.isOpen())
+			return new Color(animatable.getActiveColor().packagedInt(), false).getRGB();
 
 		return -1;
 	}
 
-	@Override
-	public RenderType getRenderType(GeoBone bone, VitalApparatusVentBlockEntity animatable)
+	public int getHullColor(GeoBone bone, VitalApparatusVentBlockEntity animatable)
 	{
-		return PortalRenderTypes.APERTURE_GLOW.apply(getTexture(bone, animatable), RenderStateShard.TRANSLUCENT_TRANSPARENCY);
+		if(animatable.getHullColor().packagedInt() != 0)
+			return new Color(animatable.getHullColor().packagedInt(), false).getRGB();
+
+		return -1;
+	}
+
+	public RenderType getGlowRenderType(GeoBone bone, VitalApparatusVentBlockEntity animatable)
+	{
+		return PortalRenderTypes.APERTURE_GLOW.apply(getGlowTexture(bone, animatable), RenderStateShard.TRANSLUCENT_TRANSPARENCY);
 	}
 }

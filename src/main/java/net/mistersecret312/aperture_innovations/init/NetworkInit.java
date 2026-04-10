@@ -32,6 +32,18 @@ public class NetworkInit
 				ServerboundPickUpEntityPacket::handle
 		);
 
+		registrar.playToServer(
+				ServerboundMultiToolApplyBlockEntityPacket.TYPE,
+				ServerboundMultiToolApplyBlockEntityPacket.STREAM_CODEC,
+				ServerboundMultiToolApplyBlockEntityPacket::handle
+		);
+
+		registrar.playToServer(
+				ServerboundMultiToolApplyEntityPacket.TYPE,
+				ServerboundMultiToolApplyEntityPacket.STREAM_CODEC,
+				ServerboundMultiToolApplyEntityPacket::handle
+		);
+
 		//Client
 
 		registrar.playToClient(

@@ -12,6 +12,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.mistersecret312.aperture_innovations.block_entities.VitalApparatusVentBlockEntity;
 import net.mistersecret312.aperture_innovations.multitool.ConfigurationProperty;
 import net.mistersecret312.aperture_innovations.multitool.IHaveConfiguration;
 import net.neoforged.neoforge.client.model.data.ModelData;
@@ -21,7 +22,7 @@ import java.util.HashMap;
 public class BlockEntityPreviewRenderer implements PreviewRenderer
 {
 	public final BlockState state;
-	private BlockEntity blockEntity = null;
+	public BlockEntity blockEntity = null;
 
 	public BlockEntityPreviewRenderer(BlockState state, BlockEntity blockEntity,
 									  HolderLookup.Provider provider)
@@ -30,7 +31,7 @@ public class BlockEntityPreviewRenderer implements PreviewRenderer
 		if(blockEntity != null)
 		{
 			CompoundTag entireTag = blockEntity.saveWithoutMetadata(provider);
-			this.blockEntity = blockEntity.getType().create(BlockPos.ZERO, state);
+			this.blockEntity = blockEntity.getType().create(blockEntity.getBlockPos(), state);
 			if(this.blockEntity != null)
 			{
 				this.blockEntity.loadWithComponents(entireTag, provider);
@@ -45,34 +46,25 @@ public class BlockEntityPreviewRenderer implements PreviewRenderer
 		poseStack.pushPose();
 		poseStack.scale(30, -30, 30);
 		float rotation = Minecraft.getInstance().levelRenderer.getTicks();
-		poseStack.mulPose(Axis.XP.rotationDegrees(30));  // Tilt it down slightly
-		poseStack.mulPose(Axis.YP.rotationDegrees(rotation % 360)); // Spin it around to see the corner
-		poseStack.translate(-0.5, -0.5, -0.5);
+		poseStack.mulPose(Axis.XP.rotationDegrees(30));
+		poseStack.mulPose(Axis.YP.rotationDegrees(rotation % 360));
+		poseStack.translate(-0.5, 0, -0.5);
 
 		if(state.getRenderShape().equals(RenderShape.INVISIBLE))
 		{
 			poseStack.popPose();
 			return;
 		}
-		if(state.getRenderShape().equals(RenderShape.MODEL))
+		else
 		{
-			Minecraft.getInstance().getBlockRenderer().renderSingleBlock(state, poseStack, graphics.bufferSource(),
-					LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY,
-					net.neoforged.neoforge.client.model.data.ModelData.EMPTY, null);
+			Minecraft.getInstance().getBlockRenderer()
+					 .renderSingleBlock(state, poseStack, graphics.bufferSource(), LightTexture.FULL_BRIGHT,
+							 OverlayTexture.NO_OVERLAY, net.neoforged.neoforge.client.model.data.ModelData.EMPTY, null);
 
 			if(this.blockEntity != null)
 			{
 				Minecraft.getInstance().getBlockEntityRenderDispatcher().render(this.blockEntity, partialTick, poseStack, graphics.bufferSource());
 			}
-		}
-
-		if(state.getRenderShape().equals(RenderShape.ENTITYBLOCK_ANIMATED) && this.blockEntity != null)
-		{
-			Minecraft.getInstance().getBlockRenderer().renderSingleBlock(state, poseStack, graphics.bufferSource(),
-					LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY,
-					net.neoforged.neoforge.client.model.data.ModelData.EMPTY, null);
-
-			Minecraft.getInstance().getBlockEntityRenderDispatcher().render(this.blockEntity, partialTick, poseStack, graphics.bufferSource());
 		}
 
 		graphics.bufferSource().endBatch();

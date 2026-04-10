@@ -214,7 +214,7 @@ public class CubeItem extends Item implements GeoItem
 
 	public Integer getColor(ItemStack stack)
 	{
-		return stack.getOrDefault(DataComponentInit.COLOR, -1);
+		return stack.getOrDefault(DataComponentInit.COLOR, 0);
 	}
 
 	public void setColor(ItemStack stack, int color)
@@ -224,12 +224,22 @@ public class CubeItem extends Item implements GeoItem
 
 	public Integer getActiveColor(ItemStack stack)
 	{
-		return stack.getOrDefault(DataComponentInit.ACTIVE_COLOR, -1);
+		return stack.getOrDefault(DataComponentInit.ACTIVE_COLOR, 0);
 	}
 
 	public void setActiveColor(ItemStack stack, int color)
 	{
 		stack.set(DataComponentInit.ACTIVE_COLOR, color);
+	}
+
+	public Integer getHullColor(ItemStack stack)
+	{
+		return stack.getOrDefault(DataComponentInit.HULL_COLOR.get(), 0);
+	}
+
+	public void setHullColor(ItemStack stack, int color)
+	{
+		stack.set(DataComponentInit.HULL_COLOR, color);
 	}
 
 	@Override
@@ -243,4 +253,5 @@ public class CubeItem extends Item implements GeoItem
 	{
 		return cache;
 	}
+
 }
