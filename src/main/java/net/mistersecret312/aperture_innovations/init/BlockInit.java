@@ -42,9 +42,9 @@ public class BlockInit
     public static final DeferredBlock<Block> TIMER = registerBlock("antline_timer",
             () -> new AntlineTimerBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.REDSTONE_WIRE)));
 
-    public static final DeferredBlock<Block> PEDESTAL_BUTTON = registerBlock("pedestal_button",
+    public static final DeferredBlock<Block> PEDESTAL_BUTTON = BLOCKS.register("pedestal_button",
             () -> new PedestalButtonBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CONCRETE)));
-    public static final DeferredBlock<Block> LARGE_BUTTON = registerBlock("large_button",
+    public static final DeferredBlock<Block> LARGE_BUTTON = BLOCKS.register("large_button",
             () -> new LargeButtonBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CONCRETE)));
 
 

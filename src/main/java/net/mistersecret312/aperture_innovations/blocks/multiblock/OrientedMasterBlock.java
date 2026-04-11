@@ -2,6 +2,8 @@ package net.mistersecret312.aperture_innovations.blocks.multiblock;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
@@ -13,6 +15,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -26,7 +29,10 @@ public abstract class OrientedMasterBlock extends MasterBlock
 	public OrientedMasterBlock(Properties properties)
 	{
 		super(properties);
-		this.registerDefaultState(this.defaultBlockState().setValue(FACING, Direction.NORTH).setValue(NORMAL, Direction.UP).setValue(UPDATE, false));
+		this.registerDefaultState(this.defaultBlockState()
+									  .setValue(FACING, Direction.NORTH)
+									  .setValue(NORMAL, Direction.UP)
+									  .setValue(UPDATE, false));
 	}
 
 	@Override
@@ -72,8 +78,7 @@ public abstract class OrientedMasterBlock extends MasterBlock
 		if(state.getValue(UPDATE))
 		{
 			level.setBlock(pos, state.setValue(UPDATE, false), 3);
-			if(level instanceof Level realLevel)
-				state.getBlock().setPlacedBy(realLevel, pos, state, null, ItemStack.EMPTY);
+			level.scheduleTick(pos, this, 2);
 		}
 
 		return super.updateShape(state, direction, neighborState, level, pos, neighborPos);
@@ -97,7 +102,7 @@ public abstract class OrientedMasterBlock extends MasterBlock
 	}
 
 	@Override
-	public final VoxelShape getFullShape(Level level, BlockPos pos, BlockState state)
+	public VoxelShape getFullShape(Level level, BlockPos pos, BlockState state)
 	{
 		VoxelShape shape = this.getDefaultVoxelShape(level, pos);
 		if(state.hasProperty(FACING) && state.hasProperty(NORMAL))
@@ -118,6 +123,15 @@ public abstract class OrientedMasterBlock extends MasterBlock
 		}
 
 		return shape;
+	}
+
+	@Override
+	protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random)
+	{
+		super.tick(state, level, pos, random);
+
+		this.removeDummyBlocks(level, pos);
+		this.placeDummyBlocks(level, null, pos);
 	}
 
 	protected AABB rotateAABB(AABB original, Direction normal, Direction facing)

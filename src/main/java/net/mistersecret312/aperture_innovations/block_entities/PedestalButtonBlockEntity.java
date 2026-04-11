@@ -8,21 +8,24 @@ import net.minecraft.world.level.block.MagmaBlock;
 import net.minecraft.world.level.block.PressurePlateBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.mistersecret312.aperture_innovations.block_entities.multiblock.MasterBlockEntity;
+import net.mistersecret312.aperture_innovations.blocks.multiblock.OrientedMasterBlock;
 import net.mistersecret312.aperture_innovations.init.BlockEntityInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
+import net.mistersecret312.aperture_innovations.multitool.Color;
 import software.bernie.geckolib.animatable.GeoBlockEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.*;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
-public class PedestalButtonBlockEntity extends BlockEntity implements GeoBlockEntity
+public class PedestalButtonBlockEntity extends MasterBlockEntity implements GeoBlockEntity
 {
 	protected static final RawAnimation PRESS = RawAnimation.begin().thenPlay("press");
 	private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
-	public int color = -1;
-	public int activeColor = -1;
-	public int buttonColor = -1;
+	public Color idleColor = new Color(0, 0, 0);
+	public Color hullColor = new Color(0, 0, 0);
+	public Color buttonColor = new Color(0, 0, 0);
 
 	public PedestalButtonBlockEntity(BlockPos pos, BlockState blockState)
 	{
@@ -44,9 +47,13 @@ public class PedestalButtonBlockEntity extends BlockEntity implements GeoBlockEn
 	@Override
 	protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries)
 	{
-		tag.putInt("color", this.color);
-		tag.putInt("active_color", this.activeColor);
-		tag.putInt("button_color", this.buttonColor);
+		int[] hullArray = {hullColor.red(), hullColor.green(), hullColor.blue()};
+		int[] idleArray = {idleColor.red(), idleColor.green(), idleColor.blue()};
+		int[] buttonArray = {buttonColor.red(), buttonColor.green(), buttonColor.blue()};
+
+		tag.putIntArray("hull_color", hullArray);
+		tag.putIntArray("idle_color", idleArray);
+		tag.putIntArray("button_color", buttonArray);
 
 		super.saveAdditional(tag, registries);
 	}
@@ -56,9 +63,13 @@ public class PedestalButtonBlockEntity extends BlockEntity implements GeoBlockEn
 	{
 		super.loadAdditional(tag, registries);
 
-		this.color = tag.getInt("color");
-		this.activeColor = tag.getInt("active_color");
-		this.buttonColor = tag.getInt("button_color");
+		int[] hullArray = tag.getIntArray("hull_color");
+		int[] idleArray = tag.getIntArray("idle_color");
+		int[] buttonArray = tag.getIntArray("button_color");
+
+		this.hullColor = new Color(hullArray[0], hullArray[1], hullArray[2]);
+		this.idleColor = new Color(idleArray[0], idleArray[1], idleArray[2]);
+		this.buttonColor = new Color(buttonArray[0], buttonArray[1], buttonArray[2]);
 	}
 
 	@Override

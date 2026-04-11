@@ -73,6 +73,13 @@ public abstract class MasterBlock extends BaseEntityBlock
 		placeDummyBlocks(level, placer, pos);
 	}
 
+	@Override
+	protected void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean movedByPiston)
+	{
+		super.onPlace(state, level, pos, oldState, movedByPiston);
+		placeDummyBlocks(level, null, pos);
+	}
+
 	/**
 	 *
 	 * @return AABB that defines the volume this multiblock will take up.

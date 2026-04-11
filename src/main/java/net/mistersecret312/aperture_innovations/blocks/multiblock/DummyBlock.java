@@ -43,7 +43,7 @@ public class DummyBlock extends BaseEntityBlock
 		if(state.getBlock() != newState.getBlock())
 		{
 			MasterBlockEntity master = getMaster(level, pos);
-			if(master != null && !master.beingRemoved)
+			if(master != null && !master.beingRemoved && !master.getBlockState().getValue(MasterBlock.UPDATE))
 				level.setBlock(master.getBlockPos(), Blocks.AIR.defaultBlockState(), 3);
 
 			super.onRemove(state, level, pos, newState, movedByPiston);
@@ -110,6 +110,31 @@ public class DummyBlock extends BaseEntityBlock
 			return null;
 
 		return dummy.getMasterPos();
+	}
+
+	@Override
+	protected int getSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction)
+	{
+
+		if(!(level instanceof Level realLevel))
+			return super.getSignal(state, level, pos, direction);
+		MasterBlockEntity master = getMaster(realLevel, pos);
+		if(master == null)
+			return super.getSignal(state, level, pos, direction);
+
+		return master.getBlockState().getSignal(level, master.getBlockPos(), direction);
+	}
+
+	@Override
+	protected int getDirectSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction)
+	{
+		if(!(level instanceof Level realLevel))
+			return super.getDirectSignal(state, level, pos, direction);
+		MasterBlockEntity master = getMaster(realLevel, pos);
+		if(master == null)
+			return super.getDirectSignal(state, level, pos, direction);
+
+		return master.getBlockState().getDirectSignal(level, master.getBlockPos(), direction);
 	}
 
 	public MasterBlockEntity getMaster(Level level, BlockPos pos)

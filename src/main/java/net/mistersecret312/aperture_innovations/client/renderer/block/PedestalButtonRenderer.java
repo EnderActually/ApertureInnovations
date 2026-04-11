@@ -11,9 +11,12 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.phys.AABB;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
+import net.mistersecret312.aperture_innovations.block_entities.LargeButtonBlockEntity;
 import net.mistersecret312.aperture_innovations.block_entities.PedestalButtonBlockEntity;
 import net.mistersecret312.aperture_innovations.blocks.PedestalButtonBlock;
+import net.mistersecret312.aperture_innovations.blocks.multiblock.OrientedMasterBlock;
 import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.client.model.PedestalButtonModel;
 import org.jetbrains.annotations.Nullable;
@@ -43,13 +46,19 @@ public class PedestalButtonRenderer extends DynamicGeoBlockRenderer<PedestalButt
 	{
 		if(bone.getName().equals("ColoredLines"))
 		{
-			Color color = new Color(this.animatable.color, false);
+			if(this.animatable.idleColor.packagedInt() == 0)
+				return false;
+
+			Color color = new Color(this.animatable.idleColor.packagedInt(), false);
 			renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, color.getRGB());
 			return true;
 		}
 		if(bone.getName().equals("Button"))
 		{
-			Color color = new Color(this.animatable.buttonColor, false);
+			if(this.animatable.buttonColor.packagedInt() == 0)
+				return false;
+
+			Color color = new Color(this.animatable.buttonColor.packagedInt(), false);
 			renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, color.getRGB());
 			return true;
 		}
@@ -64,8 +73,8 @@ public class PedestalButtonRenderer extends DynamicGeoBlockRenderer<PedestalButt
 	{
 		if(bone.getName().equals("ColoredLines"))
 		{
-			int color = animatable.color;
-			if(color != -1)
+			int color = animatable.idleColor.packagedInt();
+			if(color != 0)
 				return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
 						"textures/block/pedestal_button/pedestal_button_lines_generic.png");
 
@@ -74,8 +83,8 @@ public class PedestalButtonRenderer extends DynamicGeoBlockRenderer<PedestalButt
 		}
 		if(bone.getName().equals("Button"))
 		{
-			int color = animatable.buttonColor;
-			if(color != -1)
+			int color = animatable.buttonColor.packagedInt();
+			if(color != 0)
 				return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
 						"textures/block/pedestal_button/pedestal_button_button_generic.png");
 
@@ -199,5 +208,18 @@ public class PedestalButtonRenderer extends DynamicGeoBlockRenderer<PedestalButt
 		poseStack.popPose();
 	}
 
+	@Override
+	public AABB getRenderBoundingBox(PedestalButtonBlockEntity blockEntity)
+	{
+		if(blockEntity.getLevel() != null && blockEntity.getBlockState().getBlock() instanceof OrientedMasterBlock master)
+			return master.getMultiblockVolume(blockEntity.getLevel(), blockEntity.getBlockPos());
 
+		return new AABB(0, 0, 0, 0, 0, 0);
+	}
+
+	@Override
+	protected void rotateBlock(Direction facing, PoseStack poseStack)
+	{
+
+	}
 }

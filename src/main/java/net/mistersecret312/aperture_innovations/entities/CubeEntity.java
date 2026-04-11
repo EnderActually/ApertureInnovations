@@ -110,16 +110,10 @@ public class CubeEntity extends Entity implements IFizzle, GeoEntity, IHaveConfi
 			this.addDeltaMovement(new Vec3(0f, -0.08f, 0f));
 		}
 
-		if(level().getBlockState(this.blockPosition()).getBlock() instanceof LargeButtonBlock button)
+		if(level().getBlockState(this.blockPosition()).getBlock() instanceof LargeButtonBlock)
 		{
 			BlockState state = level().getBlockState(blockPosition());
-
 			this.setActive(state.getValue(LargeButtonBlock.PRESSED));
-			BlockPos masterPos = button.getMasterPos(blockPosition(), state);
-			if(level().getBlockEntity(masterPos) instanceof LargeButtonBlockEntity blockEntity)
-			{
-				this.setActiveColor(blockEntity.activeColor == -1 ? 0 : blockEntity.activeColor);
-			}
 		}
 		else this.setActive(false);
 

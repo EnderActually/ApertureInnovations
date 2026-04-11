@@ -13,6 +13,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.mistersecret312.aperture_innovations.block_entities.multiblock.MasterBlockEntity;
 import net.mistersecret312.aperture_innovations.blocks.LargeButtonBlock;
 import net.mistersecret312.aperture_innovations.init.BlockEntityInit;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
@@ -23,7 +24,7 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.List;
 
-public class LargeButtonBlockEntity extends BlockEntity implements GeoBlockEntity
+public class LargeButtonBlockEntity extends MasterBlockEntity implements GeoBlockEntity
 {
 	protected static final RawAnimation PRESS = RawAnimation.begin().thenPlay("down");
 	protected static final RawAnimation UNPRESS = RawAnimation.begin().thenPlay("up");

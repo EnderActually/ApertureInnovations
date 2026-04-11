@@ -28,6 +28,11 @@ public class ItemInit
 
 	public static final DeferredItem<MultiBlockItem> VITAL_APPARATUS_VENT = ITEMS.register("vital_apparatus_vent",
 			() -> new MultiBlockItem(BlockInit.VITAL_APPARATUS_VENT.get(), new Item.Properties().stacksTo(64).fireResistant()));
+	public static final DeferredItem<MultiBlockItem> PEDESTAL_BUTTON = ITEMS.register("pedestal_button",
+			() -> new MultiBlockItem(BlockInit.PEDESTAL_BUTTON.get(), new Item.Properties().stacksTo(64).fireResistant()));
+	public static final DeferredItem<MultiBlockItem> LARGE_BUTTON = ITEMS.register("large_button",
+			() -> new MultiBlockItem(BlockInit.LARGE_BUTTON.get(), new Item.Properties().stacksTo(64).fireResistant()));
+
 
 	public static final DeferredItem<MultiToolItem> MULTI_TOOL = ITEMS.register("multi_tool",
 			() -> new MultiToolItem(new Item.Properties().stacksTo(1).fireResistant()));
