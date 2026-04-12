@@ -27,6 +27,8 @@ public class ItemTabInit
 							  output.accept(PortalGunItem.createPortalGun(ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "pbody")));
 							  output.accept(PortalGunItem.createPortalGun(ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID, "reloaded")));
 
+							  output.accept(ItemInit.MULTI_TOOL.get());
+
 							  output.accept(ItemInit.LONG_FALL_BOOTS.get());
 
 							  output.accept(ItemInit.COLORFUL_GEL.get());

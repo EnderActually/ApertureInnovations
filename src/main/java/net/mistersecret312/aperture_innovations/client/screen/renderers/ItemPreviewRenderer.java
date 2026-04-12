@@ -26,6 +26,6 @@ public class ItemPreviewRenderer implements PreviewRenderer
 	@Override
 	public void applyFakeState(HashMap<String, Object> map)
 	{
-
+		//TODO - Come up with an itemstack-friendly solution
 	}
 }

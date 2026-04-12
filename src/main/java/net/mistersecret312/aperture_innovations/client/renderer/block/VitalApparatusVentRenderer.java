@@ -170,7 +170,7 @@ public class VitalApparatusVentRenderer extends DynamicGeoBlockRenderer<VitalApp
 	public AABB getRenderBoundingBox(VitalApparatusVentBlockEntity blockEntity)
 	{
 		if(blockEntity.getBlockState().getBlock() instanceof MasterBlock masterBlock)
-			return masterBlock.getMultiblockVolume(blockEntity.getLevel(), blockEntity.getBlockPos());
+			return masterBlock.getFullShape(blockEntity.getLevel(), blockEntity.getBlockPos(), blockEntity.getBlockState()).bounds().move(blockEntity.getBlockPos());
 
 		return super.getRenderBoundingBox(blockEntity);
 	}
