@@ -61,7 +61,8 @@ public class LargeButtonRenderer extends DynamicGeoBlockRenderer<LargeButtonBloc
 							   @Nullable VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight,
 							   int packedOverlay, int colour)
 	{
-
+		super.actuallyRender(poseStack, animatable, model, renderType, bufferSource, buffer,
+				isReRender, partialTick, packedLight, packedOverlay, colour);
 	}
 
 	public ResourceLocation getButtonTexture(GeoBone bone, LargeButtonBlockEntity animatable)
