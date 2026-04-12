@@ -73,9 +73,6 @@ public class CubeRenderer extends DynamicGeoEntityRenderer<CubeEntity>
 							   @Nullable VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight,
 							   int packedOverlay, int colour)
 	{
-		if(true)
-			return;
-
 		super.actuallyRender(poseStack, animatable, model, renderType, bufferSource, buffer, isReRender, partialTick,
 				packedLight, packedOverlay, colour);
 	}

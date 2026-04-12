@@ -56,7 +56,8 @@ public class VitalApparatusVentRenderer extends DynamicGeoBlockRenderer<VitalApp
 							   @Nullable VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight,
 							   int packedOverlay, int colour)
 	{
-
+		super.actuallyRender(poseStack, animatable, model, renderType, bufferSource,
+				buffer, isReRender, partialTick, packedLight, packedOverlay, colour);
 	}
 
 	@Override
