@@ -37,6 +37,7 @@ public class SteppedSliderWidget extends AbstractSliderButton
 
     public void setValue(double value)
     {
+        value = value/max;
         double d0 = this.value;
         this.value = Mth.clamp(value, 0.0, 1.0);
         if (d0 != this.value)

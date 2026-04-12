@@ -2,8 +2,6 @@ package net.mistersecret312.aperture_innovations.client.screen.renderers;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.HashMap;

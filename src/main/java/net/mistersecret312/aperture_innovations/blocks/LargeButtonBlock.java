@@ -95,6 +95,27 @@ public class LargeButtonBlock extends OrientedMasterBlock
 	}
 
 	@Override
+	public AABB getMultiblockVolume(Level level, BlockPos pos)
+	{
+		if(true)
+			return super.getMultiblockVolume(level, pos);
+
+		AABB box = new AABB(0, 0, 0, 1, 0, 1);
+
+		BlockState state = level.getBlockState(pos);
+		if(state.hasProperty(OrientedMasterBlock.NORMAL) && state.hasProperty(OrientedMasterBlock.FACING))
+		{
+			Direction normal = state.getValue(OrientedMasterBlock.NORMAL);
+			Direction facing = state.getValue(OrientedMasterBlock.FACING);
+
+			if(facing.equals(Direction.WEST))
+				box.move(0, 0, 1);
+		}
+
+		return box;
+	}
+
+	@Override
 	public VoxelShape getDefaultVoxelShape(Level level, BlockPos pos)
 	{
 		return Shapes.empty();
@@ -103,18 +124,36 @@ public class LargeButtonBlock extends OrientedMasterBlock
 	@Override
 	public VoxelShape getFullShape(Level level, BlockPos pos, BlockState state)
 	{
-		if(!state.hasProperty(OrientedMasterBlock.NORMAL))
+		if(!state.hasProperty(OrientedMasterBlock.NORMAL) || !state.hasProperty(OrientedMasterBlock.FACING))
 			return Shapes.empty();
 
 		Direction normal = state.getValue(OrientedMasterBlock.NORMAL);
+		Direction facing = state.getValue(OrientedMasterBlock.FACING);
 
 		VoxelShape shape = Shapes.box(-0.6875, 0, 0.3125, 0.6875, 0.1875, 1.6875);
-		if (normal.equals(Direction.DOWN)) shape = Shapes.box(-0.6875, 0.8125, 0.3125, 0.6875, 1, 1.6875);
-		if (normal.equals(Direction.EAST)) shape = Shapes.box(0, -0.6875, 0.3125, 0.1875, 0.6875, 1.6875);
-		if (normal.equals(Direction.WEST)) shape = Shapes.box(0.8125, -0.6875, 0.3125, 1.0, 0.6875, 1.6875);
-		if (normal.equals(Direction.NORTH)) shape = Shapes.box(-0.6875, -0.6875, 0.8125, 0.6875, 0.6875, 1.0);
-		if (normal.equals(Direction.SOUTH)) shape = Shapes.box(-0.6875, -0.6875, 0, 0.6875, 0.6875, 0.1875);
+		if(normal.equals(Direction.UP))
+		{
+			if(facing.equals(Direction.NORTH))
+				shape = shape.move(1, 0, -1);
+			if(facing.equals(Direction.EAST))
+				shape = shape.move(1, 0, 0);
+			if(facing.equals(Direction.WEST))
+				shape = shape.move(0, 0, -1);
+		}
+		if (normal.equals(Direction.DOWN))
+		{
+			shape = Shapes.box(-0.6875, 0.8125, 0.3125, 0.6875, 0.99, 1.6875).move(1, 0, 0);
+		}
 
+		if (normal.equals(Direction.EAST))
+			shape = Shapes.box(0, -0.6875, 0.3125, 0.1875, 0.6875, 1.6875).move(0, 1, 0);
+
+		if (normal.equals(Direction.WEST))
+			shape = Shapes.box(0.8125, -0.6875, 0.3125, 0.99, 0.6875, 1.6875).move(0, 1, 0);
+		if (normal.equals(Direction.NORTH))
+			shape = Shapes.box(-0.6875, -0.6875, 0.8125, 0.6875, 0.6875, 0.99).move(1, 1, 0);
+		if (normal.equals(Direction.SOUTH))
+			shape = Shapes.box(-0.6875, -0.6875, 0, 0.6875, 0.6875, 0.1875).move(1, 1, 0);
 		return shape;
 	}
 

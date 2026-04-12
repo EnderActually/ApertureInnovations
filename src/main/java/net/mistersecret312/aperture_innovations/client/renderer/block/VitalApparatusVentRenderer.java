@@ -51,6 +51,15 @@ public class VitalApparatusVentRenderer extends DynamicGeoBlockRenderer<VitalApp
 	}
 
 	@Override
+	public void actuallyRender(PoseStack poseStack, VitalApparatusVentBlockEntity animatable, BakedGeoModel model,
+							   @Nullable RenderType renderType, MultiBufferSource bufferSource,
+							   @Nullable VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight,
+							   int packedOverlay, int colour)
+	{
+
+	}
+
+	@Override
 	public @Nullable RenderType getRenderType(VitalApparatusVentBlockEntity animatable, ResourceLocation texture,
 											  @Nullable MultiBufferSource bufferSource, float partialTick)
 	{

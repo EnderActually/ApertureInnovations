@@ -11,8 +11,10 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.PlainTextButton;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.mistersecret312.aperture_innovations.client.screen.MultiToolScreen;
+import net.mistersecret312.aperture_innovations.client.screen.inputs.DropdownWidget;
 import net.mistersecret312.aperture_innovations.client.screen.inputs.SteppedSliderWidget;
 
 import java.text.NumberFormat;
@@ -333,10 +335,11 @@ public abstract class InteractionType
 		@Override
 		public void makeWidget(ConfigurationProperty<?> property, int x, int y, MultiToolScreen screen)
 		{
+			String name = property.getName();
 			SteppedSliderWidget slider = new SteppedSliderWidget(x, y+12, 40, 12,
 					Component.literal("R"), min, max, step, 0.0, value ->
 				{
-
+					screen.renderer.applyFakeState(screen.properties);
 				});
 
 			screen.addCategoryWidget(slider, screen.categories.get(property.getCategory()));
@@ -345,16 +348,33 @@ public abstract class InteractionType
 
 	public static class ListChoice extends InteractionType
 	{
-		public final List<?> allowedValues;
-		public ListChoice(List<?> allowedValues)
+		public final List<String> allowedValues;
+		public final Object current;
+		public ListChoice(List<String> allowedValues, String current)
 		{
 			this.allowedValues = allowedValues;
+			this.current = current;
 		}
 
 		@Override
 		public void makeWidget(ConfigurationProperty<?> property, int x, int y, MultiToolScreen screen)
 		{
+			String name = property.getName();
+			Component component = Component.translatable("multi_tool."+property.get().toString().replace(':', '.'));
+			int width = Minecraft.getInstance().font.width(component)+15;
+			DropdownWidget widget = new DropdownWidget(x, y,
+					width,
+					Minecraft.getInstance().font.lineHeight*2,
+					allowedValues, property.get().toString(),
+					(selected) ->
+						{
+							screen.properties.put(name, ResourceLocation.parse(selected));
+							screen.renderer.applyFakeState(screen.properties);
+						});
 
+			Component message = Component.translatable("multi_tool."+screen.properties.get(name).toString().replace(':', '.'));
+			widget.setMessage(message);
+			screen.addCategoryWidget(widget, screen.categories.get(property.getCategory()));
 		}
 	}
 }

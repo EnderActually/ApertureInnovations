@@ -85,7 +85,7 @@ public abstract class OrientedMasterBlock extends MasterBlock
 	}
 
 	@Override
-	public final AABB getMultiblockVolume(Level level, BlockPos pos)
+	public AABB getMultiblockVolume(Level level, BlockPos pos)
 	{
 		BlockState state = level.getBlockState(pos);
 

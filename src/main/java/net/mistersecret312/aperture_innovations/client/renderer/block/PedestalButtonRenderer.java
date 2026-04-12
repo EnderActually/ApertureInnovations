@@ -19,6 +19,7 @@ import net.mistersecret312.aperture_innovations.blocks.PedestalButtonBlock;
 import net.mistersecret312.aperture_innovations.blocks.multiblock.OrientedMasterBlock;
 import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.client.model.PedestalButtonModel;
+import net.mistersecret312.aperture_innovations.client.renderer.ColoredGlowingLayer;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -37,75 +38,34 @@ public class PedestalButtonRenderer extends DynamicGeoBlockRenderer<PedestalButt
 	public PedestalButtonRenderer(BlockEntityRendererProvider.Context context)
 	{
 		super(new PedestalButtonModel());
+
+		this.addRenderLayer(new ColoredGlowingLayer<>(this,
+				(button, bone) -> getButtonTexture(bone, button),
+				(button, bone) -> getButtonColor(bone, button),
+				(button, bone) -> getButtonRenderType(bone, button)
+		));
+
+		this.addRenderLayer(new ColoredGlowingLayer<>(this,
+				(button, bone) -> getLinesTexture(bone, button),
+				(button, bone) -> getLinesColor(bone, button),
+				(button, bone) -> getLinesRenderType(bone, button)
+		));
+
+		this.addRenderLayer(new ColoredGlowingLayer<>(this,
+				(button, bone) -> getHullTexture(bone, button),
+				(button, bone) -> getHullColor(bone, button),
+				(button, bone) -> getHullRenderType(bone, button)
+		));
 	}
 
 	@Override
-	protected boolean boneRenderOverride(PoseStack poseStack, GeoBone bone, MultiBufferSource bufferSource,
-										 VertexConsumer buffer, float partialTick, int packedLight, int packedOverlay,
-										 int colour)
+	public void actuallyRender(PoseStack poseStack, PedestalButtonBlockEntity animatable, BakedGeoModel model,
+							   @Nullable RenderType renderType, MultiBufferSource bufferSource,
+							   @Nullable VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight,
+							   int packedOverlay, int colour)
 	{
-		if(bone.getName().equals("ColoredLines"))
-		{
-			if(this.animatable.idleColor.packagedInt() == 0)
-				return false;
-
-			Color color = new Color(this.animatable.idleColor.packagedInt(), false);
-			renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, color.getRGB());
-			return true;
-		}
-		if(bone.getName().equals("Button"))
-		{
-			if(this.animatable.buttonColor.packagedInt() == 0)
-				return false;
-
-			Color color = new Color(this.animatable.buttonColor.packagedInt(), false);
-			renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, color.getRGB());
-			return true;
-		}
-
-		return super.boneRenderOverride(poseStack, bone, bufferSource, buffer, partialTick, packedLight, packedOverlay,
-				colour);
-	}
-
-	@Override
-	protected @Nullable ResourceLocation getTextureOverrideForBone(GeoBone bone, PedestalButtonBlockEntity animatable,
-																   float partialTick)
-	{
-		if(bone.getName().equals("ColoredLines"))
-		{
-			int color = animatable.idleColor.packagedInt();
-			if(color != 0)
-				return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
-						"textures/block/pedestal_button/pedestal_button_lines_generic.png");
-
-			return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
-					"textures/block/pedestal_button/pedestal_button_lines.png");
-		}
-		if(bone.getName().equals("Button"))
-		{
-			int color = animatable.buttonColor.packagedInt();
-			if(color != 0)
-				return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
-						"textures/block/pedestal_button/pedestal_button_button_generic.png");
-
-			return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
-					"textures/block/pedestal_button/pedestal_button_button.png");
-		}
-		return super.getTextureOverrideForBone(bone, animatable, partialTick);
-	}
-
-	@Override
-	protected @Nullable RenderType getRenderTypeOverrideForBone(GeoBone bone, PedestalButtonBlockEntity animatable,
-																ResourceLocation texturePath,
-																MultiBufferSource bufferSource, float partialTick)
-	{
-		List<String> glows = Lists.newArrayList("ColoredLines", "Button");
-		if(bone.getName().equals("Button"))
-			return GLOWING_RENDER_TYPE.apply(getTextureOverrideForBone(bone, animatable, partialTick), false);
-		if(glows.contains(bone.getName()))
-			return PortalRenderTypes.APERTURE_GLOW.apply(getTextureOverrideForBone(bone, animatable, partialTick),
-					RenderStateShard.TRANSLUCENT_TRANSPARENCY);
-		return super.getRenderTypeOverrideForBone(bone, animatable, texturePath, bufferSource, partialTick);
+		super.actuallyRender(poseStack, animatable, model, renderType, bufferSource, buffer, isReRender, partialTick,
+				packedLight, packedOverlay, colour);
 	}
 
 	@Override
@@ -158,54 +118,81 @@ public class PedestalButtonRenderer extends DynamicGeoBlockRenderer<PedestalButt
 			poseStack.mulPose(Axis.YP.rotationDegrees(180));
 	}
 
-	@Override
-	public void renderRecursively(PoseStack poseStack, PedestalButtonBlockEntity animatable, GeoBone bone,
-								  RenderType renderType, MultiBufferSource bufferSource, VertexConsumer buffer,
-								  boolean isReRender, float partialTick, int packedLight, int packedOverlay, int colour)
+	public ResourceLocation getHullTexture(GeoBone bone, PedestalButtonBlockEntity animatable)
 	{
-		poseStack.pushPose();
-		RenderUtil.translateMatrixToBone(poseStack, bone);
-		RenderUtil.translateToPivotPoint(poseStack, bone);
-		RenderUtil.rotateMatrixAroundBone(poseStack, bone);
-		RenderUtil.scaleMatrixForBone(poseStack, bone);
+		return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+				"textures/block/pedestal_button/pedestal_button.png");
+	}
 
-		if (bone.isTrackingMatrices()) {
-			Matrix4f poseState = new Matrix4f(poseStack.last().pose());
-			Matrix4f localMatrix = RenderUtil.invertAndMultiplyMatrices(poseState, this.blockRenderTranslations);
-			Matrix4f worldState = new Matrix4f(localMatrix);
-			BlockPos pos = this.animatable.getBlockPos();
+	public ResourceLocation getButtonTexture(GeoBone bone, PedestalButtonBlockEntity animatable)
+	{
+		if(!bone.getName().equals("Button"))
+			return null;
 
-			bone.setModelSpaceMatrix(RenderUtil.invertAndMultiplyMatrices(poseState, this.modelRenderTranslations));
-			bone.setLocalSpaceMatrix(localMatrix);
-			bone.setWorldSpaceMatrix(worldState.translate(new Vector3f(pos.getX(), pos.getY(), pos.getZ())));
-		}
+		int color = animatable.getButtonColor().packagedInt();
+		if(color != 0)
+			return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+					"textures/block/pedestal_button/pedestal_button_button_generic.png");
 
-		RenderUtil.translateAwayFromPivotPoint(poseStack, bone);
+		return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+				"textures/block/pedestal_button/pedestal_button_button.png");
+	}
 
-		this.textureOverride = getTextureOverrideForBone(bone, this.animatable, partialTick);
-		ResourceLocation texture = this.textureOverride == null ? getTextureLocation(this.animatable) : this.textureOverride;
-		RenderType renderTypeOverride = getRenderTypeOverrideForBone(bone, this.animatable, texture, bufferSource, partialTick);
+	public ResourceLocation getLinesTexture(GeoBone bone, PedestalButtonBlockEntity animatable)
+	{
+		if(!bone.getName().equals("ColoredLines"))
+			return null;
 
-		if (texture != null && renderTypeOverride == null)
-			renderTypeOverride = getRenderType(this.animatable, texture, bufferSource, partialTick);
+		int color = animatable.getLinesColor().packagedInt();
+		if(color != 0)
+			return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+					"textures/block/pedestal_button/pedestal_button_lines_generic.png");
 
-		if (renderTypeOverride != null)
-			buffer = bufferSource.getBuffer(renderTypeOverride);
+		return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+				"textures/block/pedestal_button/pedestal_button_lines.png");
+	}
 
-		if (!boneRenderOverride(poseStack, bone, bufferSource, buffer, partialTick, packedLight, packedOverlay, colour))
-			super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, colour);
+	public int getHullColor(GeoBone bone, PedestalButtonBlockEntity animatable)
+	{
+		int color = animatable.getHullColor().packagedInt();
+		if(color != 0)
+			return new Color(color, false).getRGB();
 
-		if (renderTypeOverride != null)
-			buffer = bufferSource.getBuffer(renderType);
+		return -1;
+	}
 
-		if (!isReRender)
-			applyRenderLayersForBone(poseStack, animatable, bone, renderTypeOverride, bufferSource, buffer, partialTick, packedLight, packedOverlay);
+	public int getButtonColor(GeoBone bone, PedestalButtonBlockEntity animatable)
+	{
+		int color = animatable.getButtonColor().packagedInt();
+		if(color != 0)
+			return new Color(color, false).getRGB();
 
-		buffer = checkAndRefreshBuffer(isReRender, buffer, bufferSource, renderTypeOverride);
+		return -1;
+	}
 
-		super.renderChildBones(poseStack, animatable, bone, renderType, bufferSource, buffer, isReRender, partialTick, packedLight, packedOverlay, colour);
+	public int getLinesColor(GeoBone bone, PedestalButtonBlockEntity animatable)
+	{
+		int color = animatable.getLinesColor().packagedInt();
+		if(color != 0)
+			return new Color(color, false).getRGB();
 
-		poseStack.popPose();
+		return -1;
+	}
+
+	public RenderType getHullRenderType(GeoBone bone, PedestalButtonBlockEntity animatable)
+	{
+		return RenderType.entityTranslucent(getHullTexture(bone, animatable));
+	}
+
+	public RenderType getButtonRenderType(GeoBone bone, PedestalButtonBlockEntity animatable)
+	{
+		return GLOWING_RENDER_TYPE.apply(getButtonTexture(bone, animatable), false);
+	}
+
+	public RenderType getLinesRenderType(GeoBone bone, PedestalButtonBlockEntity animatable)
+	{
+		return PortalRenderTypes.APERTURE_GLOW.apply(getLinesTexture(bone, animatable),
+				RenderStateShard.TRANSLUCENT_TRANSPARENCY);
 	}
 
 	@Override

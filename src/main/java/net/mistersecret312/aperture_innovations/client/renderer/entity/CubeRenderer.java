@@ -31,6 +31,11 @@ public class CubeRenderer extends DynamicGeoEntityRenderer<CubeEntity>
 				(cube, bone) -> getColor(bone, cube),
 				(cube, bone) -> getRenderType(bone, cube)
 		));
+		this.addRenderLayer(new ColoredGlowingLayer<>(this,
+				(cube, bone) -> getHullTexture(bone, cube),
+				(cube, bone) -> getHullColor(bone, cube),
+				(cube, bone) -> RenderType.entityTranslucent(cube.getClientVariant().hullTexture())
+		));
 	}
 
 	@Override
@@ -63,6 +68,26 @@ public class CubeRenderer extends DynamicGeoEntityRenderer<CubeEntity>
 	}
 
 	@Override
+	public void actuallyRender(PoseStack poseStack, CubeEntity animatable, BakedGeoModel model,
+							   @Nullable RenderType renderType, MultiBufferSource bufferSource,
+							   @Nullable VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight,
+							   int packedOverlay, int colour)
+	{
+		if(true)
+			return;
+
+		super.actuallyRender(poseStack, animatable, model, renderType, bufferSource, buffer, isReRender, partialTick,
+				packedLight, packedOverlay, colour);
+	}
+
+	@Override
+	public void render(CubeEntity entity, float entityYaw, float partialTick, PoseStack poseStack,
+					   MultiBufferSource bufferSource, int packedLight)
+	{
+		super.render(entity, entityYaw, partialTick, poseStack, bufferSource, packedLight);
+	}
+
+	@Override
 	public @Nullable RenderType getRenderType(CubeEntity animatable, ResourceLocation texture,
 											  @Nullable MultiBufferSource bufferSource, float partialTick)
 	{
@@ -78,19 +103,39 @@ public class CubeRenderer extends DynamicGeoEntityRenderer<CubeEntity>
 			return null;
 
 		ResourceLocation texture = animatable.getClientVariant().idleTexture().orElse(null);
+		if(active)
+			texture = cubeVariant.activeTexture().orElse(null);
 		if(color != 0)
 			texture = cubeVariant.genericTexture().orElse(null);
 
-		if(active)
-			texture = cubeVariant.activeTexture().orElse(null);
 
 		return texture;
+	}
+
+	public ResourceLocation getHullTexture(GeoBone bone, CubeEntity animatable)
+	{
+		if(bone.getName().equals("ColoredCircle"))
+			return null;
+
+		return animatable.getClientVariant().hullTexture();
+	}
+
+	public int getHullColor(GeoBone bone, CubeEntity animatable)
+	{
+		int color = animatable.getHullColor().packagedInt();
+		if(color != 0)
+			return new Color(color, false).getRGB();
+
+		return -1;
 	}
 
 	public int getColor(GeoBone bone, CubeEntity animatable)
 	{
 		boolean active = this.getAnimatable().isActive();
-		int color = active ? this.getAnimatable().getActiveColor().packagedInt() : this.getAnimatable().getColor().packagedInt();
+		int idleColor = this.getAnimatable().getColor().packagedInt();
+		int activeColor = this.getAnimatable().getActiveColor().packagedInt();
+
+		int color = active ? activeColor : idleColor;
 
 		if(color != 0)
 			return new Color(color, false).getRGB();

@@ -25,12 +25,14 @@ import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.block_entities.LargeButtonBlockEntity;
 import net.mistersecret312.aperture_innovations.blocks.LargeButtonBlock;
+import net.mistersecret312.aperture_innovations.blocks.multiblock.DummyBlock;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientCubeVariant;
 import net.mistersecret312.aperture_innovations.client.resourcepack.ClientCubeVariants;
 import net.mistersecret312.aperture_innovations.datapack.CubeVariant;
@@ -110,12 +112,20 @@ public class CubeEntity extends Entity implements IFizzle, GeoEntity, IHaveConfi
 			this.addDeltaMovement(new Vec3(0f, -0.08f, 0f));
 		}
 
-		if(level().getBlockState(this.blockPosition()).getBlock() instanceof LargeButtonBlock)
+		BlockState state = level().getBlockState(this.blockPosition());
+		if(state.getBlock() instanceof DummyBlock dummy)
 		{
-			BlockState state = level().getBlockState(blockPosition());
-			this.setActive(state.getValue(LargeButtonBlock.PRESSED));
+			BlockEntity master = dummy.getMaster(level(), this.blockPosition());
+			if(master instanceof LargeButtonBlockEntity)
+				this.setActive(master.getBlockState().getValue(LargeButtonBlock.PRESSED));
+			else this.setActive(false);
 		}
 		else this.setActive(false);
+
+		if(state.getBlock() instanceof LargeButtonBlock)
+		{
+			this.setActive(state.getValue(LargeButtonBlock.PRESSED));
+		}
 
 		float friction = 0.85f;
 		if(!this.onGround())
@@ -475,18 +485,18 @@ public class CubeEntity extends Entity implements IFizzle, GeoEntity, IHaveConfi
 				new InteractionType.RGBColorPicker(),
 				this::setColor, this::getColor));
 
-		List<ResourceLocation> variants = new ArrayList<>();
+		List<String> variants = new ArrayList<>();
 		for(Map.Entry<ResourceKey<CubeVariant>, CubeVariant> entry : this.registryAccess()
 																		 .registryOrThrow(CubeVariant.REGISTRY_KEY)
 																		 .entrySet())
 		{
-			variants.add(entry.getKey().location());
+			variants.add(entry.getKey().location().toString());
 		}
 
 		list.add(new ConfigurationProperty<>("variant", "variant",
 				"multi_tool.aperture_innovations.cube.variant",
 				MultiToolConfigTypeInit.RESOURCE_LOCATION.get(),
-				new InteractionType.ListChoice(variants),
+				new InteractionType.ListChoice(variants, getVariantKey().toString()),
 				this::setVariantKey, this::getVariantKey));
 
 		return list;

@@ -64,8 +64,14 @@
   "category.aperture_innovations.color.hull_color": "Hull",
   "category.aperture_innovations.color.active_color": "Active",
   "category.aperture_innovations.color.idle_color": "Idle",
+  "category.aperture_innovations.color.button_color": "Button",
+  "category.aperture_innovations.color.lines_color": "Lines",
+
   "category.aperture_innovations.variant": "Variant",
   "category.aperture_innovations.variant.variant": "Variant",
+
+  "multi_tool.aperture_innovations.weighted_storage_cube": "Weighted Storage Cube",
+  "multi_tool.aperture_innovations.weighted_companion_cube": "Weighted Companion Cube",
 
   "sound.aperture_innovations.portal_ambient": "Portal Ambient",
   "sound.aperture_innovations.portal_enter": "Portal travel",

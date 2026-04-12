@@ -18,6 +18,7 @@ import net.mistersecret312.aperture_innovations.blocks.LargeButtonBlock;
 import net.mistersecret312.aperture_innovations.blocks.multiblock.OrientedMasterBlock;
 import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.client.model.LargeButtonModel;
+import net.mistersecret312.aperture_innovations.client.renderer.ColoredGlowingLayer;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -35,79 +36,110 @@ public class LargeButtonRenderer extends DynamicGeoBlockRenderer<LargeButtonBloc
 	public LargeButtonRenderer(BlockEntityRendererProvider.Context context)
 	{
 		super(new LargeButtonModel());
+		this.addRenderLayer(new ColoredGlowingLayer<>(this,
+				(button, bone) -> getButtonTexture(bone, button),
+				(button, bone) -> getButtonColor(bone, button),
+				(button, bone) -> getButtonRenderType(bone, button)
+		));
+
+		this.addRenderLayer(new ColoredGlowingLayer<>(this,
+				(button, bone) -> getLinesTexture(bone, button),
+				(button, bone) -> getLinesColor(bone, button),
+				(button, bone) -> getLinesRenderType(bone, button)
+		));
+
+		this.addRenderLayer(new ColoredGlowingLayer<>(this,
+				(button, bone) -> getHullTexture(bone, button),
+				(button, bone) -> getHullColor(bone, button),
+				(button, bone) -> getHullRenderType(bone, button)
+		));
 	}
 
 	@Override
-	protected boolean boneRenderOverride(PoseStack poseStack, GeoBone bone, MultiBufferSource bufferSource,
-										 VertexConsumer buffer, float partialTick, int packedLight, int packedOverlay,
-										 int colour)
+	public void actuallyRender(PoseStack poseStack, LargeButtonBlockEntity animatable, BakedGeoModel model,
+							   @Nullable RenderType renderType, MultiBufferSource bufferSource,
+							   @Nullable VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight,
+							   int packedOverlay, int colour)
 	{
-		if(bone.getName().equals("ColoredLines"))
-		{
-			boolean active = animatable.getBlockState().getValue(LargeButtonBlock.PRESSED);
-			int intColor = active ? this.animatable.activeColor : this.animatable.color;
 
-			Color color = new Color(intColor, false);
-			renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, color.getRGB());
-			return true;
-		}
-		if(bone.getName().equals("Button"))
-		{
-			Color color = new Color(this.animatable.buttonColor, false);
-			renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, color.getRGB());
-			return true;
-		}
-
-		return super.boneRenderOverride(poseStack, bone, bufferSource, buffer, partialTick, packedLight, packedOverlay,
-				colour);
 	}
 
-	@Override
-	protected @Nullable ResourceLocation getTextureOverrideForBone(GeoBone bone, LargeButtonBlockEntity animatable,
-																   float partialTick)
+	public ResourceLocation getButtonTexture(GeoBone bone, LargeButtonBlockEntity animatable)
 	{
-		if(bone.getName().equals("ColoredLines"))
-		{
-			boolean active = animatable.getBlockState().getValue(LargeButtonBlock.PRESSED);
-			int color = active ? animatable.activeColor : animatable.color;
-			if(color == -1)
-			{
-				if(active)
-					return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
-							"textures/block/large_button/large_button_lines_active.png");
-				else return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
-						"textures/block/large_button/large_button_lines_inactive.png");
-			}
-			else return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
-						"textures/block/large_button/large_button_lines_generic.png");
-
-		}
-		if(bone.getName().equals("Button"))
-		{
-			int color = animatable.buttonColor;
-			if(color != -1)
-				return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
-						"textures/block/large_button/large_button_button_generic.png");
-
+		int color = animatable.getButtonColor().packagedInt();
+		if(color != 0)
 			return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
-					"textures/block/large_button/large_button_button.png");
-		}
-		return super.getTextureOverrideForBone(bone, animatable, partialTick);
+					"textures/block/large_button/large_button_button_generic.png");
+
+		return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+				"textures/block/large_button/large_button_button.png");
 	}
 
-	@Override
-	protected @Nullable RenderType getRenderTypeOverrideForBone(GeoBone bone, LargeButtonBlockEntity animatable,
-																ResourceLocation texturePath,
-																MultiBufferSource bufferSource, float partialTick)
+	public ResourceLocation getLinesTexture(GeoBone bone, LargeButtonBlockEntity animatable)
 	{
-		if(bone.getName().equals("Button"))
-			return GLOWING_RENDER_TYPE.apply(getTextureOverrideForBone(bone, animatable, partialTick), false);
+		int color = animatable.getColor().packagedInt();
+		if(color != 0)
+			return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+			"textures/block/large_button/large_button_lines_generic.png");
 
-		if(bone.getName().equals("ColoredLines"))
-			return PortalRenderTypes.APERTURE_GLOW.apply(getTextureOverrideForBone(bone, animatable, partialTick),
-					RenderStateShard.TRANSLUCENT_TRANSPARENCY);
+		boolean active = animatable.getBlockState().getValue(LargeButtonBlock.PRESSED);
+		if(active)
+			return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+					"textures/block/large_button/large_button_lines_active.png");
 
-		return super.getRenderTypeOverrideForBone(bone, animatable, texturePath, bufferSource, partialTick);
+		return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+				"textures/block/large_button/large_button_lines_inactive.png");
+	}
+
+	public ResourceLocation getHullTexture(GeoBone bone, LargeButtonBlockEntity animatable)
+	{
+		return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+				"textures/block/large_button/large_button.png");
+	}
+
+	public int getButtonColor(GeoBone bone, LargeButtonBlockEntity animatable)
+	{
+		int color = animatable.getButtonColor().packagedInt();
+		if(color != 0)
+			return new Color(color, false).getRGB();
+
+		return -1;
+	}
+
+	public int getLinesColor(GeoBone bone, LargeButtonBlockEntity animatable)
+	{
+		boolean active = animatable.getBlockState().getValue(LargeButtonBlock.PRESSED);
+		int color = active ? animatable.getActiveColor().packagedInt() : animatable.getColor().packagedInt();
+
+		if(color != 0)
+			return new Color(color, false).getRGB();
+
+		return -1;
+	}
+
+	public int getHullColor(GeoBone bone, LargeButtonBlockEntity animatable)
+	{
+		int color = animatable.getHullColor().packagedInt();
+		if(color != 0)
+			return new Color(color, false).getRGB();
+
+		return -1;
+	}
+
+	public RenderType getButtonRenderType(GeoBone bone, LargeButtonBlockEntity animatable)
+	{
+		return GLOWING_RENDER_TYPE.apply(getButtonTexture(bone, animatable), false);
+	}
+
+	public RenderType getLinesRenderType(GeoBone bone, LargeButtonBlockEntity animatable)
+	{
+		return PortalRenderTypes.APERTURE_GLOW.apply(getLinesTexture(bone, animatable),
+				RenderStateShard.TRANSLUCENT_TRANSPARENCY);
+	}
+
+	public RenderType getHullRenderType(GeoBone bone, LargeButtonBlockEntity animatable)
+	{
+		return RenderType.entityTranslucent(getHullTexture(bone, animatable));
 	}
 
 	@Override
@@ -120,116 +152,38 @@ public class LargeButtonRenderer extends DynamicGeoBlockRenderer<LargeButtonBloc
 
 		Direction facing = animatable.getBlockState().getValue(LargeButtonBlock.FACING);
 		Direction normal = animatable.getBlockState().getValue(LargeButtonBlock.NORMAL);
-		boolean positive = normal.getAxisDirection().equals(Direction.AxisDirection.POSITIVE);
-		boolean facingPos = facing.getAxisDirection().equals(Direction.AxisDirection.POSITIVE);
 
-//		if(normal.getAxis().isVertical())
-//		{
-//			if(!positive)
-//			{
-//				poseStack.translate(0f, 1f, 0f);
-//				poseStack.mulPose(Axis.ZP.rotationDegrees(180));
-//				if(facing.getAxis().equals(Direction.Axis.X))
-//				{
-//					poseStack.translate(0f, 0f, 0f);
-//					poseStack.mulPose(Axis.YP.rotationDegrees(180));
-//				}
-//				else
-//					poseStack.translate(0f, 0f, 0f);
-//			}
-//
-//			if(facing.getAxis().equals(Direction.Axis.X))
-//			{
-//				if(!facingPos)
-//					poseStack.translate(0f, 0f, 1f);
-//				else poseStack.translate(-1f, 0f, 0f);
-//			}
-//			else if(!facingPos)
-//				poseStack.translate(-1f, 0f, 1f);
-//		}
-//		if(normal.getAxis().isHorizontal())
-//		{
-//			if(normal.getAxis().equals(Direction.Axis.X))
-//			{
-//				poseStack.translate(positive ? -0.5f : 0.5f, 0.5f, positive ? 0f: 1f);
-//
-//				poseStack.mulPose(Axis.ZP.rotationDegrees(normal.toYRot()));
-//				poseStack.mulPose(Axis.YP.rotationDegrees(positive ? 180 : 0));
-//			}
-//			if(normal.getAxis().equals(Direction.Axis.Z))
-//			{
-//				poseStack.translate(positive ? 0f : -1f, 0.5f, positive ? -0.5f : 0.5f);
-//				poseStack.mulPose(Axis.ZP.rotationDegrees(90));
-//				poseStack.mulPose(Axis.XP.rotationDegrees(positive ? 90 : -90));
-//			}
-//
-//			if(facing.getAxis().isVertical())
-//			{
-//				boolean posFace = facing.getAxisDirection().equals(Direction.AxisDirection.POSITIVE);
-//				poseStack.mulPose(Axis.YP.rotationDegrees(posFace ? 0 :180));
-//			}
-//		}
-//
-//		poseStack.mulPose(Axis.YP.rotationDegrees(animatable.getBlockState().getValue(LargeButtonBlock.FACING).toYRot()));
-//		if(facing.getAxis().equals(Direction.Axis.X))
-//			poseStack.mulPose(Axis.YP.rotationDegrees(180));
-	}
+		poseStack.mulPose(normal.getRotation());
 
-	@Override
-	public void renderRecursively(PoseStack poseStack, LargeButtonBlockEntity animatable, GeoBone bone,
-								  RenderType renderType, MultiBufferSource bufferSource, VertexConsumer buffer,
-								  boolean isReRender, float partialTick, int packedLight, int packedOverlay, int colour)
-	{
-		poseStack.pushPose();
-		RenderUtil.translateMatrixToBone(poseStack, bone);
-		RenderUtil.translateToPivotPoint(poseStack, bone);
-		RenderUtil.rotateMatrixAroundBone(poseStack, bone);
-		RenderUtil.scaleMatrixForBone(poseStack, bone);
-
-		if (bone.isTrackingMatrices()) {
-			Matrix4f poseState = new Matrix4f(poseStack.last().pose());
-			Matrix4f localMatrix = RenderUtil.invertAndMultiplyMatrices(poseState, this.blockRenderTranslations);
-			Matrix4f worldState = new Matrix4f(localMatrix);
-			BlockPos pos = this.animatable.getBlockPos();
-
-			bone.setModelSpaceMatrix(RenderUtil.invertAndMultiplyMatrices(poseState, this.modelRenderTranslations));
-			bone.setLocalSpaceMatrix(localMatrix);
-			bone.setWorldSpaceMatrix(worldState.translate(new Vector3f(pos.getX(), pos.getY(), pos.getZ())));
+		if(normal.equals(Direction.UP))
+		{
+			if(facing.equals(Direction.NORTH))
+				poseStack.translate(1, 0, -1);
+			if(facing.equals(Direction.EAST))
+				poseStack.translate(1, 0, 0);
+			if(facing.equals(Direction.WEST))
+				poseStack.translate(0, 0, -1);
 		}
+		else poseStack.translate(0, -0.5, 0);
 
-		RenderUtil.translateAwayFromPivotPoint(poseStack, bone);
+		if(normal.equals(Direction.DOWN))
+			poseStack.translate(1, -1, -1);
+		if(normal.equals(Direction.NORTH))
+			poseStack.translate(0, 0, -1.5f);
+		if(normal.equals(Direction.WEST))
+			poseStack.translate(1f, 0, -1.5f);
+		if(normal.equals(Direction.SOUTH))
+			poseStack.translate(1f, 0f, -1.5f);
+		if(normal.equals(Direction.EAST))
+			poseStack.translate(0, 0, -1.5f);
 
-		this.textureOverride = getTextureOverrideForBone(bone, this.animatable, partialTick);
-		ResourceLocation texture = this.textureOverride == null ? getTextureLocation(this.animatable) : this.textureOverride;
-		RenderType renderTypeOverride = getRenderTypeOverrideForBone(bone, this.animatable, texture, bufferSource, partialTick);
-
-		if (texture != null && renderTypeOverride == null)
-			renderTypeOverride = getRenderType(this.animatable, texture, bufferSource, partialTick);
-
-		if (renderTypeOverride != null)
-			buffer = bufferSource.getBuffer(renderTypeOverride);
-
-		if (!boneRenderOverride(poseStack, bone, bufferSource, buffer, partialTick, packedLight, packedOverlay, colour))
-			super.renderCubesOfBone(poseStack, bone, buffer, packedLight, packedOverlay, colour);
-
-		if (renderTypeOverride != null)
-			buffer = bufferSource.getBuffer(renderTypeOverride);
-
-		if (!isReRender)
-			applyRenderLayersForBone(poseStack, animatable, bone, renderTypeOverride, bufferSource, buffer, partialTick, packedLight, packedOverlay);
-
-		buffer = checkAndRefreshBuffer(isReRender, buffer, bufferSource, renderTypeOverride);
-
-		super.renderChildBones(poseStack, animatable, bone, renderType, bufferSource, buffer, isReRender, partialTick, packedLight, packedOverlay, colour);
-
-		poseStack.popPose();
 	}
 
 	@Override
 	public AABB getRenderBoundingBox(LargeButtonBlockEntity blockEntity)
 	{
 		if(blockEntity.getLevel() != null && blockEntity.getBlockState().getBlock() instanceof OrientedMasterBlock master)
-			return master.getMultiblockVolume(blockEntity.getLevel(), blockEntity.getBlockPos());
+			return master.getFullShape(blockEntity.getLevel(), blockEntity.getBlockPos(), blockEntity.getBlockState()).bounds();
 
 		return new AABB(0, 0, 0, 0, 0, 0);
 	}
