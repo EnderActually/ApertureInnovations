@@ -183,7 +183,7 @@ public class LargeButtonRenderer extends DynamicGeoBlockRenderer<LargeButtonBloc
 	public AABB getRenderBoundingBox(LargeButtonBlockEntity blockEntity)
 	{
 		if(blockEntity.getLevel() != null && blockEntity.getBlockState().getBlock() instanceof OrientedMasterBlock master)
-			return master.getFullShape(blockEntity.getLevel(), blockEntity.getBlockPos(), blockEntity.getBlockState()).bounds();
+			return master.getFullShape(blockEntity.getLevel(), blockEntity.getBlockPos(), blockEntity.getBlockState()).bounds().move(blockEntity.getBlockPos());
 
 		return new AABB(0, 0, 0, 0, 0, 0);
 	}

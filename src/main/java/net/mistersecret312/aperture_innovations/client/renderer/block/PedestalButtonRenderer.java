@@ -199,7 +199,7 @@ public class PedestalButtonRenderer extends DynamicGeoBlockRenderer<PedestalButt
 	public AABB getRenderBoundingBox(PedestalButtonBlockEntity blockEntity)
 	{
 		if(blockEntity.getLevel() != null && blockEntity.getBlockState().getBlock() instanceof OrientedMasterBlock master)
-			return master.getMultiblockVolume(blockEntity.getLevel(), blockEntity.getBlockPos());
+			return master.getFullShape(blockEntity.getLevel(), blockEntity.getBlockPos(), blockEntity.getBlockState()).bounds().move(blockEntity.getBlockPos());
 
 		return new AABB(0, 0, 0, 0, 0, 0);
 	}
