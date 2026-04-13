@@ -360,7 +360,7 @@ public class CubeEntity extends Entity implements IFizzle, GeoEntity, IHaveConfi
 		if(entity instanceof IFizzle fizzle)
 			return fizzle.getFizzlingTick() == -1;
 
-		return true;
+		return false;
 	}
 
 	@Override

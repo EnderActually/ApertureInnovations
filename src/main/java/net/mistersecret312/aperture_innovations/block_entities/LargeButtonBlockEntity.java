@@ -19,6 +19,7 @@ import net.mistersecret312.aperture_innovations.blocks.multiblock.OrientedMaster
 import net.mistersecret312.aperture_innovations.init.BlockEntityInit;
 import net.mistersecret312.aperture_innovations.init.MultiToolConfigTypeInit;
 import net.mistersecret312.aperture_innovations.init.SoundInit;
+import net.mistersecret312.aperture_innovations.init.TagInit;
 import net.mistersecret312.aperture_innovations.multitool.Color;
 import net.mistersecret312.aperture_innovations.multitool.ConfigurationProperty;
 import net.mistersecret312.aperture_innovations.multitool.IHaveConfiguration;
@@ -132,7 +133,8 @@ public class LargeButtonBlockEntity extends MasterBlockEntity implements GeoBloc
 		Vec3 normal = Vec3.atLowerCornerOf(blockState.getValue(OrientedMasterBlock.NORMAL).getNormal()).multiply(0.15, 0.15, 0.15);
 		AABB box = master.getFullShape(level, pos, blockState).bounds().move(pos).deflate(0.15, 0, 0.15).move(normal.x, normal.y, normal.z);
 
-		List<Entity> entities = level.getEntities((Entity) null, box, entity -> entity.getBoundingBox().getSize() > 0.25);
+		List<Entity> entities = level.getEntities((Entity) null, box, entity -> entity.getBoundingBox().getSize() > 0.25 && !entity.getType().is(
+				TagInit.Entities.BUTTON_IGNORE));
 
 		boolean isPressed = blockState.getValue(LargeButtonBlock.PRESSED);
 		if(level.isClientSide())
