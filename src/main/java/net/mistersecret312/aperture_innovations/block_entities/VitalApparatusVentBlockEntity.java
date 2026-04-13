@@ -82,6 +82,11 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 			tag.remove("Fire");
 			tag.remove("Air");
 			tag.remove("OnGround");
+			tag.remove("Health");
+			tag.remove("HurtTime");
+			tag.remove("DeathTime");
+			tag.remove("InLove");
+			tag.remove("HurtByTimestamp");
 
 			vent.setTrackingData(tag);
 		}
@@ -322,6 +327,7 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 
 			tag.putInt("color", cube.getColor(stack));
 			tag.putInt("active_color", cube.getActiveColor(stack));
+			tag.putInt("hull_color", cube.getHullColor(stack));
 			tag.putString("variant", cube.getVariant(stack).toString());
 
 			this.setTrackingData(tag);
@@ -350,18 +356,15 @@ public class VitalApparatusVentBlockEntity extends MasterBlockEntity implements 
 	public void fizzleTrackedEntity(Level level)
 	{
 		Entity entity = getTrackingEntity(level);
-		if(entity instanceof IFizzle fizzle)
-			fizzle.fizzle();
+		if(entity instanceof IFizzle fizzle) fizzle.fizzle();
 
-		if(entity == null)
-		{
-			if(!(level instanceof ServerLevel serverLevel))
-				return;
 
-			Entity trackingEntity = serverLevel.getEntity(getTrackingID());
-			if(trackingEntity != null && !(trackingEntity instanceof IFizzle))
-				trackingEntity.remove(Entity.RemovalReason.KILLED);
-		}
+		if(!(level instanceof ServerLevel serverLevel))
+			return;
+
+		Entity trackingEntity = serverLevel.getEntity(getTrackingID());
+		if(trackingEntity != null && !(trackingEntity instanceof IFizzle))
+			trackingEntity.remove(Entity.RemovalReason.KILLED);
 	}
 
 	@Override

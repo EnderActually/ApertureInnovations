@@ -3,6 +3,7 @@ package net.mistersecret312.aperture_innovations.client.renderer.entity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
@@ -42,17 +43,17 @@ public class CubeRenderer extends DynamicGeoEntityRenderer<CubeEntity>
 	public software.bernie.geckolib.util.Color getRenderColor(CubeEntity animatable, float partialTick,
 															  int packedLight)
 	{
-		if(animatable.getFizzlingTick() != -1)
-		{
-			float delta = (this.getAnimatable().getFizzlingTick() - 30f) /
-								  (this.getAnimatable().getMaxFizzleTime() - 30f);
-
-			float colorDelta = this.getAnimatable().getFizzlingTick()/10f;
-			float color = Mth.clampedLerp(1f, 0f, colorDelta);
-
-			return software.bernie.geckolib.util.Color.ofARGB(Mth.clampedLerp(1f, 0f, delta),
-					color, color, color);
-		}
+//		if(animatable.getFizzlingTick() != -1)
+//		{
+//			float delta = (this.getAnimatable().getFizzlingTick() - 30f) /
+//								  (this.getAnimatable().getMaxFizzleTime() - 30f);
+//
+//			float colorDelta = this.getAnimatable().getFizzlingTick()/10f;
+//			float color = Mth.clampedLerp(1f, 0f, colorDelta);
+//
+//			return software.bernie.geckolib.util.Color.ofARGB(Mth.clampedLerp(1f, 0f, delta),
+//					color, color, color);
+//		}
 		return super.getRenderColor(animatable, partialTick, packedLight);
 	}
 
@@ -73,8 +74,7 @@ public class CubeRenderer extends DynamicGeoEntityRenderer<CubeEntity>
 							   @Nullable VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight,
 							   int packedOverlay, int colour)
 	{
-		super.actuallyRender(poseStack, animatable, model, renderType, bufferSource, buffer, isReRender, partialTick,
-				packedLight, packedOverlay, colour);
+
 	}
 
 	@Override
@@ -120,6 +120,17 @@ public class CubeRenderer extends DynamicGeoEntityRenderer<CubeEntity>
 	public int getHullColor(GeoBone bone, CubeEntity animatable)
 	{
 		int color = animatable.getHullColor().packagedInt();
+
+		if(animatable.getFizzlingTick() != -1)
+		{
+			float delta = (this.getAnimatable().getFizzlingTick() - 30f) /
+								  (this.getAnimatable().getMaxFizzleTime() - 30f);
+
+			Color clr = new Color(0, false);
+			return software.bernie.geckolib.util.Color.ofARGB(Mth.clampedLerp(1f, 0f, delta),
+					clr.getRed(), clr.getGreen(), clr.getBlue()).argbInt();
+		}
+
 		if(color != 0)
 			return new Color(color, false).getRGB();
 

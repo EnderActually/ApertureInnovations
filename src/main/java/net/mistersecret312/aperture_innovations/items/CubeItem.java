@@ -83,6 +83,7 @@ public class CubeItem extends Item implements GeoItem
 
 				tag.putInt("color", cubeItem.getColor(item));
 				tag.putInt("active_color", cubeItem.getActiveColor(item));
+				tag.putInt("hull_color", cubeItem.getHullColor(item));
 				tag.putString("variant", cubeItem.getVariant(item).toString());
 
 				ListTag motion = new ListTag(3);
@@ -170,6 +171,7 @@ public class CubeItem extends Item implements GeoItem
 
 		tag.putInt("color", this.getColor(itemstack));
 		tag.putInt("active_color", this.getActiveColor(itemstack));
+		tag.putInt("hull_color", this.getHullColor(itemstack));
 		tag.putString("variant", this.getVariant(itemstack).toString());
 
 		itemstack.set(DataComponents.ENTITY_DATA, CustomData.of(tag));

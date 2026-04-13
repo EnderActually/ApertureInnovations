@@ -28,6 +28,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.block_entities.LargeButtonBlockEntity;
@@ -43,6 +44,7 @@ import net.mistersecret312.aperture_innovations.multitool.*;
 import net.mistersecret312.aperture_innovations.network.ClientboundFizzleParticlesPacket;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
@@ -303,6 +305,9 @@ public class CubeEntity extends Entity implements IFizzle, GeoEntity, IHaveConfi
 	{
 		Registry<CubeVariant> registry =
 				level.registryAccess().registryOrThrow(CubeVariant.REGISTRY_KEY);
+		if(registry.get(getVariantKey()) == null)
+			return registry.get(ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
+					"weighted_storage_cube"));
 		return registry.get(getVariantKey());
 	}
 
@@ -449,6 +454,20 @@ public class CubeEntity extends Entity implements IFizzle, GeoEntity, IHaveConfi
 	public void setHullColor(int color)
 	{
 		this.entityData.set(HULL_COLOR, color);
+	}
+
+	@Override
+	public @Nullable ItemStack getPickResult()
+	{
+		CubeItem cubeItem = ItemInit.CUBE.get();
+		ItemStack stack = cubeItem.getDefaultInstance();
+
+		cubeItem.setHullColor(stack, getHullColor().packagedInt());
+		cubeItem.setColor(stack, getColor().packagedInt());
+		cubeItem.setActiveColor(stack, getActiveColor().packagedInt());
+		cubeItem.setVariant(stack, getVariantKey());
+
+		return stack;
 	}
 
 	@Override
