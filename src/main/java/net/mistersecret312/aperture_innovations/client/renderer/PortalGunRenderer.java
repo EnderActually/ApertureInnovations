@@ -119,7 +119,7 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
 	{
 		List<String> gunCore = Lists.newArrayList("CoreOuter", "CoreInner", "PortalLight", "Muzzle");
 		if(bone.getName().equals("Zap"))
-			return PortalRenderTypes.APERTURE_GLOW.apply(getTextureOverrideForBone(bone, animatable, partialTick));
+			return PortalRenderTypes.entityTranslucentCull(getTextureOverrideForBone(bone, animatable, partialTick));
 		if(gunCore.contains(bone.getName()))
 		{
 			return DynamicGeoItemRenderer.GLOWING_FUNCTION.apply(getTextureOverrideForBone(bone, animatable, partialTick));
