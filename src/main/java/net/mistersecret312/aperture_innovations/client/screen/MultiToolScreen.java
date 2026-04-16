@@ -10,13 +10,12 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.world.item.Item;
 import net.mistersecret312.aperture_innovations.client.screen.renderers.BlockEntityPreviewRenderer;
 import net.mistersecret312.aperture_innovations.client.screen.renderers.EntityPreviewRenderer;
+import net.mistersecret312.aperture_innovations.client.screen.renderers.ItemPreviewRenderer;
 import net.mistersecret312.aperture_innovations.client.screen.renderers.PreviewRenderer;
-import net.mistersecret312.aperture_innovations.multitool.Color;
-import net.mistersecret312.aperture_innovations.multitool.ConfigurationProperty;
-import net.mistersecret312.aperture_innovations.multitool.IHaveConfiguration;
-import net.mistersecret312.aperture_innovations.multitool.InteractionType;
+import net.mistersecret312.aperture_innovations.multitool.*;
 import net.mistersecret312.aperture_innovations.network.ServerboundMultiToolApplyBlockEntityPacket;
 import net.mistersecret312.aperture_innovations.network.ServerboundMultiToolApplyEntityPacket;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -42,24 +41,48 @@ public class MultiToolScreen extends Screen
 	public MultiToolScreen(Component title, IHaveConfiguration configuration, PreviewRenderer renderer)
 	{
 		super(title);
+		this.renderer = renderer;
+
 		if(configuration != null)
 		{
 			this.config = configuration;
-
-			for(ConfigurationProperty<?> property : configuration.getConfigurationProperties())
-			{
-				properties.put(property.getName(), property.get());
-
-				Category category = categories.computeIfAbsent(property.getCategory(), name -> new Category(
-						name, new HashMap<>()));
-				category.entries.computeIfAbsent(property.getName(), name -> new CategoryEntry(name,
-						property.getTranslatable()));
-			}
+			if(configuration instanceof Item)
+				constructItemProperties();
+			else constructProperties();
 		}
 
-		this.renderer = renderer;
-
 		this.renderer.applyFakeState(properties);
+	}
+
+	public void constructProperties()
+	{
+		for(ConfigurationProperty<?> property : this.config.getConfigurationProperties())
+		{
+			properties.put(property.getName(), property.get());
+
+			Category category = categories.computeIfAbsent(property.getCategory(), name -> new Category(
+					name, new HashMap<>()));
+			category.entries.computeIfAbsent(property.getName(), name -> new CategoryEntry(name,
+					property.getTranslatable()));
+		}
+	}
+
+	public void constructItemProperties()
+	{
+		if(!(renderer instanceof ItemPreviewRenderer itemPreviewRenderer))
+			return;
+		if(!(config instanceof IItemConfiguration configuration))
+			return;
+
+		for(ConfigurationProperty<?> property : configuration.getConfigurationProperties(itemPreviewRenderer.stack))
+		{
+			properties.put(property.getName(), property.get());
+
+			Category category = categories.computeIfAbsent(property.getCategory(), name -> new Category(
+					name, new HashMap<>()));
+			category.entries.computeIfAbsent(property.getName(), name -> new CategoryEntry(name,
+					property.getTranslatable()));
+		}
 	}
 
 	@Override
@@ -123,16 +146,45 @@ public class MultiToolScreen extends Screen
 			}
 
 			Category category = entry.getValue();
-			int entryID = 0;
-			for(Map.Entry<String, CategoryEntry> categoryEntry : category.entries.entrySet())
+			if(config instanceof IItemConfiguration)
+				makeWidgetForItemProperty(category, x, y);
+			else makeWidgetForProperty(category, x, y);
+		}
+	}
+
+	public void makeWidgetForProperty(Category category, int x, int y)
+	{
+		int entryID = 0;
+		for(Map.Entry<String, CategoryEntry> entry : category.entries.entrySet())
+		{
+			Optional<ConfigurationProperty<?>> property = config.getConfigurationProperties().stream().filter(
+					prop -> prop.getName().equals(entry.getValue().name)
+									&& prop.getCategory().equals(category.category)).findFirst();
+			if(property.isPresent())
 			{
-				Optional<ConfigurationProperty<?>> property = config.getConfigurationProperties().stream().filter(
-						prop -> prop.getName().equals(categoryEntry.getValue().name) && prop.getCategory().equals(category.category)).findFirst();
-				if(property.isPresent())
-				{
-					property.get().getInteraction().makeWidget(property.get(), x, y+(entryID)*24+12, this);
-					entryID++;
-				}
+				property.get().getInteraction().makeWidget(property.get(), x, y+(entryID)*24+12, this);
+				entryID++;
+			}
+		}
+	}
+
+	public void makeWidgetForItemProperty(Category category, int x, int y)
+	{
+		if(!(renderer instanceof ItemPreviewRenderer renderer))
+			return;
+		if(!(config instanceof IItemConfiguration configuration))
+			return;
+
+		int entryID = 0;
+		for(Map.Entry<String, CategoryEntry> entry : category.entries.entrySet())
+		{
+			Optional<ConfigurationProperty<?>> property = configuration.getConfigurationProperties(renderer.stack).stream().filter(
+					prop -> prop.getName().equals(entry.getValue().name)
+									&& prop.getCategory().equals(category.category)).findFirst();
+			if(property.isPresent())
+			{
+				property.get().getInteraction().makeWidget(property.get(), x, y+(entryID)*24+12, this);
+				entryID++;
 			}
 		}
 	}

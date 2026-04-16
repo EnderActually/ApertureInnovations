@@ -3,12 +3,14 @@ package net.mistersecret312.aperture_innovations.client.screen.renderers;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
+import net.mistersecret312.aperture_innovations.multitool.ConfigurationProperty;
+import net.mistersecret312.aperture_innovations.multitool.IItemConfiguration;
 
 import java.util.HashMap;
 
 public class ItemPreviewRenderer implements PreviewRenderer
 {
-	private final ItemStack stack;
+	public ItemStack stack;
 	public ItemPreviewRenderer(ItemStack stack)
 	{
 		this.stack = stack.copy();
@@ -26,6 +28,14 @@ public class ItemPreviewRenderer implements PreviewRenderer
 	@Override
 	public void applyFakeState(HashMap<String, Object> map)
 	{
-		//TODO - Come up with an itemstack-friendly solution
+		if(stack == null || !(stack.getItem() instanceof IItemConfiguration configuration))
+			return;
+
+		for(ConfigurationProperty<?> property : configuration.getConfigurationProperties(stack))
+		{
+			Object value = map.get(property.getName());
+			if(value != null)
+				property.setUnsafe(value);
+		}
 	}
 }

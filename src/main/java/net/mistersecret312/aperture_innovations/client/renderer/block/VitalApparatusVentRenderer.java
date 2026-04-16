@@ -122,7 +122,7 @@ public class VitalApparatusVentRenderer extends DynamicGeoBlockRenderer<VitalApp
 		if(!bone.getName().equals("GlowingStuff"))
 			return null;
 
-		if(animatable.getIdleColor().packagedInt() != 0)
+		if(animatable.getIdleColor().packagedInt() != -1)
 		{
 			return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
 					"textures/entity/vital_apparatus_vent/vital_apparatus_vent_generic.png");
@@ -134,7 +134,7 @@ public class VitalApparatusVentRenderer extends DynamicGeoBlockRenderer<VitalApp
 
 	public ResourceLocation getHullTexture(GeoBone bone, VitalApparatusVentBlockEntity animatable)
 	{
-		if(animatable.getHullColor().packagedInt() != 0)
+		if(animatable.getHullColor().packagedInt() != -1)
 		{
 			return ResourceLocation.fromNamespaceAndPath(ApertureInnovations.MODID,
 					"textures/entity/vital_apparatus_vent/vital_apparatus_vent_hull_generic.png");
@@ -146,9 +146,9 @@ public class VitalApparatusVentRenderer extends DynamicGeoBlockRenderer<VitalApp
 
 	public int getGlowColor(GeoBone bone, VitalApparatusVentBlockEntity animatable)
 	{
-		if(animatable.getIdleColor().packagedInt() != 0 && !animatable.isOpen())
+		if(animatable.getIdleColor().packagedInt() != -1 && !animatable.isOpen())
 			return new Color(animatable.getIdleColor().packagedInt(), false).getRGB();
-		if(animatable.getActiveColor().packagedInt() != 0 && animatable.isOpen())
+		if(animatable.getActiveColor().packagedInt() != -1 && animatable.isOpen())
 			return new Color(animatable.getActiveColor().packagedInt(), false).getRGB();
 
 		return -1;
@@ -156,7 +156,7 @@ public class VitalApparatusVentRenderer extends DynamicGeoBlockRenderer<VitalApp
 
 	public int getHullColor(GeoBone bone, VitalApparatusVentBlockEntity animatable)
 	{
-		if(animatable.getHullColor().packagedInt() != 0)
+		if(animatable.getHullColor().packagedInt() != -1)
 			return new Color(animatable.getHullColor().packagedInt(), false).getRGB();
 
 		return -1;

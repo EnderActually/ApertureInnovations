@@ -20,13 +20,16 @@ public record Color(int red, int green, int blue)
 		return String.valueOf(packagedInt());
 	}
 
+	public static Color fromInt(int packaged)
+	{
+		java.awt.Color color = new java.awt.Color(packaged ,false);
+
+		return new Color(color.getRed(), color.getGreen(), color.getBlue());
+	}
+
 	public int packagedInt()
 	{
-		int rgb = red;
-		rgb = (rgb << 8) + green;
-		rgb = (rgb << 8) + blue;
-
-		return rgb;
+		return new java.awt.Color(red, green, blue).getRGB();
 	}
 
 	public float getRed()

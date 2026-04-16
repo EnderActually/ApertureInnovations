@@ -32,6 +32,9 @@ import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
 import net.mistersecret312.aperture_innovations.client.renderer.item.PortalGunRenderer;
 import net.mistersecret312.aperture_innovations.config.PortalGunConfig;
 import net.mistersecret312.aperture_innovations.init.*;
+import net.mistersecret312.aperture_innovations.multitool.ConfigurationProperty;
+import net.mistersecret312.aperture_innovations.multitool.IItemConfiguration;
+import net.mistersecret312.aperture_innovations.multitool.InteractionType;
 import net.mistersecret312.aperture_innovations.network.ClientboundGunZapSoundPacket;
 import net.mistersecret312.aperture_innovations.network.ClientboundPortalSoundsPacket;
 import net.mistersecret312.aperture_innovations.data.portal.PortalLink;
@@ -49,11 +52,12 @@ import software.bernie.geckolib.animation.*;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-public class PortalGunItem extends Item implements GeoItem
+public class PortalGunItem extends Item implements GeoItem, IItemConfiguration
 {
 	public static final String ENERGY = "Energy";
 
@@ -618,5 +622,41 @@ public class PortalGunItem extends Item implements GeoItem
 		{
 			stack.set(DataComponentInit.ENERGY, this.energy);
 		}
+	}
+
+	@Override
+	public List<ConfigurationProperty<?>> getConfigurationProperties(ItemStack stack)
+	{
+		List<ConfigurationProperty<?>> properties = new ArrayList<>();
+
+		properties.add(new ConfigurationProperty<>("primary_portal_color",
+				"color", "multi_tool.aperture_innovations.portal_gun.primary_portal_color",
+				MultiToolConfigTypeInit.COLOR.get(),
+				new InteractionType.RGBColorPicker(),
+				clr -> setPrimaryPortalColor(stack, clr.packagedInt()),
+				() -> net.mistersecret312.aperture_innovations.multitool.Color.fromInt(getPrimaryPortalColor(stack))));
+
+		properties.add(new ConfigurationProperty<>("secondary_portal_color",
+				"color", "multi_tool.aperture_innovations.portal_gun.secondary_portal_color",
+				MultiToolConfigTypeInit.COLOR.get(),
+				new InteractionType.RGBColorPicker(),
+				clr -> setSecondaryPortalColor(stack, clr.packagedInt()),
+				() -> net.mistersecret312.aperture_innovations.multitool.Color.fromInt(getSecondaryPortalColor(stack))));
+
+		properties.add(new ConfigurationProperty<>("primary_stripe_color",
+				"color", "multi_tool.aperture_innovations.portal_gun.primary_stripe_color",
+				MultiToolConfigTypeInit.COLOR.get(),
+				new InteractionType.RGBColorPicker(),
+				clr -> setPrimaryStripeColor(stack, clr.packagedInt()),
+				() -> net.mistersecret312.aperture_innovations.multitool.Color.fromInt(getPrimaryStripeColor(stack))));
+
+		properties.add(new ConfigurationProperty<>("secondary_stripe_color",
+				"color", "multi_tool.aperture_innovations.portal_gun.secondary_portal_color",
+				MultiToolConfigTypeInit.COLOR.get(),
+				new InteractionType.RGBColorPicker(),
+				clr -> setSecondaryStripeColor(stack, clr.packagedInt()),
+				() -> net.mistersecret312.aperture_innovations.multitool.Color.fromInt(getSecondaryStripeColor(stack))));
+
+		return properties;
 	}
 }
