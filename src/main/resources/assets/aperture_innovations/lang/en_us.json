@@ -66,12 +66,21 @@
   "category.aperture_innovations.color.idle_color": "Idle",
   "category.aperture_innovations.color.button_color": "Button",
   "category.aperture_innovations.color.lines_color": "Lines",
+  "category.aperture_innovations.color.primary_portal_color": "Portal #1",
+  "category.aperture_innovations.color.secondary_portal_color": "Portal #2",
+  "category.aperture_innovations.color.primary_stripe_color": "Stripe #1",
+  "category.aperture_innovations.color.secondary_stripe_color": "Stripe #2",
+
 
   "category.aperture_innovations.variant": "Variant",
   "category.aperture_innovations.variant.variant": "Variant",
 
   "multi_tool.aperture_innovations.weighted_storage_cube": "Weighted Storage Cube",
   "multi_tool.aperture_innovations.weighted_companion_cube": "Weighted Companion Cube",
+  "multi_tool.aperture_innovations.chell": "Chell",
+  "multi_tool.aperture_innovations.atlas": "Atlas",
+  "multi_tool.aperture_innovations.pbody": "P-Body",
+  "multi_tool.aperture_innovations.reloaded": "Reloaded",
 
   "sound.aperture_innovations.portal_ambient": "Portal Ambient",
   "sound.aperture_innovations.portal_enter": "Portal travel",

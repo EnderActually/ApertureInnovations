@@ -3,7 +3,9 @@ package net.mistersecret312.aperture_innovations.items;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -31,6 +33,8 @@ import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
 import net.mistersecret312.aperture_innovations.client.renderer.item.PortalGunRenderer;
 import net.mistersecret312.aperture_innovations.config.PortalGunConfig;
+import net.mistersecret312.aperture_innovations.datapack.CubeVariant;
+import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
 import net.mistersecret312.aperture_innovations.init.*;
 import net.mistersecret312.aperture_innovations.multitool.ConfigurationProperty;
 import net.mistersecret312.aperture_innovations.multitool.IItemConfiguration;
@@ -54,6 +58,7 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -254,7 +259,7 @@ public class PortalGunItem extends Item implements GeoItem, IItemConfiguration
 				setZapSoundTick(stack, -1);
 			}
 
-			if(link != null && isSelected && (getPair(stack) == null || getDualityState(stack) == 2) )
+			if(link != null && (isSelected || slot == 40) && (getPair(stack) == null || getDualityState(stack) == 2) )
 			{
 				link.updateColors(level, getPrimaryPortalColor(stack), getSecondaryPortalColor(stack));
 				link.updateVariant(level, getVariant(stack));
@@ -442,6 +447,11 @@ public class PortalGunItem extends Item implements GeoItem, IItemConfiguration
 		return stack.getOrDefault(DataComponentInit.SECONDARY_PORTAL_COLOR, -1);
 	}
 
+	public int getHullColor(ItemStack stack)
+	{
+		return stack.getOrDefault(DataComponentInit.HULL_COLOR, -1);
+	}
+
 	public ResourceLocation getVariant(ItemStack stack)
 	{
 		return stack.getOrDefault(DataComponentInit.PORTAL_GUN_VARIANT, ResourceLocation.fromNamespaceAndPath(
@@ -471,6 +481,11 @@ public class PortalGunItem extends Item implements GeoItem, IItemConfiguration
 	public void setSecondaryPortalColor(ItemStack stack, int color)
 	{
 		stack.set(DataComponentInit.SECONDARY_PORTAL_COLOR, color);
+	}
+
+	public void setHullColor(ItemStack stack, int color)
+	{
+		stack.set(DataComponentInit.HULL_COLOR, color);
 	}
 
 	public void setVariant(ItemStack stack, ResourceLocation variantKey)
@@ -625,7 +640,7 @@ public class PortalGunItem extends Item implements GeoItem, IItemConfiguration
 	}
 
 	@Override
-	public List<ConfigurationProperty<?>> getConfigurationProperties(ItemStack stack)
+	public List<ConfigurationProperty<?>> getConfigurationProperties(ItemStack stack, RegistryAccess registryAccess)
 	{
 		List<ConfigurationProperty<?>> properties = new ArrayList<>();
 
@@ -656,6 +671,28 @@ public class PortalGunItem extends Item implements GeoItem, IItemConfiguration
 				new InteractionType.RGBColorPicker(),
 				clr -> setSecondaryStripeColor(stack, clr.packagedInt()),
 				() -> net.mistersecret312.aperture_innovations.multitool.Color.fromInt(getSecondaryStripeColor(stack))));
+
+		properties.add(new ConfigurationProperty<>("hull_color",
+				"color", "multi_tool.aperture_innovations.portal_gun.hull_color",
+				MultiToolConfigTypeInit.COLOR.get(),
+				new InteractionType.RGBColorPicker(),
+				clr -> setHullColor(stack, clr.packagedInt()),
+				() -> net.mistersecret312.aperture_innovations.multitool.Color.fromInt(getHullColor(stack))));
+
+		List<String> variants = new ArrayList<>();
+		for(Map.Entry<ResourceKey<PortalGunVariant>, PortalGunVariant> entry : registryAccess
+																		 .registryOrThrow(PortalGunVariant.REGISTRY_KEY)
+																		 .entrySet())
+		{
+			variants.add(entry.getKey().location().toString());
+		}
+
+		properties.add(new ConfigurationProperty<>("variant", "variant",
+				"multi_tool.aperture_innovations.cube.variant",
+				MultiToolConfigTypeInit.RESOURCE_LOCATION.get(),
+				new InteractionType.ListChoice(variants, getVariant(stack).toString()),
+				variant -> setVariant(stack, variant),
+				() -> getVariant(stack)));
 
 		return properties;
 	}

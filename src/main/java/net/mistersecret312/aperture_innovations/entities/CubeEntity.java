@@ -2,6 +2,7 @@ package net.mistersecret312.aperture_innovations.entities;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
@@ -483,7 +484,7 @@ public class CubeEntity extends Entity implements IFizzle, GeoEntity, IHaveConfi
 	}
 
 	@Override
-	public List<ConfigurationProperty<?>> getConfigurationProperties()
+	public List<ConfigurationProperty<?>> getConfigurationProperties(RegistryAccess registryAccess)
 	{
 		List<ConfigurationProperty<?>> list = new ArrayList<>();
 		list.add(new ConfigurationProperty<>("hull_color", "color",
@@ -505,7 +506,7 @@ public class CubeEntity extends Entity implements IFizzle, GeoEntity, IHaveConfi
 				this::setColor, this::getColor));
 
 		List<String> variants = new ArrayList<>();
-		for(Map.Entry<ResourceKey<CubeVariant>, CubeVariant> entry : this.registryAccess()
+		for(Map.Entry<ResourceKey<CubeVariant>, CubeVariant> entry : registryAccess
 																		 .registryOrThrow(CubeVariant.REGISTRY_KEY)
 																		 .entrySet())
 		{

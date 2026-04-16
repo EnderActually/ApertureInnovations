@@ -68,7 +68,7 @@ public record ServerboundMultiToolApplyBlockEntityPacket(BlockPos pos, String na
 			BlockEntity blockEntity = level.getBlockEntity(packet.pos);
 			if(blockEntity instanceof IHaveConfiguration configuration)
 			{
-				for(ConfigurationProperty<?> property : configuration.getConfigurationProperties())
+				for(ConfigurationProperty<?> property : configuration.getConfigurationProperties(blockEntity.getLevel().registryAccess()))
 				{
 					if(property.getName().equals(packet.name) && property.getType().equals(packet.dataType))
 					{

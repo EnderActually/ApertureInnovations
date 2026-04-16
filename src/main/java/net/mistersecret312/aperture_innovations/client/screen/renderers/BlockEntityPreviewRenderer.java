@@ -79,7 +79,7 @@ public class BlockEntityPreviewRenderer implements PreviewRenderer
 		if(!(this.blockEntity instanceof IHaveConfiguration configurable))
 			return;
 
-		for(ConfigurationProperty<?> property : configurable.getConfigurationProperties())
+		for(ConfigurationProperty<?> property : configurable.getConfigurationProperties(Minecraft.getInstance().level.registryAccess()))
 		{
 			Object value = map.get(property.getName());
 			if(value != null)

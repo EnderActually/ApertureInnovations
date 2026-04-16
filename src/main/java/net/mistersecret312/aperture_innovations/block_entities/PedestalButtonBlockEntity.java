@@ -2,6 +2,7 @@ package net.mistersecret312.aperture_innovations.block_entities;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.block.MagmaBlock;
@@ -130,7 +131,7 @@ public class PedestalButtonBlockEntity extends MasterBlockEntity implements GeoB
 	}
 
 	@Override
-	public List<ConfigurationProperty<?>> getConfigurationProperties()
+	public List<ConfigurationProperty<?>> getConfigurationProperties(RegistryAccess registryAccess)
 	{
 		List<ConfigurationProperty<?>> list = new ArrayList<>();
 		list.add(new ConfigurationProperty<>("hull_color", "color",

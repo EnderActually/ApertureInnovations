@@ -10,6 +10,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.Item;
 import net.mistersecret312.aperture_innovations.client.screen.renderers.BlockEntityPreviewRenderer;
 import net.mistersecret312.aperture_innovations.client.screen.renderers.EntityPreviewRenderer;
@@ -18,6 +19,7 @@ import net.mistersecret312.aperture_innovations.client.screen.renderers.PreviewR
 import net.mistersecret312.aperture_innovations.multitool.*;
 import net.mistersecret312.aperture_innovations.network.ServerboundMultiToolApplyBlockEntityPacket;
 import net.mistersecret312.aperture_innovations.network.ServerboundMultiToolApplyEntityPacket;
+import net.mistersecret312.aperture_innovations.network.ServerboundMultiToolApplyItemStackPacket;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
@@ -56,7 +58,7 @@ public class MultiToolScreen extends Screen
 
 	public void constructProperties()
 	{
-		for(ConfigurationProperty<?> property : this.config.getConfigurationProperties())
+		for(ConfigurationProperty<?> property : this.config.getConfigurationProperties(Minecraft.getInstance().level.registryAccess()))
 		{
 			properties.put(property.getName(), property.get());
 
@@ -74,7 +76,7 @@ public class MultiToolScreen extends Screen
 		if(!(config instanceof IItemConfiguration configuration))
 			return;
 
-		for(ConfigurationProperty<?> property : configuration.getConfigurationProperties(itemPreviewRenderer.stack))
+		for(ConfigurationProperty<?> property : configuration.getConfigurationProperties(itemPreviewRenderer.stack, Minecraft.getInstance().level.registryAccess()))
 		{
 			properties.put(property.getName(), property.get());
 
@@ -157,7 +159,7 @@ public class MultiToolScreen extends Screen
 		int entryID = 0;
 		for(Map.Entry<String, CategoryEntry> entry : category.entries.entrySet())
 		{
-			Optional<ConfigurationProperty<?>> property = config.getConfigurationProperties().stream().filter(
+			Optional<ConfigurationProperty<?>> property = config.getConfigurationProperties(Minecraft.getInstance().level.registryAccess()).stream().filter(
 					prop -> prop.getName().equals(entry.getValue().name)
 									&& prop.getCategory().equals(category.category)).findFirst();
 			if(property.isPresent())
@@ -178,7 +180,7 @@ public class MultiToolScreen extends Screen
 		int entryID = 0;
 		for(Map.Entry<String, CategoryEntry> entry : category.entries.entrySet())
 		{
-			Optional<ConfigurationProperty<?>> property = configuration.getConfigurationProperties(renderer.stack).stream().filter(
+			Optional<ConfigurationProperty<?>> property = configuration.getConfigurationProperties(renderer.stack, Minecraft.getInstance().level.registryAccess()).stream().filter(
 					prop -> prop.getName().equals(entry.getValue().name)
 									&& prop.getCategory().equals(category.category)).findFirst();
 			if(property.isPresent())
@@ -193,10 +195,13 @@ public class MultiToolScreen extends Screen
 	public void onClose()
 	{
 		super.onClose();
+		if(Minecraft.getInstance().player != null)
+			Minecraft.getInstance().player.inventoryMenu.broadcastChanges();
+
 		if(this.config == null)
 			return;
 
-		for(ConfigurationProperty<?> property : this.config.getConfigurationProperties())
+		for(ConfigurationProperty<?> property : this.config.getConfigurationProperties(Minecraft.getInstance().level.registryAccess()))
 		{
 			Object value = properties.get(property.getName());
 			if(renderer instanceof BlockEntityPreviewRenderer blockEntityPreviewRenderer)
@@ -205,6 +210,13 @@ public class MultiToolScreen extends Screen
 			if(renderer instanceof EntityPreviewRenderer entityPreviewRenderer)
 				PacketDistributor.sendToServer(new ServerboundMultiToolApplyEntityPacket(entityPreviewRenderer.entity.getUUID(),
 						property.getName(), property.getType(), value));
+		}
+		if(config instanceof IItemConfiguration itemConfiguration)
+		{
+			if(renderer instanceof ItemPreviewRenderer itemPreviewRenderer)
+				PacketDistributor.sendToServer(new ServerboundMultiToolApplyItemStackPacket(itemPreviewRenderer.stack,
+						itemPreviewRenderer.hand == InteractionHand.MAIN_HAND));
+
 		}
 	}
 

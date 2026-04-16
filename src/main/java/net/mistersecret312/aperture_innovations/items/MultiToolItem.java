@@ -2,11 +2,10 @@ package net.mistersecret312.aperture_innovations.items;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.SlotAccess;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.ClickAction;
-import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
@@ -29,6 +28,26 @@ public class MultiToolItem extends Item
 	public MultiToolItem(Properties properties)
 	{
 		super(properties);
+	}
+
+	@Override
+	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand usedHand)
+	{
+		InteractionHand otherHand;
+		if(usedHand == InteractionHand.MAIN_HAND)
+			otherHand = InteractionHand.OFF_HAND;
+		else otherHand = InteractionHand.MAIN_HAND;
+
+		ItemStack otherStack = player.getItemInHand(otherHand);
+		if(level.isClientSide() && !otherStack.isEmpty())
+		{
+			PreviewRenderer renderer = new ItemPreviewRenderer(otherStack, otherHand);
+			MultiToolScreen screen = new MultiToolScreen(otherStack.getHoverName(), otherStack.getItem() instanceof IItemConfiguration config ? config : null, renderer);
+
+			Minecraft.getInstance().setScreen(screen);
+		}
+
+		return super.use(level, player, usedHand);
 	}
 
 	@Override
@@ -61,35 +80,5 @@ public class MultiToolItem extends Item
 		}
 
 		return super.useOn(context);
-	}
-
-	@Override
-	public boolean overrideStackedOnOther(ItemStack stack, Slot slot, ClickAction action, Player player)
-	{
-		ItemStack other = slot.getItem();
-		if(player.level().isClientSide() && other.getItem() instanceof IItemConfiguration configuration)
-		{
-			ItemPreviewRenderer renderer = new ItemPreviewRenderer(other);
-			MultiToolScreen screen = new MultiToolScreen(other.getHoverName(), configuration, renderer);
-
-			Minecraft.getInstance().setScreen(screen);
-		}
-
-		return false;
-	}
-
-	@Override
-	public boolean overrideOtherStackedOnMe(ItemStack stack, ItemStack other, Slot slot, ClickAction action,
-											Player player, SlotAccess access)
-	{
-		if(player.level().isClientSide() && other.getItem() instanceof IItemConfiguration configuration)
-		{
-			ItemPreviewRenderer renderer = new ItemPreviewRenderer(other);
-			MultiToolScreen screen = new MultiToolScreen(other.getHoverName(), configuration, renderer);
-
-			Minecraft.getInstance().setScreen(screen);
-		}
-
-		return false;
 	}
 }

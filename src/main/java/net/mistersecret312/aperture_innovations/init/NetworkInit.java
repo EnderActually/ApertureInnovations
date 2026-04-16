@@ -44,6 +44,12 @@ public class NetworkInit
 				ServerboundMultiToolApplyEntityPacket::handle
 		);
 
+		registrar.playToServer(
+				ServerboundMultiToolApplyItemStackPacket.TYPE,
+				ServerboundMultiToolApplyItemStackPacket.STREAM_CODEC,
+				ServerboundMultiToolApplyItemStackPacket::handle
+		);
+
 		//Client
 
 		registrar.playToClient(

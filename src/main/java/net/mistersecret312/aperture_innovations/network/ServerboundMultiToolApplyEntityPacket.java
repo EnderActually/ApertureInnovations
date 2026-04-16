@@ -72,7 +72,7 @@ public record ServerboundMultiToolApplyEntityPacket(UUID uuid, String name, Conf
 			Entity entity = level.getEntity(packet.uuid);
 			if(entity instanceof IHaveConfiguration configuration)
 			{
-				for(ConfigurationProperty<?> property : configuration.getConfigurationProperties())
+				for(ConfigurationProperty<?> property : configuration.getConfigurationProperties(entity.registryAccess()))
 				{
 					if(property.getName().equals(packet.name) && property.getType().equals(packet.dataType))
 					{

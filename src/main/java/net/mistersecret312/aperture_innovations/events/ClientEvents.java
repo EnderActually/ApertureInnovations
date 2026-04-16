@@ -237,7 +237,6 @@ public class ClientEvents
 	@SubscribeEvent
 	public static void clientTick(ClientTickEvent.Pre event)
 	{
-
 		Minecraft mc = Minecraft.getInstance();
 		if(mc.level != null && mc.player != null)
 		{
@@ -267,6 +266,8 @@ public class ClientEvents
 					}
 				});
 		}
+		if(mc.player == null)
+			return;
 
 		while(ApertureInnovations.ClientModEvents.RESET_PORTAL_GUN.get().consumeClick())
 			PacketDistributor.sendToServer(new ServerboundResetPortalLinkPacket());
@@ -274,10 +275,10 @@ public class ClientEvents
 		while(ApertureInnovations.ClientModEvents.PICK_UP.get().consumeClick())
 			PacketDistributor.sendToServer(new ServerboundPickUpEntityPacket());
 
-		while(ApertureInnovations.ClientModEvents.PRIMARY_FIRE.get().consumeClick())
+		while(ApertureInnovations.ClientModEvents.PRIMARY_FIRE.get().consumeClick() && !mc.player.isShiftKeyDown())
 			PacketDistributor.sendToServer(new ServerboundOpenPortalPacket(true));
 
-		while(ApertureInnovations.ClientModEvents.SECONDARY_FIRE.get().consumeClick())
+		while(ApertureInnovations.ClientModEvents.SECONDARY_FIRE.get().consumeClick() && !mc.player.isShiftKeyDown())
 			PacketDistributor.sendToServer(new ServerboundOpenPortalPacket(false));
 	}
 

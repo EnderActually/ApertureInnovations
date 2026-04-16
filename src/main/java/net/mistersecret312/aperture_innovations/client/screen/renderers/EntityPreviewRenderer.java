@@ -67,7 +67,7 @@ public class EntityPreviewRenderer implements PreviewRenderer
 		if(!(this.entity instanceof IHaveConfiguration configurable))
 			return;
 
-		for(ConfigurationProperty<?> property : configurable.getConfigurationProperties())
+		for(ConfigurationProperty<?> property : configurable.getConfigurationProperties(Minecraft.getInstance().level.registryAccess()))
 		{
 			Object value = map.get(property.getName());
 			if(value != null)
