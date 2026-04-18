@@ -109,7 +109,7 @@ public class CommonEvents
 
 					ResourceKey<Level> portalDim = isPrimary ? link.getPrimaryPortal().getDimension() : link.getSecondaryPortal()
 																											.getDimension();
-					if(!portalDim.equals(event.getLevel().dimension()))
+					if(!portalDim.equals(event.getLevel().dimension()) || !level.isLoaded(BlockPos.containing(portalPos)))
 						continue;
 
 

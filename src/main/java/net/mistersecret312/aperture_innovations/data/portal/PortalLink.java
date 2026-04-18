@@ -1,11 +1,14 @@
 package net.mistersecret312.aperture_innovations.data.portal;
 
 import com.mojang.datafixers.util.Pair;
+import dev.ryanhcode.sable.companion.SableCompanion;
+import dev.ryanhcode.sable.companion.SubLevelAccess;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -16,6 +19,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.Chicken;
 import net.minecraft.world.entity.animal.FlyingAnimal;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -42,6 +46,7 @@ import net.mistersecret312.aperture_innovations.utilities.PortalUtilities;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.joml.Quaternionf;
+import org.joml.Quaternionfc;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
@@ -445,12 +450,22 @@ public class PortalLink
 		Portal portal = isPrimary ? link.getPrimaryPortal() : link.getSecondaryPortal();
 		Portal otherPortal = isPrimary ? link.getSecondaryPortal() : link.getPrimaryPortal();
 
-		double distance = portal.getPosition().distanceTo(entity.position());
+		Vec3 portalPosition = portal.getPosition();
+		Vec3 otherPortalPosition = otherPortal.getPosition();
+
+		SubLevelAccess portalAccess = SableCompanion.INSTANCE.getContaining(level, portalPosition);
+		SubLevelAccess otherPortalAccess = SableCompanion.INSTANCE.getContaining(level, otherPortalPosition);
+		//noinspection UnstableApiUsage
+		portalPosition = SableCompanion.INSTANCE.projectOutOfSubLevel(level, portalPosition);
+		//noinspection UnstableApiUsage
+		otherPortalPosition = SableCompanion.INSTANCE.projectOutOfSubLevel(level, otherPortalPosition);
+
+		double distance = portalPosition.distanceTo(entity.position());
 		if(distance < 6 && otherPortal.isMoonshot() && !(entity instanceof ServerPlayer && ((ServerPlayer) entity).getAbilities().instabuild))
 		{
 			Direction direction = PortalUtilities.getPortalDirection(level, linkID, isPrimary);
 
-			Vec3 portalPos = PortalUtilities.getPortalTeleportBox(portal.getPosition(), portal.getXRotation(),
+			Vec3 portalPos = PortalUtilities.getPortalTeleportBox(portalPosition, portal.getXRotation(),
 					portal.getYRotation()).getCenter();
 			portalPos = portalPos.add(direction.getOpposite().getStepX() * entity.getBbWidth() / 2f,
 					direction.getOpposite().getStepY() * entity.getBbHeight() / 1.25f,
@@ -466,7 +481,7 @@ public class PortalLink
 			aperture.setFrictionlessTime(2);
 		}
 
-		AABB teleportBox = PortalUtilities.getPortalTeleportBox(portal.getPosition(), portal.getXRotation(),
+		AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPosition, portal.getXRotation(),
 				portal.getYRotation());
 
 		if(movementBox.inflate(0.05f).intersects(teleportBox))
@@ -474,7 +489,7 @@ public class PortalLink
 			Direction direction = PortalUtilities.getPortalDirection(level, linkID, isPrimary);
 			Vector3f normal = direction.step();
 
-			Vec3 portalPos = PortalUtilities.getPortalTeleportBox(portal.getPosition(), portal.getXRotation(),
+			Vec3 portalPos = PortalUtilities.getPortalTeleportBox(portalPosition, portal.getXRotation(),
 					portal.getYRotation()).getCenter();
 			portalPos = portalPos.add(direction.getOpposite().getStepX() * entity.getBbWidth() / 2f,
 					direction.getOpposite().getStepY() * entity.getBbHeight() / 1.25f,
@@ -489,7 +504,7 @@ public class PortalLink
 			boolean slow = portalPos.closerThan(currentPos, 0.5f) && relativePos >= 0;
 			boolean fast = relativePos > 0 && nextRelativePos <= 0;
 
-			AABB boundingBox = PortalUtilities.getPortalBoundingBox(portal.getPosition(), portal.getXRotation(), portal.getYRotation());
+			AABB boundingBox = PortalUtilities.getPortalBoundingBox(portalPosition, portal.getXRotation(), portal.getYRotation());
 			boolean full = portal.getDirection().equals(Direction.UP) && boundingBox.contains(entity.getBoundingBox().getCenter().add(0, entity.getBbHeight()/2f, 0));
  			if(slow || fast || full)
 			{
@@ -531,18 +546,26 @@ public class PortalLink
 				Vec3 destinationLookAngle;
 				if(!otherPortal.isMoonshot())
 				{
-					destinationPosition = CoordUtil.fromPortalCoords(otherPortal, relativePosition, true).add(otherPortal.getPosition());
+					destinationPosition = CoordUtil.fromPortalCoords(otherPortal, relativePosition, true).add(otherPortalPosition);
 					destinationMomentum = CoordUtil.fromPortalCoords(otherPortal, relativeMomentum, true);
 					destinationLookAngle = CoordUtil.fromPortalCoords(otherPortal, relativeLookAngle, true);
 				}
 				else
 				{
-					destinationPosition = portal.getPosition().add(0, 1000, 0);
+					destinationPosition = portalPosition.add(0, 1000, 0);
 					destinationMomentum = new Vec3(0, 0, 0);
 					destinationLookAngle = entity.getLookAngle();
 				}
 
-
+				if(otherPortalAccess != null)
+				{
+					Quaternionf rotation = otherPortalAccess.logicalPose().orientation().get(new Quaternionf());
+					destinationPosition = otherPortalPosition;
+					if(entity instanceof Player player)
+						player.displayClientMessage(Component.literal("Trying to rotate you"), true);
+					destinationMomentum = new Vec3(destinationMomentum.toVector3f().rotate(rotation));
+					destinationLookAngle = new Vec3(destinationLookAngle.toVector3f().rotate(rotation));
+				}
 				PortalTravelEvent.Pre event = NeoForge.EVENT_BUS.post(new PortalTravelEvent.Pre(link, portal, isPrimary, level,
 						targetLevel, currentPos, destinationPosition, otherPortal.isMoonshot()));
 
@@ -554,7 +577,7 @@ public class PortalLink
 					return false;
 
 				PacketDistributor.sendToPlayersTrackingChunk((ServerLevel) level,
-						new ChunkPos(BlockPos.containing(portal.getPosition())),
+						new ChunkPos(BlockPos.containing(portalPosition)),
 						new ClientboundPortalSoundsPacket.EnterPortal(link.linkID, isPrimary));
 
 
@@ -580,7 +603,7 @@ public class PortalLink
 					aperture.setPortal(Pair.of(linkID, isPrimary));
 					aperture.updateDistance();
 					AdvancementInit.PORTAL_TRAVEL.get().trigger(player, portal.getDimension().location(),
-							targetLevel.dimension().location(), portal.getPosition().distanceToSqr(destinationPosition),
+							targetLevel.dimension().location(), portalPosition.distanceToSqr(destinationPosition),
 							aperture.verticalDistance, aperture.horizontalDistance, otherPortal.isMoonshot());
 				}
 				else
