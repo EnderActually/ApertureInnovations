@@ -451,14 +451,21 @@ public class PortalLink
 		Portal otherPortal = isPrimary ? link.getSecondaryPortal() : link.getPrimaryPortal();
 
 		Vec3 portalPosition = portal.getPosition();
+		SubLevelAccess portalAccess = null;
+		if(!portal.isMoonshot())
+		{
+			portalAccess = SableCompanion.INSTANCE.getContaining(level, portalPosition);
+			//noinspection UnstableApiUsage
+			portalPosition = SableCompanion.INSTANCE.projectOutOfSubLevel(level, portalPosition);
+		}
 		Vec3 otherPortalPosition = otherPortal.getPosition();
-
-		SubLevelAccess portalAccess = SableCompanion.INSTANCE.getContaining(level, portalPosition);
-		SubLevelAccess otherPortalAccess = SableCompanion.INSTANCE.getContaining(level, otherPortalPosition);
-		//noinspection UnstableApiUsage
-		portalPosition = SableCompanion.INSTANCE.projectOutOfSubLevel(level, portalPosition);
-		//noinspection UnstableApiUsage
-		otherPortalPosition = SableCompanion.INSTANCE.projectOutOfSubLevel(level, otherPortalPosition);
+		SubLevelAccess otherPortalAccess = null;
+		if(!otherPortal.isMoonshot())
+		{
+			otherPortalAccess = SableCompanion.INSTANCE.getContaining(level, otherPortalPosition);
+			//noinspection UnstableApiUsage
+			otherPortalPosition = SableCompanion.INSTANCE.projectOutOfSubLevel(level, otherPortalPosition);
+		}
 
 		double distance = portalPosition.distanceTo(entity.position());
 		if(distance < 6 && otherPortal.isMoonshot() && !(entity instanceof ServerPlayer && ((ServerPlayer) entity).getAbilities().instabuild))
