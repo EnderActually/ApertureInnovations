@@ -561,8 +561,6 @@ public class PortalLink
 				{
 					Quaternionf rotation = otherPortalAccess.logicalPose().orientation().get(new Quaternionf());
 					destinationPosition = otherPortalPosition;
-					if(entity instanceof Player player)
-						player.displayClientMessage(Component.literal("Trying to rotate you"), true);
 					destinationMomentum = new Vec3(destinationMomentum.toVector3f().rotate(rotation));
 					destinationLookAngle = new Vec3(destinationLookAngle.toVector3f().rotate(rotation));
 				}
