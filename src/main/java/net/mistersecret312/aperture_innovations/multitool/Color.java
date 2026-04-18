@@ -29,8 +29,13 @@ public record Color(int red, int green, int blue)
 
 	public int packagedInt()
 	{
-		return new java.awt.Color(red, green, blue).getRGB();
+		int rgb = red;
+		rgb = (rgb << 8) + green;
+		rgb = (rgb << 8) + blue;
+
+		return rgb;
 	}
+
 
 	public float getRed()
 	{
