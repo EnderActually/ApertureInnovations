@@ -6,9 +6,12 @@ import com.mojang.math.Axis;
 import dev.ryanhcode.sable.companion.ClientSubLevelAccess;
 import dev.ryanhcode.sable.companion.SableCompanion;
 import dev.ryanhcode.sable.companion.SubLevelAccess;
+import dev.ryanhcode.sable.companion.impl.SableCompanionUtil;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
@@ -20,6 +23,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.init.ItemInit;
 import net.mistersecret312.aperture_innovations.items.PortalGunItem;
@@ -37,6 +41,7 @@ import net.neoforged.neoforge.client.event.*;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.joml.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -86,16 +91,18 @@ public class ClientEvents
 					if(portalPos != null)
 					{
 						ClientSubLevelAccess access = SableCompanion.INSTANCE.getContainingClient(portalPos);
-						//noinspection UnstableApiUsage
-						portalPos = SableCompanion.INSTANCE.projectOutOfSubLevel(Minecraft.getInstance().level,
-								portalPos);
-
-						poseStack.translate(-camera.getPosition().x + portalPos.x,
-								-camera.getPosition().y + portalPos.y,
-								-camera.getPosition().z + portalPos.z);
+						if(access == null)
+							poseStack.translate(-camera.getPosition().x + portalPos.x,
+									-camera.getPosition().y + portalPos.y,
+									-camera.getPosition().z + portalPos.z);
 
 						if(access != null)
 						{
+							portalPos = access.renderPose().transformPosition(portalPos);
+							poseStack.translate(-camera.getPosition().x + portalPos.x,
+									-camera.getPosition().y + portalPos.y,
+									-camera.getPosition().z + portalPos.z);
+
 							Quaternionf rotation = access.renderPose().orientation().get(new Quaternionf());
 							Vector3f angles = rotation.getEulerAnglesYXZ(new Vector3f());
 							poseStack.mulPose(Axis.YP.rotation(angles.y));

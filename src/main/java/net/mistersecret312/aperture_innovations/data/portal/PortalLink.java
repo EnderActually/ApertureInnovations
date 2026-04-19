@@ -458,10 +458,12 @@ public class PortalLink
 			//noinspection UnstableApiUsage
 			portalPosition = SableCompanion.INSTANCE.projectOutOfSubLevel(level, portalPosition);
 		}
-		Vec3 otherPortalPosition = otherPortal.getPosition();
+
+		Vec3 otherPortalPosition = new Vec3(0, 0, 0);
 		SubLevelAccess otherPortalAccess = null;
 		if(!otherPortal.isMoonshot())
 		{
+			otherPortalPosition = otherPortal.getPosition();
 			otherPortalAccess = SableCompanion.INSTANCE.getContaining(level, otherPortalPosition);
 			//noinspection UnstableApiUsage
 			otherPortalPosition = SableCompanion.INSTANCE.projectOutOfSubLevel(level, otherPortalPosition);
@@ -513,13 +515,18 @@ public class PortalLink
 
 			AABB boundingBox = PortalUtilities.getPortalBoundingBox(portalPosition, portal.getXRotation(), portal.getYRotation());
 			boolean full = portal.getDirection().equals(Direction.UP) && boundingBox.contains(entity.getBoundingBox().getCenter().add(0, entity.getBbHeight()/2f, 0));
- 			if(slow || fast || full)
-			{
 
+			boolean touchInContraption = boundingBox.intersects(entity.getBoundingBox()) && portalAccess != null;
+
+			if(slow || fast || full || touchInContraption)
+			{
 				if(direction.getAxis().isHorizontal())
 					aperture.setIgnorePortalsTime(5);
 				if(link.isInWorld() && link.isInterdimensionalLink())
 					aperture.setIgnorePortalsTime(20);
+
+				if(otherPortalAccess != null)
+					aperture.setIgnorePortalsTime(5);
 
 				double xSpeed = entity.position().x()-entity.xOld;
 				double ySpeed = entity.position().y()-entity.yOld;
@@ -538,6 +545,8 @@ public class PortalLink
 																												  otherPortal.isOnCeiling() ? -entity.getBoundingBox().getYsize()/2 : entity.getBoundingBox().getYsize(),
 						otherPortal.isOnWall() ? -entity.getBoundingBox().getYsize()/2 : 0, 0);
 
+				if(otherPortalAccess != null)
+					relativePosition.add(-0.2, 0, 0);
 //				relativePosition = new Vec3(otherPortal.isOnWall() ? -0.15 : -0.15,
 //						otherPortal.isOnWall() ? -entity.getBoundingBox().getYsize()/2 : 0, 0);
 
@@ -546,14 +555,23 @@ public class PortalLink
 					relativeMomentum = CoordUtil.toPortalCoords(portal, new Vec3(xSpeed, 0, zSpeed));
 				else relativeMomentum = CoordUtil.toPortalCoords(portal, new Vec3(0, entity.getDeltaMovement().y(), 0));
 
-				Vec3 relativeLookAngle = CoordUtil.toPortalCoords(portal, entity.getLookAngle());
+				Vec3 lookAngle = entity.getLookAngle();
+				if(portalAccess != null && otherPortalAccess == null)
+				{
+					Vec3 momentum = new Vec3(xSpeed, 0, zSpeed);
+					momentum = portalAccess.logicalPose().transformNormalInverse(momentum);
+
+					relativeMomentum = CoordUtil.toPortalCoords(portal, momentum);
+					lookAngle = portalAccess.logicalPose().transformNormalInverse(lookAngle);
+				}
+				Vec3 relativeLookAngle = CoordUtil.toPortalCoords(portal, lookAngle);
 
 				Vec3 destinationPosition;
 				Vec3 destinationMomentum;
 				Vec3 destinationLookAngle;
 				if(!otherPortal.isMoonshot())
 				{
-					destinationPosition = CoordUtil.fromPortalCoords(otherPortal, relativePosition, true).add(otherPortalPosition);
+					destinationPosition = CoordUtil.fromPortalCoords(otherPortal, relativePosition, true).add(otherPortal.getPosition());
 					destinationMomentum = CoordUtil.fromPortalCoords(otherPortal, relativeMomentum, true);
 					destinationLookAngle = CoordUtil.fromPortalCoords(otherPortal, relativeLookAngle, true);
 				}
@@ -564,12 +582,10 @@ public class PortalLink
 					destinationLookAngle = entity.getLookAngle();
 				}
 
-				if(otherPortalAccess != null)
+				if(otherPortalAccess != null && portalAccess == null)
 				{
-					Quaternionf rotation = otherPortalAccess.logicalPose().orientation().get(new Quaternionf());
-					destinationPosition = otherPortalPosition;
-					destinationMomentum = new Vec3(destinationMomentum.toVector3f().rotate(rotation));
-					destinationLookAngle = new Vec3(destinationLookAngle.toVector3f().rotate(rotation));
+					destinationMomentum = otherPortalAccess.logicalPose().transformNormal(destinationMomentum);
+					destinationLookAngle = otherPortalAccess.logicalPose().transformNormal(destinationLookAngle);
 				}
 				PortalTravelEvent.Pre event = NeoForge.EVENT_BUS.post(new PortalTravelEvent.Pre(link, portal, isPrimary, level,
 						targetLevel, currentPos, destinationPosition, otherPortal.isMoonshot()));
