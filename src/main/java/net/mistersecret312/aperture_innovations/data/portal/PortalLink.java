@@ -543,8 +543,10 @@ public class PortalLink
 					return false;
 
 				boolean smallEntity = entity.getBoundingBox().getYsize() < 1.5f;
-				Vec3 relativePosition = new Vec3(otherPortal.isOnWall() ? -0.15 : portal.isOnWall() ? 0 : smallEntity ? -entity.getBoundingBox().getYsize() :
-																												  otherPortal.isOnCeiling() ? -entity.getBoundingBox().getYsize()/2 : entity.getBoundingBox().getYsize(),
+				double verticalOffset = smallEntity ? -entity.getBoundingBox().getYsize() :
+												otherPortal.isOnCeiling() ? -entity.getBoundingBox().getYsize()/2 : entity.getBoundingBox().getYsize();
+				verticalOffset = Math.min(entity.getBoundingBox().getYsize()*0.95f, verticalOffset);
+				Vec3 relativePosition = new Vec3(otherPortal.isOnWall() ? -0.15 : portal.isOnWall() ? 0 : verticalOffset,
 						otherPortal.isOnWall() ? -entity.getBoundingBox().getYsize()/2 : 0, 0);
 
 				if(otherPortalAccess != null)
