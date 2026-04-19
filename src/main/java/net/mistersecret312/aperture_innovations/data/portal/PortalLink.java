@@ -492,8 +492,10 @@ public class PortalLink
 
 		AABB teleportBox = PortalUtilities.getPortalTeleportBox(portalPosition, portal.getXRotation(),
 				portal.getYRotation());
+		AABB portalBox = PortalUtilities.getPortalBoundingBox(portalPosition, portal.getXRotation(),
+				portal.getYRotation());
 
-		if(movementBox.inflate(0.05f).intersects(teleportBox))
+		if(movementBox.inflate(0.05f).intersects(teleportBox) || portalBox.intersects(entity.getBoundingBox()))
 		{
 			Direction direction = PortalUtilities.getPortalDirection(level, linkID, isPrimary);
 			Vector3f normal = direction.step();
@@ -526,7 +528,7 @@ public class PortalLink
 					aperture.setIgnorePortalsTime(20);
 
 				if(otherPortalAccess != null)
-					aperture.setIgnorePortalsTime(5);
+					aperture.setIgnorePortalsTime(40);
 
 				double xSpeed = entity.position().x()-entity.xOld;
 				double ySpeed = entity.position().y()-entity.yOld;
@@ -546,7 +548,8 @@ public class PortalLink
 						otherPortal.isOnWall() ? -entity.getBoundingBox().getYsize()/2 : 0, 0);
 
 				if(otherPortalAccess != null)
-					relativePosition.add(-0.2, 0, 0);
+					relativePosition = relativePosition.add(-0.75, 0, 0);
+
 //				relativePosition = new Vec3(otherPortal.isOnWall() ? -0.15 : -0.15,
 //						otherPortal.isOnWall() ? -entity.getBoundingBox().getYsize()/2 : 0, 0);
 
@@ -587,6 +590,7 @@ public class PortalLink
 					destinationMomentum = otherPortalAccess.logicalPose().transformNormal(destinationMomentum);
 					destinationLookAngle = otherPortalAccess.logicalPose().transformNormal(destinationLookAngle);
 				}
+
 				PortalTravelEvent.Pre event = NeoForge.EVENT_BUS.post(new PortalTravelEvent.Pre(link, portal, isPrimary, level,
 						targetLevel, currentPos, destinationPosition, otherPortal.isMoonshot()));
 
