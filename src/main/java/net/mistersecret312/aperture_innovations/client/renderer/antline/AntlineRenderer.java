@@ -3,6 +3,7 @@ package net.mistersecret312.aperture_innovations.client.renderer.antline;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
@@ -29,6 +30,16 @@ public class AntlineRenderer implements BlockEntityRenderer<AntlineBlockEntity>
 	public void render(AntlineBlockEntity blockEntity, float partialTick, PoseStack poseStack,
 						   MultiBufferSource bufferSource, int packedLight, int packedOverlay)
 	{
+		if(blockEntity.getFakeState() != null)
+		{
+			poseStack.pushPose();
+
+			Minecraft.getInstance().getBlockRenderer().renderSingleBlock(blockEntity.getFakeState(),
+					poseStack, bufferSource, packedLight, packedOverlay);
+
+			poseStack.popPose();
+		}
+
 		String activity = blockEntity.active ? "active" : "inactive";
 		int color = ClientAntlineUtilities.isActive(blockEntity.getNetworkID()) ? blockEntity.activeColor : blockEntity.color;
 

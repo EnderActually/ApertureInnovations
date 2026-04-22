@@ -12,6 +12,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -25,7 +26,9 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -211,9 +214,44 @@ public class AntlineBlock extends BaseEntityBlock
 	}
 
 	@Override
+	public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, boolean willHarvest,
+									   FluidState fluid)
+	{
+		if(level.getBlockEntity(pos) instanceof AntlineBlockEntity antline)
+		{
+			BlockState fakeState = antline.getFakeState();
+			if(fakeState != null)
+			{
+				antline.setFakeState(null);
+				return false;
+			}
+		}
+
+		return super.onDestroyedByPlayer(state, level, pos, player, willHarvest, fluid);
+	}
+
+	@Override
 	protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
 											  Player player, InteractionHand hand, BlockHitResult hitResult)
 	{
+		if(stack.getItem() instanceof BlockItem blockItem)
+		{
+			BlockState heldState = blockItem.getBlock().defaultBlockState();
+			if(!(heldState.getBlock() instanceof EntityBlock)
+					   && level.getBlockEntity(pos) instanceof AntlineBlockEntity antline)
+			{
+				if(antline.getFakeState() == null)
+				{
+					heldState = heldState.getBlock().getStateForPlacement(new BlockPlaceContext(player, hand, stack, hitResult));
+					if(heldState != null && !heldState.getShape(level, pos).bounds().equals(Shapes.block().bounds()))
+						return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+
+					antline.setFakeState(heldState);
+					return ItemInteractionResult.sidedSuccess(level.isClientSide());
+				}
+			}
+		}
+
 		if(stack.is(ItemInit.COLORFUL_GEL))
 		{
 			ColorfulGelItem gel = (ColorfulGelItem) stack.getItem();
@@ -252,7 +290,7 @@ public class AntlineBlock extends BaseEntityBlock
 	{
 		Direction normal = state.getValue(NORMAL);
 
-		return switch (normal)
+		VoxelShape shape = switch (normal)
 		{
 			case UP -> SHAPE_UP;
 			case DOWN -> SHAPE_DOWN;
@@ -261,6 +299,27 @@ public class AntlineBlock extends BaseEntityBlock
 			case EAST -> SHAPE_EAST;
 			case WEST -> SHAPE_WEST;
 		};
+
+		VoxelShape blockShape = Shapes.empty();
+		if(level.getBlockEntity(pos) instanceof AntlineBlockEntity antline)
+		{
+			if(antline.getFakeState() != null)
+				blockShape = antline.getFakeState().getShape(level, pos);
+		}
+
+		shape = Shapes.join(shape, blockShape, BooleanOp.OR);
+		return shape;
+	}
+
+
+
+	@Override
+	protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context)
+	{
+		if(level.getBlockEntity(pos) instanceof AntlineBlockEntity antline)
+			if(antline.getFakeState() != null)
+				return antline.getFakeState().getShape(level, pos);
+		return Shapes.empty();
 	}
 
 	@Override

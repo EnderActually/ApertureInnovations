@@ -5,6 +5,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
+import net.minecraft.world.level.material.PushReaction;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.minecraft.world.level.block.Block;
 import net.mistersecret312.aperture_innovations.blocks.*;
@@ -35,7 +36,7 @@ public class BlockInit
             () -> new VerticalOneByTwoBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CONCRETE).mapColor(MapColor.TERRACOTTA_WHITE)));
 
     public static final DeferredBlock<Block> ANTLINE = registerBlock("antline",
-            () -> new AntlineBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.REDSTONE_WIRE)
+            () -> new AntlineBlock(BlockBehaviour.Properties.of().noOcclusion().instabreak().pushReaction(PushReaction.DESTROY)
                  .isRedstoneConductor((state, getter, pos) -> true)));
     public static final DeferredBlock<Block> CHECKMARK = registerBlock("antline_checkmark",
             () -> new AntlineOutputBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.REDSTONE_WIRE)));
