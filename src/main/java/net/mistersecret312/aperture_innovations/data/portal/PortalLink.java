@@ -561,7 +561,7 @@ public class PortalLink
 				else relativeMomentum = CoordUtil.toPortalCoords(portal, new Vec3(0, entity.getDeltaMovement().y(), 0));
 
 				Vec3 lookAngle = entity.getLookAngle();
-				if(portalAccess != null && otherPortalAccess == null)
+				if(portalAccess != null)
 				{
 					Vec3 momentum = new Vec3(xSpeed, 0, zSpeed);
 					momentum = portalAccess.logicalPose().transformNormalInverse(momentum);
@@ -576,7 +576,11 @@ public class PortalLink
 				Vec3 destinationLookAngle;
 				if(!otherPortal.isMoonshot())
 				{
-					destinationPosition = CoordUtil.fromPortalCoords(otherPortal, relativePosition, true).add(otherPortal.getPosition());
+					destinationPosition = CoordUtil.fromPortalCoords(otherPortal, relativePosition, true);
+					if(entity instanceof Player)
+						destinationPosition = destinationPosition.add(otherPortal.getPosition());
+					else destinationPosition = destinationPosition.add(otherPortalPosition);
+
 					destinationMomentum = CoordUtil.fromPortalCoords(otherPortal, relativeMomentum, true);
 					destinationLookAngle = CoordUtil.fromPortalCoords(otherPortal, relativeLookAngle, true);
 				}
@@ -587,7 +591,7 @@ public class PortalLink
 					destinationLookAngle = entity.getLookAngle();
 				}
 
-				if(otherPortalAccess != null && portalAccess == null)
+				if(otherPortalAccess != null)
 				{
 					destinationMomentum = otherPortalAccess.logicalPose().transformNormal(destinationMomentum);
 					destinationLookAngle = otherPortalAccess.logicalPose().transformNormal(destinationLookAngle);
