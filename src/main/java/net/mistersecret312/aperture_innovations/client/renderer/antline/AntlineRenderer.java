@@ -7,9 +7,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
@@ -18,6 +20,7 @@ import net.mistersecret312.aperture_innovations.blocks.AntlineBlock;
 import net.mistersecret312.aperture_innovations.blocks.enums.ConnectionState;
 import net.mistersecret312.aperture_innovations.client.PortalRenderTypes;
 import net.mistersecret312.aperture_innovations.utilities.ClientAntlineUtilities;
+import net.neoforged.neoforge.client.model.data.ModelData;
 
 public class AntlineRenderer implements BlockEntityRenderer<AntlineBlockEntity>
 {
@@ -30,14 +33,19 @@ public class AntlineRenderer implements BlockEntityRenderer<AntlineBlockEntity>
 	public void render(AntlineBlockEntity blockEntity, float partialTick, PoseStack poseStack,
 						   MultiBufferSource bufferSource, int packedLight, int packedOverlay)
 	{
-		if(blockEntity.getFakeState() != null)
+		if(blockEntity.getFakeState() != null && blockEntity.getLevel() != null)
 		{
 			poseStack.pushPose();
-
-			Minecraft.getInstance().getBlockRenderer().renderSingleBlock(blockEntity.getFakeState(),
-					poseStack, bufferSource, packedLight, packedOverlay);
+			BakedModel model = Minecraft.getInstance().getBlockRenderer().getBlockModel(blockEntity.getFakeState());
+			for (net.minecraft.client.renderer.RenderType rt : model.getRenderTypes(blockEntity.getFakeState(), RandomSource.create(42), ModelData.EMPTY))
+			{
+				Minecraft.getInstance().getBlockRenderer().renderBatched(blockEntity.getFakeState(),
+						blockEntity.getBlockPos(), blockEntity.getLevel(), poseStack, bufferSource.getBuffer(rt),
+						true, blockEntity.getLevel().random, ModelData.EMPTY, rt);
+			}
 
 			poseStack.popPose();
+			return;
 		}
 
 		String activity = blockEntity.active ? "active" : "inactive";

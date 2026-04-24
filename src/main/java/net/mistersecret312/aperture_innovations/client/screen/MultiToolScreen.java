@@ -172,7 +172,7 @@ public class MultiToolScreen extends Screen
 
 	public void makeWidgetForItemProperty(Category category, int x, int y)
 	{
-		if(!(renderer instanceof ItemPreviewRenderer renderer))
+		if(!(renderer instanceof ItemPreviewRenderer itemRenderer))
 			return;
 		if(!(config instanceof IItemConfiguration configuration))
 			return;
@@ -180,7 +180,7 @@ public class MultiToolScreen extends Screen
 		int entryID = 0;
 		for(Map.Entry<String, CategoryEntry> entry : category.entries.entrySet())
 		{
-			Optional<ConfigurationProperty<?>> property = configuration.getConfigurationProperties(renderer.stack, Minecraft.getInstance().level.registryAccess()).stream().filter(
+			Optional<ConfigurationProperty<?>> property = configuration.getConfigurationProperties(itemRenderer.stack, Minecraft.getInstance().level.registryAccess()).stream().filter(
 					prop -> prop.getName().equals(entry.getValue().name)
 									&& prop.getCategory().equals(category.category)).findFirst();
 			if(property.isPresent())

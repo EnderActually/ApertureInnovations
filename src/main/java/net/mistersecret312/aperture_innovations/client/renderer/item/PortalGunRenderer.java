@@ -49,10 +49,6 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
         //Zap
         this.addRenderLayer(new ColoredGlowingLayer<>(this,
                 this::getZapTexture, this::getZapColor, this::getZapRenderType));
-
-        //Stripes
-        this.addRenderLayer(new ColoredGlowingLayer<>(this,
-                this::getStripeTexture, this::getStripeColor, this::getStripeRenderType));
     }
 
     @Override
@@ -69,7 +65,8 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
                                               .getPrimaryStripeColor(this.currentItemStack) : this.getAnimatable()
                                                                                                   .getSecondaryStripeColor(
                                                                                                           this.currentItemStack);
-            if(stripeColor == -1)
+            Color rgbStripeColor = new Color(stripeColor, false);
+            if(rgbStripeColor.getRGB() == -1)
             {
                 ClientPortalLink link = PortalUtilities.getPortalLinks()
                                                        .get(this.getAnimatable().getUUID(this.currentItemStack, false));
@@ -78,7 +75,8 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
                 if(animatable.getVariant(currentItemStack) != null)
                     variant = ClientPortalGunVariants.getPortalGunVariant(animatable.getVariant(currentItemStack));
 
-                if(link != null) variant = link.getVariant();
+//                if(link != null)
+//                    variant = link.getVariant();
 
                 ColorUtil.RGBA color = isPrimary ? variant.primaryStripeColor() : variant.secondaryStripeColor();
 
@@ -148,11 +146,26 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
     public ResourceLocation getCoreTexture(PortalGunItem animatable, GeoBone bone)
     {
         List<String> gunCore = Lists.newArrayList("CoreOuter", "CoreInner", "PortalLight", "Muzzle");
-        ClientPortalLink link = PortalUtilities.getPortalLinks().get(animatable.getUUID(this.currentItemStack, false));
-        if(!gunCore.contains(bone.getName()) || bone.getName().equals("Zap") || link == null)
+        ClientPortalGunVariant variant = animatable.getGunVariant(this.currentItemStack);
+        int lastPortal = animatable.getLastShotPortal(this.currentItemStack);
+        if(!gunCore.contains(bone.getName()) || bone.getName().equals("Zap"))
             return null;
 
-        return ClientPortalUtilities.getPortalGunCoreTexture(link, animatable.getLastShotPortal(this.currentItemStack));}
+        if(lastPortal == -1)
+            return variant.idleCoreTexture();
+        int portalColor = lastPortal == 0 ?
+                                  animatable.getPrimaryPortalColor(this.currentItemStack) : animatable.getSecondaryPortalColor(this.currentItemStack);
+        Color color = new Color(portalColor, false);
+        if(color.getRGB() != -1)
+            return variant.genericPortal().getCoreTexture();
+
+        if(lastPortal == 0)
+            return variant.primaryPortal().getCoreTexture();
+        if(lastPortal == 1)
+            return variant.secondaryPortal().getCoreTexture();
+
+        return variant.idleCoreTexture();
+    }
 
     public ResourceLocation getZapTexture(PortalGunItem animatable, GeoBone bone)
     {
@@ -161,15 +174,6 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
 
         return ApertureInnovations.of(
                 "textures/portal_gun/zap/portal_gun_zap_" + animatable.getZapTick(this.currentItemStack) + ".png");
-    }
-
-    public ResourceLocation getStripeTexture(PortalGunItem animatable, GeoBone bone)
-    {
-        List<String> stripeBones = Lists.newArrayList("StripePrimary", "StripeSecondary");
-        if(!stripeBones.contains(bone.getName()))
-            return null;
-
-        return null;
     }
 
     public int getHullColor(PortalGunItem animatable, GeoBone bone)
@@ -181,14 +185,10 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
     public int getCoreColor(PortalGunItem animatable, GeoBone bone)
     {
         int lastPortal = animatable.getLastShotPortal(this.currentItemStack);
-        ClientPortalLink link = PortalUtilities.getPortalLinks().get(animatable.getUUID(this.currentItemStack, false));
-        Color color = new Color(-1, false);
-        if(link == null || lastPortal == -1)
+        int portalColor = lastPortal == 0 ? animatable.getPrimaryPortalColor(this.currentItemStack) : animatable.getSecondaryPortalColor(this.currentItemStack);
+        Color color = new Color(portalColor, false);
+        if(lastPortal == -1)
             return -1;
-        if(lastPortal == 0)
-            color = new Color(link.getPrimaryPortal().getColor(), false);
-        if(lastPortal == 1)
-            color = new Color(link.getSecondaryPortal().getColor(), false);
 
         return color.getRGB();
     }
@@ -196,11 +196,6 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
     public int getZapColor(PortalGunItem animatable, GeoBone bone)
     {
         return -1;
-    }
-
-    public int getStripeColor(PortalGunItem animatable, GeoBone bone)
-    {
-        return 0x00FF00;
     }
 
     public RenderType getHullRenderType(PortalGunItem animatable, GeoBone bone)
@@ -216,11 +211,6 @@ public class PortalGunRenderer extends DynamicGeoItemRenderer<PortalGunItem>
     public RenderType getZapRenderType(PortalGunItem animatable, GeoBone bone)
     {
         return RenderType.EYES.apply(getZapTexture(animatable, bone), RenderStateShard.TRANSLUCENT_TRANSPARENCY);
-    }
-
-    public RenderType getStripeRenderType(PortalGunItem animatable, GeoBone bone)
-    {
-        return getHullRenderType(animatable, bone);
     }
 
     private static final RenderStateShard.ShaderStateShard SHADER_STATE = new RenderStateShard.ShaderStateShard(

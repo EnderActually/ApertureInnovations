@@ -311,15 +311,13 @@ public class AntlineBlock extends BaseEntityBlock
 		return shape;
 	}
 
-
-
 	@Override
 	protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context)
 	{
 		if(level.getBlockEntity(pos) instanceof AntlineBlockEntity antline)
 			if(antline.getFakeState() != null)
 				return antline.getFakeState().getShape(level, pos);
-		return Shapes.empty();
+		return getShape(state, level, pos, context);
 	}
 
 	@Override
@@ -332,6 +330,28 @@ public class AntlineBlock extends BaseEntityBlock
 		}
 
 		return super.updateShape(state, direction, neighborState, level, pos, neighborPos);
+	}
+
+	@Override
+	protected float getDestroyProgress(BlockState state, Player player, BlockGetter level, BlockPos pos)
+	{
+		float destroyTime = 0;
+		if(level.getBlockEntity(pos) instanceof AntlineBlockEntity antline)
+			if(antline.getFakeState() != null)
+				destroyTime = antline.getFakeState().getBlock().defaultDestroyTime();
+
+		if (destroyTime == -1.0F) {
+			return 0.0F;
+		} else {
+			int i = net.neoforged.neoforge.event.EventHooks.doPlayerHarvestCheck(player, state, level, pos) ? 30 : 100;
+			return player.getDigSpeed(state, pos) / destroyTime / (float)i;
+		}
+	}
+
+	@Override
+	public float defaultDestroyTime()
+	{
+		return super.defaultDestroyTime();
 	}
 
 	@Override
