@@ -10,7 +10,9 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -223,6 +225,8 @@ public class AntlineBlock extends BaseEntityBlock
 			if(fakeState != null)
 			{
 				antline.setFakeState(null);
+				if(!player.getAbilities().instabuild)
+					Block.popResource(level, pos, new ItemStack(fakeState.getBlock()));
 				return false;
 			}
 		}
@@ -247,6 +251,9 @@ public class AntlineBlock extends BaseEntityBlock
 						return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 
 					antline.setFakeState(heldState);
+					if(!player.getAbilities().instabuild)
+						stack.shrink(1);
+					level.scheduleTick(pos, this, 1);
 					return ItemInteractionResult.sidedSuccess(level.isClientSide());
 				}
 			}
@@ -300,14 +307,10 @@ public class AntlineBlock extends BaseEntityBlock
 			case WEST -> SHAPE_WEST;
 		};
 
-		VoxelShape blockShape = Shapes.empty();
 		if(level.getBlockEntity(pos) instanceof AntlineBlockEntity antline)
-		{
 			if(antline.getFakeState() != null)
-				blockShape = antline.getFakeState().getShape(level, pos);
-		}
+				return antline.getFakeState().getShape(level, pos);
 
-		shape = Shapes.join(shape, blockShape, BooleanOp.OR);
 		return shape;
 	}
 
@@ -317,7 +320,7 @@ public class AntlineBlock extends BaseEntityBlock
 		if(level.getBlockEntity(pos) instanceof AntlineBlockEntity antline)
 			if(antline.getFakeState() != null)
 				return antline.getFakeState().getShape(level, pos);
-		return getShape(state, level, pos, context);
+		return Shapes.empty();
 	}
 
 	@Override
@@ -336,22 +339,20 @@ public class AntlineBlock extends BaseEntityBlock
 	protected float getDestroyProgress(BlockState state, Player player, BlockGetter level, BlockPos pos)
 	{
 		float destroyTime = 0;
+		float digSpeed = player.getDigSpeed(state, pos);
 		if(level.getBlockEntity(pos) instanceof AntlineBlockEntity antline)
 			if(antline.getFakeState() != null)
-				destroyTime = antline.getFakeState().getBlock().defaultDestroyTime();
+			{
+				destroyTime = antline.getFakeState().getDestroySpeed(level, pos);
+				digSpeed = player.getDigSpeed(antline.getFakeState(), pos);
+			}
 
 		if (destroyTime == -1.0F) {
 			return 0.0F;
 		} else {
 			int i = net.neoforged.neoforge.event.EventHooks.doPlayerHarvestCheck(player, state, level, pos) ? 30 : 100;
-			return player.getDigSpeed(state, pos) / destroyTime / (float)i;
+			return digSpeed / destroyTime / (float)i;
 		}
-	}
-
-	@Override
-	public float defaultDestroyTime()
-	{
-		return super.defaultDestroyTime();
 	}
 
 	@Override

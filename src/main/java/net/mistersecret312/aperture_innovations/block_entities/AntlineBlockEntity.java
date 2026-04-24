@@ -133,7 +133,7 @@ public class AntlineBlockEntity extends BlockEntity
 
 	public BlockState getFakeState()
 	{
-		if(this.getLevel() != null)
+		if(this.getLevel() != null && !this.getLevel().isClientSide())
 		{
 			this.getLevel().sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
 		}
@@ -143,6 +143,7 @@ public class AntlineBlockEntity extends BlockEntity
 	public void setFakeState(BlockState fakeState)
 	{
 		this.fakeState = fakeState;
+		this.setChanged();
 	}
 
 	public boolean isActive()

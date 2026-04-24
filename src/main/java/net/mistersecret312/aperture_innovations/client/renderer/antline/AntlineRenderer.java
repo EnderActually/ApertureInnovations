@@ -45,7 +45,12 @@ public class AntlineRenderer implements BlockEntityRenderer<AntlineBlockEntity>
 			}
 
 			poseStack.popPose();
-			return;
+
+			if(Minecraft.getInstance().player != null &&
+					   blockEntity.getBlockState().getDestroyProgress(Minecraft.getInstance().player, blockEntity.getLevel(), blockEntity.getBlockPos()) != 0)
+			{
+				return;
+			}
 		}
 
 		String activity = blockEntity.active ? "active" : "inactive";
