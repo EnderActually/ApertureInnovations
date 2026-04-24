@@ -194,11 +194,13 @@ public record ClientPortalGunVariant(ResourceLocation texture, ResourceLocation 
             return maskTexture;
         }
 
-        public RGBA getColor() {
+        public RGBA getColor()
+        {
             return color;
         }
 
-        public boolean isGenericColoring() {
+        public boolean isGenericColoring()
+        {
             return genericColoring;
         }
 

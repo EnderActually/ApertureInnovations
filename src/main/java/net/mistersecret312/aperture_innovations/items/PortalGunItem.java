@@ -1,6 +1,7 @@
 package net.mistersecret312.aperture_innovations.items;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.RegistryAccess;
@@ -32,6 +33,8 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.mistersecret312.aperture_innovations.ApertureInnovations;
 import net.mistersecret312.aperture_innovations.capabilities.ApertureEnergy;
 import net.mistersecret312.aperture_innovations.client.renderer.item.PortalGunRenderer;
+import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortalGunVariant;
+import net.mistersecret312.aperture_innovations.client.resourcepack.ClientPortalGunVariants;
 import net.mistersecret312.aperture_innovations.config.PortalGunConfig;
 import net.mistersecret312.aperture_innovations.datapack.CubeVariant;
 import net.mistersecret312.aperture_innovations.datapack.PortalGunVariant;
@@ -44,6 +47,8 @@ import net.mistersecret312.aperture_innovations.network.ClientboundPortalSoundsP
 import net.mistersecret312.aperture_innovations.data.portal.PortalLink;
 import net.mistersecret312.aperture_innovations.data.PortalLinkData;
 import net.mistersecret312.aperture_innovations.utilities.PortalUtilities;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -456,6 +461,20 @@ public class PortalGunItem extends Item implements GeoItem, IItemConfiguration
 	{
 		return stack.getOrDefault(DataComponentInit.PORTAL_GUN_VARIANT, ResourceLocation.fromNamespaceAndPath(
 				ApertureInnovations.MODID, "chell"));
+	}
+
+	@OnlyIn(Dist.CLIENT)
+	public ClientPortalGunVariant getGunVariant(ItemStack stack)
+	{
+		if(Minecraft.getInstance().level == null)
+			return ClientPortalGunVariant.DEFAULT_VARIANT;
+
+		RegistryAccess registryAccess = Minecraft.getInstance().level.registryAccess();
+		PortalGunVariant variant = registryAccess.registryOrThrow(PortalGunVariant.REGISTRY_KEY).get(getVariant(stack));
+		if(variant == null)
+			return ClientPortalGunVariant.DEFAULT_VARIANT;
+
+		return ClientPortalGunVariants.getPortalGunVariant(variant.getClientVariant());
 	}
 
 	public void setDualityState(ItemStack stack, int state)
