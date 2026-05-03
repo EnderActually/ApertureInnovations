@@ -202,6 +202,15 @@ public class ClientEvents
 
 				while(ApertureInnovations.ClientModEvents.PICK_UP.get().consumeClick())
 					NetworkInit.INSTANCE.sendToServer(new ServerboundPickUpEntityPacket());
+
+				while(ApertureInnovations.ClientModEvents.PORTAL_GUN_PRIMARY_FIRE.get().consumeClick())
+				{
+					NetworkInit.INSTANCE.sendToServer(new ServerboundOpenPortalPacket(true));
+				}
+				while(ApertureInnovations.ClientModEvents.PORTAL_GUN_SECONDARY_FIRE.get().consumeClick())
+				{
+					NetworkInit.INSTANCE.sendToServer(new ServerboundOpenPortalPacket(false));
+				}
 			}
 		}
 	}
